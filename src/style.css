@@ -7,54 +7,55 @@
 }
 
 @layer components {
-    .card-tray {
-        @apply w-[62px] shrink-0 flex items-center justify-center transition-all duration-300;
-        --tray-color: #e2e4e8;
-        background: linear-gradient(to right,
-            var(--tray-color) 0%,
-            var(--tray-color) 36px,
-            color-mix(in srgb, var(--tray-color), transparent 10%) 42px,
-            color-mix(in srgb, var(--tray-color), transparent 50%) 49px,
-            color-mix(in srgb, var(--tray-color), transparent 90%) 54px,
-            transparent 58px
-        );
-    }
-
-    html.dark .card-tray {
-        --tray-color: rgba(255,255,255,0.15);
-        background: linear-gradient(to right,
-            var(--tray-color) 0%,
-            var(--tray-color) 36px,
-            color-mix(in srgb, var(--tray-color), transparent 10%) 42px,
-            color-mix(in srgb, var(--tray-color), transparent 50%) 49px,
-            color-mix(in srgb, var(--tray-color), transparent 90%) 54px,
-            transparent 58px
-        );
-    }
-
-    .add-btn-tray {
-        --tray-color: #e5e7eb;
-        background: linear-gradient(to right,
-            var(--tray-color) 0%,
-            var(--tray-color) 40px,
-            transparent 55px
-        );
-    }
-
-    html.dark .add-btn-tray {
-        --tray-color: rgba(255,255,255,0.04);
-    }
-
     .site-card {
         @apply flex items-stretch h-12 rounded-xl overflow-hidden transition-all duration-300 relative shadow-sm;
         @apply bg-surface border border-gray-200;
         @apply dark:bg-surface-dark dark:border-white/10;
+        
+        isolation: isolate; 
+        --bg-start: #e2e4e8;
+    }
+
+    html.dark .site-card {
+        --bg-start: rgba(255,255,255,0.15);
+    }
+
+    .site-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        opacity: 1;
+        transition: opacity 0.3s;
+        
+        background: linear-gradient(to right,
+            var(--bg-start) 0%,
+            color-mix(in srgb, var(--bg-start), transparent 20%) 45px,
+            color-mix(in srgb, var(--bg-start), transparent 60%) 60%,
+            color-mix(in srgb, var(--bg-start), transparent 90%) 85%,
+            transparent 100%
+        );
     }
 
     .site-card:hover {
         @apply shadow-md -translate-y-0.5;
         @apply border-gray-300 bg-white;
         @apply dark:border-white/20 dark:bg-surface-darkHover;
+    }
+    
+    .site-card:hover::before {
+        opacity: 0.7;
+    }
+
+    .card-tray {
+        @apply w-[62px] shrink-0 flex items-center justify-center transition-all duration-300 z-10;
+    }
+
+    .site-card.border-dashed {
+        --bg-start: #e5e7eb;
+    }
+    html.dark .site-card.border-dashed {
+        --bg-start: rgba(255,255,255,0.04);
     }
 
     .site-icon {
