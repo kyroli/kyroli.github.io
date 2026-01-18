@@ -21,7 +21,7 @@
     }
 
     html.dark .card-tray {
-        --tray-color: rgba(255,255,255,0.08);
+        --tray-color: rgba(255,255,255,0.15);
         background: linear-gradient(to right,
             var(--tray-color) 0%,
             var(--tray-color) 36px,
