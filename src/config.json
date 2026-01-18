@@ -1,0 +1,185 @@
+{
+    "title": "个人导航",
+    "groups": [
+        {
+            "id": "entertainment",
+            "name": "娱乐",
+            "sites": [
+                {
+                    "id": "bilibili",
+                    "name": "批哩批哩",
+                    "url": "https://www.bilibili.com/",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "blog",
+            "name": "博客",
+            "sites": [
+                {
+                    "id": "landian",
+                    "name": "蓝点网",
+                    "url": "https://www.landiannews.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "ghxi",
+                    "name": "果核剥壳",
+                    "url": "https://www.ghxi.com/",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "common",
+            "name": "常用",
+            "sites": [
+                {
+                    "id": "google",
+                    "name": "Google",
+                    "url": "https://www.google.com/ncr",
+                    "icon": ""
+                },
+                {
+                    "id": "youtube",
+                    "name": "YouTube",
+                    "url": "https://www.youtube.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "github",
+                    "name": "GitHub",
+                    "url": "https://www.github.com",
+                    "icon": ""
+                },
+                {
+                    "id": "skinny",
+                    "name": "Skinny",
+                    "url": "https://www.skinny.co.nz/dashboard/sub",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "ai",
+            "name": "AI 工具",
+            "sites": [
+                {
+                    "id": "chatgpt",
+                    "name": "ChatGPT",
+                    "url": "https://chatgpt.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "gemini",
+                    "name": "Gemini",
+                    "url": "https://gemini.google.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "qwen",
+                    "name": "Qwen Chat",
+                    "url": "https://chat.qwen.ai/",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "surf",
+            "name": "冲浪",
+            "sites": [
+                {
+                    "id": "eggtart",
+                    "name": "蛋挞云",
+                    "url": "https://eggtart.cloud",
+                    "icon": ""
+                },
+                {
+                    "id": "doriya",
+                    "name": "Doriya",
+                    "url": "https://dash.rtx.al",
+                    "icon": "https://dash.rtx.al/images/logo.png"
+                },
+                {
+                    "id": "coke",
+                    "name": "Cokecloud",
+                    "url": "https://cokecloud.net/#/stage/dashboard",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "tools",
+            "name": "工具箱",
+            "sites": [
+                {
+                    "id": "gtrans",
+                    "name": "Google 翻译",
+                    "url": "https://translate.google.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "aconvert",
+                    "name": "Aconvert",
+                    "url": "https://www.aconvert.com/cn/",
+                    "icon": ""
+                },
+                {
+                    "id": "sms",
+                    "name": "接码",
+                    "url": "https://sms-man.com/cn",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "drive",
+            "name": "云盘",
+            "sites": [
+                {
+                    "id": "aliyun",
+                    "name": "阿里云盘",
+                    "url": "https://www.aliyundrive.com/drive",
+                    "icon": ""
+                },
+                {
+                    "id": "onedrive",
+                    "name": "OneDrive",
+                    "url": "https://onedrive.live.com/",
+                    "icon": "OneDrive.png"
+                },
+                {
+                    "id": "jianguo",
+                    "name": "坚果云",
+                    "url": "https://www.jianguoyun.com/#/",
+                    "icon": ""
+                }
+            ]
+        },
+        {
+            "id": "email",
+            "name": "邮箱",
+            "sites": [
+                {
+                    "id": "qqmail",
+                    "name": "QQ 邮箱",
+                    "url": "https://mail.qq.com/",
+                    "icon": ""
+                },
+                {
+                    "id": "gmail",
+                    "name": "Gmail",
+                    "url": "https://mail.google.com/",
+                    "icon": "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico"
+                },
+                {
+                    "id": "outlook",
+                    "name": "Outlook",
+                    "url": "https://outlook.live.com/",
+                    "icon": ""
+                }
+            ]
+        }
+    ]
+}

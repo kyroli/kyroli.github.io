@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none !important;
+}
+
+@layer components {
+    .card-tray {
+        @apply w-[62px] shrink-0 flex items-center justify-center transition-all duration-300;
+        --tray-color: #e2e4e8;
+        background: linear-gradient(to right,
+            var(--tray-color) 0%,
+            var(--tray-color) 36px,
+            color-mix(in srgb, var(--tray-color), transparent 10%) 42px,
+            color-mix(in srgb, var(--tray-color), transparent 50%) 49px,
+            color-mix(in srgb, var(--tray-color), transparent 90%) 54px,
+            transparent 58px
+        );
+    }
+
+    html.dark .card-tray {
+        --tray-color: rgba(255,255,255,0.08);
+        background: linear-gradient(to right,
+            var(--tray-color) 0%,
+            var(--tray-color) 36px,
+            color-mix(in srgb, var(--tray-color), transparent 10%) 42px,
+            color-mix(in srgb, var(--tray-color), transparent 50%) 49px,
+            color-mix(in srgb, var(--tray-color), transparent 90%) 54px,
+            transparent 58px
+        );
+    }
+
+    .add-btn-tray {
+        --tray-color: #e5e7eb;
+        background: linear-gradient(to right,
+            var(--tray-color) 0%,
+            var(--tray-color) 40px,
+            transparent 55px
+        );
+    }
+
+    html.dark .add-btn-tray {
+        --tray-color: rgba(255,255,255,0.04);
+    }
+
+    .site-card {
+        @apply flex items-stretch h-12 rounded-xl overflow-hidden transition-all duration-300 relative shadow-sm;
+        @apply bg-surface border border-gray-200;
+        @apply dark:bg-surface-dark dark:border-white/10;
+    }
+
+    .site-card:hover {
+        @apply shadow-md -translate-y-0.5;
+        @apply border-gray-300 bg-white;
+        @apply dark:border-white/20 dark:bg-surface-darkHover;
+    }
+
+    .site-icon {
+        @apply w-6 h-6 object-contain transition-transform duration-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] dark:drop-shadow-[0_0_1px_rgba(255,255,255,0.25)];
+    }
+    .group\/card:hover .site-icon {
+        @apply scale-110;
+    }
+}
+
+body {
+    @apply transition-colors duration-200 ease-in-out antialiased;
+}
