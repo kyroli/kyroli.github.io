@@ -1,0 +1,29 @@
+{
+  "name": "nav-zero",
+  "version": "1.0.0",
+  "description": "A minimal personal startpage built with Svelte and TailwindCSS",
+  "private": true,
+  "type": "module",
+  "author": "Kyro Li",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "sortablejs": "^1.15.2",
+    "svelte": "^5.1.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/sortablejs": "^1.15.8",
+    "svelte-check": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.0.0"
+  }
+}

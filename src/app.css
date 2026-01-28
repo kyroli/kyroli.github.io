@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-primary: var(--primary);
+  --color-icon-bg: var(--icon-bg);
+  --color-danger: var(--danger);
+}
+
+@layer base {
+  :root {
+    --primary: #ea580c;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e4e4e7;
+    --text: #18181b;
+    --text-dim: #71717a;
+    --icon-bg: #f4f4f5;
+    --danger: #d32f2f;
+  }
+
+  :root.dark {
+    --primary: #f97316;
+    --bg: #09090b;
+    --surface: #18181b;
+    --border: #27272a;
+    --text: #fafafa;
+    --text-dim: #a1a1aa;
+    --icon-bg: #27272a;
+    --danger: #f44336;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    outline: none !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: scale(0.98) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.animate-fade {
+  animation: fade 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
