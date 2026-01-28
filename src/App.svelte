@@ -2,7 +2,7 @@
   // 1. Imports
   import { onMount } from 'svelte';
   import { app } from '$lib/store.svelte';
-  
+
   // Components
   import Header from './components/business/Header.svelte';
   import SiteGrid from './components/business/SiteGrid.svelte';
@@ -53,32 +53,34 @@
     
     <Header onConfig={() => showConfig = true} />
 
-    {#if isReady}
-      {#if showConfigTip}
-        <div class={configTipClass}>
-          <p class="font-bold">请点击右上角配置 GitHub 连接</p>
+    <main>
+      {#if isReady}
+        {#if showConfigTip}
+          <div class={configTipClass}>
+            <p class="font-bold">请点击右上角配置 GitHub 连接</p>
+          </div>
+        {/if}
+    
+        <SiteGrid 
+          onEditSite={(groupId, siteId) => editingSite = { groupId, siteId }}
+          onAddSite={(groupId) => editingSite = { groupId }}
+        />
+        
+      {:else if isSyncingOrLoading}
+        <div class={syncBadgeClass}>
+          同步中...
         </div>
+        
+      {:else if isError}
+         <div class={errorWrapperClass}>
+            <p>错误: {app.errorMsg}</p>
+            <button onclick={() => showConfig = true} class="mt-4 underline cursor-pointer">检查配置</button>
+         </div>
+         
+      {:else}
+         <LoadingSkeleton />
       {/if}
-  
-      <SiteGrid 
-        onEditSite={(groupId, siteId) => editingSite = { groupId, siteId }}
-        onAddSite={(groupId) => editingSite = { groupId }}
-      />
-      
-    {:else if isSyncingOrLoading}
-      <div class={syncBadgeClass}>
-        同步中...
-      </div>
-      
-    {:else if isError}
-       <div class={errorWrapperClass}>
-          <p>错误: {app.errorMsg}</p>
-          <button onclick={() => showConfig = true} class="mt-4 underline cursor-pointer">检查配置</button>
-       </div>
-       
-    {:else}
-       <LoadingSkeleton />
-    {/if}
+    </main>
   </div>
 
   {#if showConfig}
