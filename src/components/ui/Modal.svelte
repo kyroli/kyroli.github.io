@@ -12,8 +12,10 @@
   }
 
   const overlayClass = "fixed inset-0 z-[100] flex items-center justify-center p-6";
-  const backdropClass = "absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity border-none w-full h-full cursor-default";
-  const panelClass = "relative bg-surface rounded-2xl shadow-xl w-full max-w-sm p-8 animate-fade border-2 border-border/80 flex flex-col gap-6 pointer-events-auto";
+  const backdropClass = "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity w-full h-full cursor-default";
+  
+  const panelClass = "relative bg-surface/90 backdrop-blur-xl rounded-2xl w-full max-w-sm p-8 animate-fade border border-border/80 flex flex-col gap-6 pointer-events-auto ring-1 ring-black/5 shadow-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]";
+  
   const titleClass = "text-xl font-bold tracking-tight text-text";
 </script>
 

@@ -36,17 +36,21 @@
   const logoInnerClass = "w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm group-hover:rotate-6 transition-transform";
   const logoSubTextClass = "text-[10px] font-mono text-text-dim/60 tracking-widest uppercase";
   const logoTitleClass = "font-bold text-xl tracking-tight select-none text-text leading-none";
-
+  
   // Search Styles
   const searchContainerClass = "relative w-full md:w-[480px]";
   const searchIconClass = "absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors";
-  const searchInputClass = "px-11 py-3 text-base shadow-sm";
+  const searchInputClass = "px-11 py-3 text-base shadow-sm bg-surface/50 backdrop-blur-sm";
 
   // Action Bar Styles
   const actionBarClass = "flex gap-2 animate-fade";
   const iconBtnClass = "w-10 h-10 !rounded-xl !p-0";
   const closeBtnClass = "h-10 w-10 !rounded-xl !p-0 text-text-dim";
   const actionBtnWideClass = "h-10 w-28 !rounded-xl";
+  
+  // Tooltip Styles
+  const tooltipWrapperClass = "relative group/tooltip";
+  const tooltipContentClass = "absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 font-medium shadow-xl translate-y-1 group-hover/tooltip:translate-y-0";
 </script>
 
 <div class={headerWrapperClass}>
@@ -99,9 +103,14 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox={ICONS.edit.viewBox}>{@html ICONS.edit.path}</svg>
                 </Button>
 
-                <Button variant="outline" onclick={onConfig} class={iconBtnClass} title="设置">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox={ICONS.settings.viewBox}>{@html ICONS.settings.path}</svg>
-               </Button>
+                <div class={tooltipWrapperClass}>
+                    <Button variant="outline" onclick={onConfig} class={iconBtnClass}>
+                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox={ICONS.settings.viewBox}>{@html ICONS.settings.path}</svg>
+                    </Button>
+                    {#if !app.config.token}
+                       <div class={tooltipContentClass}>配置 GitHub 以同步数据</div>
+                    {/if}
+                </div>
             </div>
         {/if}
       </div>
