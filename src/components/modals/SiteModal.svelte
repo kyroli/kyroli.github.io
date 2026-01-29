@@ -1,7 +1,7 @@
 <script lang="ts">
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
-  import { ICONS } from '$lib/icons';
+  import { Trash2 } from 'lucide-svelte';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
@@ -28,7 +28,6 @@
     }
 
     let finalUrl = url.trim();
-
     if (!/^https?:\/\//i.test(finalUrl)) {
       finalUrl = `https://${finalUrl}`;
     }
@@ -67,7 +66,7 @@
   {#if siteId}
     <div class={deleteBtnClass}>
       <Button variant="ghost" onclick={handleDelete} class={deleteIconBtnClass}>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox={ICONS.delete.viewBox}>{@html ICONS.delete.path}</svg>
+        <Trash2 class="w-5 h-5" />
       </Button>
     </div>
   {/if}

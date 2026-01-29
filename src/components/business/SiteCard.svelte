@@ -3,13 +3,14 @@
   import { ui } from '$lib/ui.svelte';
   import { getIcon } from '$lib/utils';
   import type { Site } from '$lib/types';
-  import { ICONS } from '$lib/icons';
+  import { X } from 'lucide-svelte';
   import CardBase from './CardBase.svelte';
 
   let { site, onEdit } = $props<{ 
     site: Site,
     onEdit: () => void 
   }>();
+
   let loadError = $state(false);
 
   const displayHostname = $derived.by(() => {
@@ -20,20 +21,25 @@
       return '';
     }
   });
+
   const firstChar = $derived(site.name ? site.name.charAt(0).toUpperCase() : '?');
   const safeHref = $derived(!ui.isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
+
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     ui.isEdit 
       ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.99]'
   }`);
+
   const bgHue = $derived(
     site.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360
   );
+
   const fallbackStyle = $derived(`
     background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
     color: hsl(${bgHue}, 70%, var(--fallback-text-l));
   `);
+
   function handleImgError() {
     loadError = true;
   }
@@ -48,7 +54,6 @@
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
-    
     ui.openConfirm('确定要删除这个站点吗？', () => {
       const group = nav.data.groups.find(g => g.sites.some(s => s.id === site.id));
       if (group) {
@@ -90,7 +95,7 @@
 
     {#if ui.isEdit}
       <button class={removeBtnClass} onclick={handleDelete} title="删除站点">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox={ICONS.close.viewBox} stroke-width="3">{@html ICONS.close.path}</svg>
+        <X class="w-3 h-3" stroke-width={3} />
       </button>
     {/if}
   </CardBase>
