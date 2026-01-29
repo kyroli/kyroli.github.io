@@ -29,12 +29,10 @@
 
     let finalUrl = url.trim();
 
-    // 智能修正：如果用户没写协议，默认补全 https://
     if (!/^https?:\/\//i.test(finalUrl)) {
       finalUrl = `https://${finalUrl}`;
     }
 
-    // 严格约束：仅允许 http/https
     try {
       const u = new URL(finalUrl);
       if (u.protocol !== 'http:' && u.protocol !== 'https:') {

@@ -10,13 +10,19 @@ const headers = (token: string) => ({
 
 const blobToBase64 = (data: unknown): Promise<string> => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
         const result = reader.result as string;
-        // [Complexity] DataURL 格式为 "data:application/json;base64,xxxxx"，需截取逗号后的部分
-        resolve(result.split(',')[1]);
+        if (!result) {
+            reject(new Error('Failed to convert blob to base64'));
+            return;
+        }
+        // DataURL format: "data:application/json;base64,xxxxx"
+        const parts = result.split(',');
+        resolve(parts.length > 1 ? parts[1] : result);
     };
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
 };
@@ -36,15 +42,12 @@ export async function getRemoteInfo(cfg: GithubConfig): Promise<{ sha: string; c
   
   if (!res.ok) throw new Error(`HTTP_ERROR_${res.status}`);
 
-  // 使用显式断言而非隐式 any
   const json = (await res.json()) as GithubFileResponse;
   
-  // GitHub API 返回内容为 Base64，需经过 Base64 -> Binary -> UTF8 解码链
   const decoded = new TextDecoder().decode(
     Uint8Array.from(atob(json.content), c => c.charCodeAt(0))
   );
   
-  // 假设解码后的 JSON 符合 NavData 结构，生产环境可增加校验
   return {
     sha: json.sha,
     content: JSON.parse(decoded) as NavData

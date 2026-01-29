@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import { UI_CONSTANTS } from '$lib/utils';
   import Card from '../ui/Card.svelte';
-  
+
   let { 
     children, 
     class: className = '', 
@@ -15,7 +15,6 @@
     [key: string]: any;
   }>();
 
-  // 使用统一的高度常量
   const baseLayout = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface rounded-xl`;
 </script>
 

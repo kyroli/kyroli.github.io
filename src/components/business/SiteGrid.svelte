@@ -3,7 +3,7 @@
   import { ui } from '$lib/ui.svelte';
   import { ICONS } from '$lib/icons';
   import { UI_CONSTANTS } from '$lib/utils';
-  import { sortable } from '@/actions/sortable';
+  import { sortable } from '$lib/actions/sortable';
   import GroupModal from '../modals/GroupModal.svelte';
   import SiteCard from './SiteCard.svelte';
   
@@ -11,7 +11,7 @@
     onEditSite: (gid: string, sid: string) => void,
     onAddSite: (gid: string) => void
   }>();
-  
+
   let editingGroup = $state<{id?: string, name?: string} | null>(null);
 
   function handleTransfer(siteId: string, toGroupId: string, newIndex: number) {
@@ -52,7 +52,7 @@
       <div class={groupHeaderClass}>
         {#if ui.isEdit}
           <div class={groupHandleClass} title="拖动排序分组">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.drag.viewBox}>{@html ICONS.drag.path}</svg>
+             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.drag.viewBox}>{@html ICONS.drag.path}</svg>
           </div>
         {/if}
         
@@ -85,7 +85,7 @@
              <SiteCard site={site} onEdit={() => onEditSite(group.id, site.id)} />
           {/each}
         
-           {#if ui.isEdit}
+          {#if ui.isEdit}
             <button onclick={() => onAddSite(group.id)} class={addSiteBtnClass}>
               <div class={addSiteIconWrapperClass}>
                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.add.viewBox}>{@html ICONS.add.path}</svg>
