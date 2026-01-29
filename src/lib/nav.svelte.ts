@@ -1,11 +1,10 @@
 import { getRemoteInfo, pushNav } from './github';
 import { storage, resolveError } from './utils';
-import { ui } from './ui.svelte';
 import type { NavData, GithubConfig, Group, Site } from './types';
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
-  data = $state<NavData>({ groups: [] });
+  data = $state<NavData>({ groups: [], deletedIds: [] });
   
   status = $state<'init' | 'ready' | 'syncing' | 'error'>('init');
   errorMsg = $state('');
@@ -23,14 +22,21 @@ class NavState {
 
   private loadLocal() {
     this.config = storage.getConfig();
-    this.data = storage.getData();
+    this.data = this.normalizeData(storage.getData());
     this.lastSha = storage.getSha();
     this.isDirty = storage.getDirty();
   }
 
+  private normalizeData(data: NavData): NavData {
+    return {
+      groups: data.groups || [],
+      deletedIds: data.deletedIds || []
+    };
+  }
+
   private handleStorageChange(e: StorageEvent) {
     if (e.key === storage.KEYS.DATA && e.newValue) {
-      try { this.data = JSON.parse(e.newValue); } catch {}
+      try { this.data = this.normalizeData(JSON.parse(e.newValue)); } catch {}
     }
     if (e.key === storage.KEYS.SHA && e.newValue) this.lastSha = e.newValue;
     if (e.key === storage.KEYS.DIRTY && e.newValue) this.isDirty = e.newValue === 'true';
@@ -46,7 +52,7 @@ class NavState {
 
     try {
       const { sha, content } = await getRemoteInfo(this.config);
-      this.data = content;
+      this.data = this.normalizeData(content);
       this.lastSha = sha;
       this.isDirty = false;
       this.saveAll();
@@ -55,10 +61,11 @@ class NavState {
       const msg = resolveError(e);
       if (this.data.groups.length > 0) {
         this.status = 'ready';
-        ui.showToast(`同步失败: ${msg}`, 'error');
+        throw new Error(msg); 
       } else {
         this.status = 'error';
         this.errorMsg = msg;
+        throw e;
       }
     }
   }
@@ -70,19 +77,13 @@ class NavState {
     try {
       const newSha = await pushNav(this.config, this.data, this.lastSha);
       this.finalizeSync(newSha);
-      ui.showToast('同步成功', 'success');
-
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
       
       if (err.message === 'CONFLICT') {
-        try {
-          await this.handleConflictMerge();
-        } catch (mergeErr) {
-          ui.showToast('合并失败: ' + resolveError(mergeErr), 'error');
-        }
+        await this.handleConflictMerge();
       } else {
-        ui.showToast(resolveError(err), 'error');
+        throw err;
       }
     } finally {
       this.isSyncing = false;
@@ -90,37 +91,48 @@ class NavState {
   }
 
   private async handleConflictMerge() {
-    ui.showToast('云端数据更新，正在智能合并...', 'info');
-
     const { sha: remoteSha, content: remoteData } = await getRemoteInfo(this.config);
-    const mergedData = this.mergeData(this.data, remoteData);
+    const mergedData = this.mergeData(this.data, this.normalizeData(remoteData));
+    
     const newSha = await pushNav(this.config, mergedData, remoteSha);
 
     this.data = mergedData;
     this.finalizeSync(newSha);
-    
-    ui.showToast('已合并云端新数据并同步', 'success');
   }
 
   private mergeData(local: NavData, remote: NavData): NavData {
     const merged = JSON.parse(JSON.stringify(local)) as NavData;
     
+    const allDeleted = new Set([...(local.deletedIds || []), ...(remote.deletedIds || [])]);
+    merged.deletedIds = Array.from(allDeleted);
+
     for (const rGroup of remote.groups) {
+      if (allDeleted.has(rGroup.id)) continue;
+
       const lGroupIndex = merged.groups.findIndex(g => g.id === rGroup.id);
 
       if (lGroupIndex === -1) {
-        merged.groups.push(rGroup);
+        const activeSites = rGroup.sites.filter(s => !allDeleted.has(s.id));
+        if (activeSites.length > 0 || rGroup.sites.length === 0) {
+           merged.groups.push({ ...rGroup, sites: activeSites });
+        }
       } else {
         const lGroup = merged.groups[lGroupIndex];
         const localSiteIds = new Set(lGroup.sites.map(s => s.id));
 
         for (const rSite of rGroup.sites) {
-          if (!localSiteIds.has(rSite.id)) {
+          if (!allDeleted.has(rSite.id) && !localSiteIds.has(rSite.id)) {
             lGroup.sites.push(rSite);
           }
         }
       }
     }
+    
+    merged.groups = merged.groups.filter(g => !allDeleted.has(g.id));
+    merged.groups.forEach(g => {
+        g.sites = g.sites.filter(s => !allDeleted.has(s.id));
+    });
+
     return merged;
   }
 
@@ -140,15 +152,8 @@ class NavState {
     this.isDirty = false;
     storage.setDirty(false);
     this.status = 'syncing';
-    try {
-      await this.init();
-      ui.showToast('已重置为云端版本', 'success');
-    } catch (e) {
-      ui.showToast('重置失败', 'error');
-      this.isDirty = true;
-    }
+    await this.init();
   }
-
 
   private saveAll() {
     storage.saveData(this.data);
@@ -159,6 +164,13 @@ class NavState {
   private markDirty() {
     this.isDirty = true;
     this.saveAll();
+  }
+
+  private recordDeletion(id: string) {
+    if (!this.data.deletedIds) this.data.deletedIds = [];
+    if (!this.data.deletedIds.includes(id)) {
+      this.data.deletedIds.push(id);
+    }
   }
 
   addGroup(name: string) {
@@ -172,8 +184,14 @@ class NavState {
   }
 
   deleteGroup(groupId: string) {
-    this.data.groups = this.data.groups.filter(g => g.id !== groupId);
-    this.markDirty();
+    const g = this.data.groups.find(x => x.id === groupId);
+    if (g) {
+        this.recordDeletion(groupId);
+        g.sites.forEach(s => this.recordDeletion(s.id));
+        
+        this.data.groups = this.data.groups.filter(x => x.id !== groupId);
+        this.markDirty();
+    }
   }
 
   updateGroups(groups: Group[]) {
@@ -206,12 +224,21 @@ class NavState {
     const idx = g.sites.findIndex(s => s.id === site.id);
     if (idx > -1) g.sites[idx] = site;
     else g.sites.push(site);
+    
+    if (this.data.deletedIds) {
+        this.data.deletedIds = this.data.deletedIds.filter(id => id !== site.id);
+    }
+    
     this.markDirty();
   }
 
   deleteSite(groupId: string, siteId: string) {
     const g = this.data.groups.find(x => x.id === groupId);
-    if (g) { g.sites = g.sites.filter(s => s.id !== siteId); this.markDirty(); }
+    if (g) { 
+        this.recordDeletion(siteId);
+        g.sites = g.sites.filter(s => s.id !== siteId); 
+        this.markDirty(); 
+    }
   }
 
   exportBackup() {
@@ -224,33 +251,19 @@ class NavState {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    ui.showToast('备份已下载', 'success');
   }
 
-  importBackup() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        if (!json || !Array.isArray(json.groups)) throw new Error();
-
-        ui.openConfirm('确定要覆盖当前所有数据吗？此操作不可撤销。', () => {
-             this.data = json as NavData;
-             this.markDirty();
-             ui.showToast('数据已恢复，请记得同步', 'success');
-        });
-      } catch {
-        ui.showToast('无效的备份文件', 'error');
-      }
-    };
-    input.click();
+  async importBackup(file: File) {
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      if (!json || !Array.isArray(json.groups)) throw new Error('Invalid format');
+      
+      this.data = this.normalizeData(json);
+      this.markDirty();
+    } catch (e) {
+      throw e;
+    }
   }
 }
 

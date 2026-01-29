@@ -1,5 +1,6 @@
 export interface NavData {
   groups: Group[];
+  deletedIds?: string[];
 }
 
 export interface Group {
@@ -26,10 +27,9 @@ export interface ToastState {
   type: 'info' | 'error' | 'success';
 }
 
-// API 响应契约
 export interface GithubFileResponse {
   sha: string;
-  content: string; // Base64 encoded
+  content: string;
 }
 
 export interface GithubPushResponse {
