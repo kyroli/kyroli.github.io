@@ -69,16 +69,18 @@ class NavState {
     
     try {
       const newSha = await pushNav(this.config, this.data, this.lastSha);
-      this.lastSha = newSha;
-      this.isDirty = false;
-      this.saveAll();
+      this.finalizeSync(newSha);
       ui.showToast('同步成功', 'success');
+
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
+      
       if (err.message === 'CONFLICT') {
-        ui.openConfirm('云端数据已更新（版本冲突）。\n确定强制覆盖云端吗？（取消则请手动刷新页面）', () => {
-          this.forcePush();
-        });
+        try {
+          await this.handleConflictMerge();
+        } catch (mergeErr) {
+          ui.showToast('合并失败: ' + resolveError(mergeErr), 'error');
+        }
       } else {
         ui.showToast(resolveError(err), 'error');
       }
@@ -87,20 +89,43 @@ class NavState {
     }
   }
 
-  private async forcePush() {
-    this.isSyncing = true;
-    try {
-      const remote = await getRemoteInfo(this.config);
-      const newSha = await pushNav(this.config, this.data, remote.sha);
-      this.lastSha = newSha;
-      this.isDirty = false;
-      this.saveAll();
-      ui.showToast('覆盖成功', 'success');
-    } catch (e) {
-      ui.showToast('覆盖失败: ' + resolveError(e), 'error');
-    } finally {
-      this.isSyncing = false;
+  private async handleConflictMerge() {
+    ui.showToast('云端数据更新，正在智能合并...', 'info');
+    const { sha: remoteSha, content: remoteData } = await getRemoteInfo(this.config);
+    const mergedData = this.mergeData(this.data, remoteData);
+    const newSha = await pushNav(this.config, mergedData, remoteSha);
+    this.data = mergedData;
+    this.finalizeSync(newSha);
+    
+    ui.showToast('已合并云端新数据并同步', 'success');
+  }
+
+  private mergeData(local: NavData, remote: NavData): NavData {
+    const merged = JSON.parse(JSON.stringify(local)) as NavData;
+    
+    for (const rGroup of remote.groups) {
+      const lGroupIndex = merged.groups.findIndex(g => g.id === rGroup.id);
+
+      if (lGroupIndex === -1) {
+        merged.groups.push(rGroup);
+      } else {
+        const lGroup = merged.groups[lGroupIndex];
+        const localSiteIds = new Set(lGroup.sites.map(s => s.id));
+
+        for (const rSite of rGroup.sites) {
+          if (!localSiteIds.has(rSite.id)) {
+            lGroup.sites.push(rSite);
+          }
+        }
+      }
     }
+    return merged;
+  }
+
+  private finalizeSync(sha: string) {
+    this.lastSha = sha;
+    this.isDirty = false;
+    this.saveAll();
   }
 
   async updateConfig(cfg: GithubConfig) {
@@ -121,8 +146,6 @@ class NavState {
       this.isDirty = true;
     }
   }
-
-  // --- CRUD Operations ---
 
   private saveAll() {
     storage.saveData(this.data);
@@ -213,8 +236,6 @@ class NavState {
       try {
         const text = await file.text();
         const json = JSON.parse(text);
-        
-        // 简化的校验，实际使用中可以更严格
         if (!json || !Array.isArray(json.groups)) throw new Error();
 
         ui.openConfirm('确定要覆盖当前所有数据吗？此操作不可撤销。', () => {
