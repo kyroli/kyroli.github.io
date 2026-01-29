@@ -6,6 +6,7 @@
   import GroupModal from '../modals/GroupModal.svelte';
   import SiteCard from './SiteCard.svelte';
   import { ui } from '$lib/ui.svelte';
+  import { MESSAGES } from '$lib/i18n';
 
   let { 
     groups,
@@ -33,7 +34,7 @@
   }
 
   function handleDeleteGroupClick(groupName: string, groupId: string) {
-      ui.openConfirm(`确定删除分组 "${groupName}" 及其所有站点吗？`, () => onDeleteGroup(groupId));
+      ui.openConfirm(`${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`, () => onDeleteGroup(groupId));
   }
 </script>
 
@@ -50,7 +51,7 @@
     <div class="group-item flex flex-col gap-4">
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
         {#if ui.isEdit}
-           <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title="拖动排序分组">
+          <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
@@ -59,12 +60,12 @@
 
         {#if ui.isEdit}
            <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity">
-            <button onclick={() => editingGroup = { id: group.id, name: group.name }} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title="重命名分组">
+            <button onclick={() => editingGroup = { id: group.id, name: group.name }} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                <Pencil class="w-4 h-4" />
              </button>
 
-             <button onclick={() => handleDeleteGroupClick(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title="删除分组">
-                  <Trash2 class="w-4 h-4" />
+             <button onclick={() => handleDeleteGroupClick(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
+                 <Trash2 class="w-4 h-4" />
              </button>
            </div>
         {/if}
@@ -80,7 +81,7 @@
              draggable: '.site-card' 
            }}>
         
-           {#each group.sites as site (site.id)}
+          {#each group.sites as site (site.id)}
              <SiteCard site={site} onEdit={() => onEditSite(group.id, site.id)} />
           {/each}
         
@@ -98,7 +99,7 @@
   {#if ui.isEdit}
    <button onclick={() => editingGroup = {}} class="w-full py-8 border border-border/40 rounded-3xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group mt-4 active:scale-[0.99]">
       <Plus class="w-6 h-6 group-hover:scale-110 transition-transform" />
-      <span class="font-bold text-sm tracking-widest">新建分组</span>
+      <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>
   {/if}
 

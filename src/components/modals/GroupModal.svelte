@@ -1,6 +1,7 @@
 <script lang="ts">
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
+  import { MESSAGES } from '$lib/i18n';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
@@ -10,22 +11,21 @@
     groupId?: string, 
     initialName?: string 
   }>();
-
   let name = $state(initialName);
-  const modalTitle = $derived(groupId ? "重命名分组" : "新建分组");
+  const modalTitle = $derived(groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW);
 
   function handleSave() {
     if (!name.trim()) {
-        ui.showToast('请输入分组名称', 'error');
+        ui.showToast(MESSAGES.TOAST.GROUP_NAME_REQUIRED, 'error');
         return;
     }
     
     if (groupId) {
       nav.renameGroup(groupId, name.trim());
-      ui.showToast('分组已重命名', 'success');
+      ui.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
     } else {
       nav.addGroup(name.trim());
-      ui.showToast('分组已添加', 'success');
+      ui.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
     }
     
     onClose();
@@ -36,13 +36,13 @@
   <div class="space-y-3">
     <Input 
       bind:value={name} 
-      placeholder="分组名称" 
+      placeholder={MESSAGES.MODAL.GROUP_PLACEHOLDER}
       onkeydown={(e) => e.key === 'Enter' && handleSave()}
     />
     
     <div class="flex gap-2 pt-4">
-      <Button variant="ghost" onclick={onClose} class="flex-1 font-bold text-text-dim">取消</Button>
-      <Button onclick={handleSave} class="flex-1">完成</Button>
+      <Button variant="ghost" onclick={onClose} class="flex-1 font-bold text-text-dim">{MESSAGES.UI.CANCEL}</Button>
+      <Button onclick={handleSave} class="flex-1">{MESSAGES.UI.COMPLETE}</Button>
     </div>
   </div>
 </Modal>

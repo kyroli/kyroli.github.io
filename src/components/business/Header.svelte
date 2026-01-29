@@ -3,6 +3,7 @@
   import { ui } from '$lib/ui.svelte';
   import { Search, X, Save, RotateCcw, Moon, Pencil, Settings } from 'lucide-svelte';
   import { resolveError, AppError, UI_CONSTANTS } from '$lib/utils';
+  import { MESSAGES } from '$lib/i18n';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
 
@@ -23,7 +24,7 @@
 
   function handleEditClick() {
       if (!nav.config.token) { 
-          ui.showToast('请先配置 GitHub Token', 'error');
+          ui.showToast(MESSAGES.TOAST.CONFIG_MISSING, 'error');
           return; 
       }
       ui.toggleEdit();
@@ -32,32 +33,32 @@
   async function handleSync() {
       try {
           await nav.sync();
-          ui.showToast('同步成功', 'success');
+          ui.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
       } catch (e) {
           if (e instanceof AppError && e.code === 'CONFLICT') {
              ui.openConfirm(
-               '云端数据已更新，版本不一致。\n是否强制用本地数据覆盖云端？', 
+               MESSAGES.CONFIRM.CONFLICT, 
                async () => {
                  try {
                    await nav.forceSync();
-                   ui.showToast('覆盖成功', 'success');
+                   ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
                  } catch (err) {
-                   ui.showToast(`覆盖失败: ${resolveError(err)}`, 'error');
+                   ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
                  }
                }
              );
              return;
           }
-          ui.showToast(`同步失败: ${resolveError(e)}`, 'error');
+          ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
       }
   }
 
   async function handleReset() {
       try {
           await nav.reset();
-          ui.showToast('已重置为云端版本', 'success');
+          ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
       } catch (e) {
-          ui.showToast('重置失败', 'error');
+          ui.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
       }
   }
 </script>
@@ -87,7 +88,7 @@
         bind:value={search}
         onkeydown={e => e.key === 'Enter' && handleSearch()}
         class="px-11 py-3 text-base shadow-sm bg-surface/50 backdrop-blur-sm"
-        placeholder="Search..."
+        placeholder={MESSAGES.UI.SEARCH_PLACEHOLDER}
       />
       <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
     </div>
@@ -96,27 +97,27 @@
       <div class="flex items-center gap-2 h-10">
         {#if ui.isEdit}
             <div class="flex gap-2 animate-fade">
-                <Button variant="ghost" onclick={() => ui.toggleEdit()} class="w-10 h-10 !rounded-xl !p-0 text-text-dim" title="退出编辑">
+                <Button variant="ghost" onclick={() => ui.toggleEdit()} class="w-10 h-10 !rounded-xl !p-0 text-text-dim" title={MESSAGES.UI.TIP_EXIT_EDIT}>
                      <X class="w-5 h-5" />
                 </Button>
 
-                <Button variant="primary" onclick={() => ui.openConfirm('确定要同步当前修改到 GitHub 吗？', handleSync)} class="h-10 w-28 !rounded-xl" title="保存并同步" disabled={!nav.isDirty}>
-                    <span class="mr-1">保存</span>
+                <Button variant="primary" onclick={() => ui.openConfirm(MESSAGES.CONFIRM.SYNC_CHANGES, handleSync)} class="h-10 w-28 !rounded-xl" title={MESSAGES.UI.SAVE_AND_SYNC} disabled={!nav.isDirty}>
+                    <span class="mr-1">{MESSAGES.UI.SAVE}</span>
                     <Save class="w-5 h-5" />
                 </Button>
 
-                <Button variant="danger" onclick={() => ui.openConfirm('确定丢弃修改并重置吗？', handleReset)} class="h-10 w-28 !rounded-xl" title="重置">
-                    <span class="mr-1">重置</span>
+                <Button variant="danger" onclick={() => ui.openConfirm(MESSAGES.CONFIRM.DISCARD_CHANGES, handleReset)} class="h-10 w-28 !rounded-xl" title={MESSAGES.UI.RESET}>
+                    <span class="mr-1">{MESSAGES.UI.RESET}</span>
                     <RotateCcw class="w-4 h-4" />
                 </Button>
             </div>
         {:else}
            <div class="flex gap-2 animate-fade">
-                <Button variant="outline" onclick={() => ui.toggleTheme()} class="w-10 h-10 !rounded-xl !p-0" title="切换主题">
+                <Button variant="outline" onclick={() => ui.toggleTheme()} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_SWITCH_THEME}>
                     <Moon class="w-5 h-5" />
                 </Button>
             
-                <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title="进入编辑模式">
+                <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
                     <Pencil class="w-5 h-5" />
                 </Button>
 
@@ -125,7 +126,7 @@
                       <Settings class="w-5 h-5" />
                     </Button>
                     {#if !nav.config.token}
-                       <div class="absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 font-medium shadow-xl translate-y-1 group-hover/tooltip:translate-y-0">配置 GitHub 以同步数据</div>
+                       <div class="absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 font-medium shadow-xl translate-y-1 group-hover/tooltip:translate-y-0">{MESSAGES.UI.TIP_CONFIG_TOKEN}</div>
                     {/if}
                 </div>
             </div>

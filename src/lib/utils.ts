@@ -2,7 +2,7 @@ import type { GithubConfig, NavData } from './types';
 import { MESSAGES } from './i18n';
 
 // =========================================
-// 1. 全局常量 (Global Constants)
+// 1. 全局常量
 // =========================================
 export const UI_CONSTANTS = {
   CARD_HEIGHT: "h-[72px]",
@@ -10,7 +10,7 @@ export const UI_CONSTANTS = {
 } as const;
 
 // =========================================
-// 2. 错误治理 (Error Handling)
+// 2. 错误治理
 // =========================================
 
 export class AppError extends Error {
@@ -37,7 +37,7 @@ export function resolveError(err: unknown): string {
 }
 
 // =========================================
-// 3. 资源管理 (Assets)
+// 3. 资源管理
 // =========================================
 interface AssetModule {
   default?: string;
@@ -69,7 +69,7 @@ export const getIcon = (url: string, custom?: string): string => {
 };
 
 // =========================================
-// 4. 存储管理 (Storage)
+// 4. 存储管理
 // =========================================
 const KEYS = {
   CONFIG: 'nav_cfg',

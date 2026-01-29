@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
-  import { resolveError } from '$lib/utils';
+  import { MESSAGES } from '$lib/i18n';
 
   import Header from './components/business/Header.svelte';
   import SiteGrid from './components/business/SiteGrid.svelte';
@@ -17,6 +17,7 @@
 
   const needsConfig = $derived(nav.status === 'ready' && !nav.config.token);
   const showConfigTip = $derived(needsConfig && !showConfig);
+
   const isSyncingOrLoading = $derived(nav.status === 'syncing' || nav.status === 'loading');
   const isReady = $derived(nav.status === 'ready');
   const isError = $derived(nav.status === 'error');
@@ -39,7 +40,6 @@
           nav.moveSite(sid, fromGroup.id, toGid, idx);
       }
   };
-
 </script>
 
 {#if nav.isSyncing}
@@ -54,7 +54,7 @@
       {#if isReady}
         {#if showConfigTip}
           <div class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim animate-fade">
-            <p class="font-bold">请点击右上角配置 GitHub 连接</p>
+            <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
         {/if}
     
@@ -70,11 +70,11 @@
         />
         
       {:else if isSyncingOrLoading}
-        <div class="fixed bottom-8 right-8 bg-primary text-white px-4 py-2 rounded-full shadow-lg animate-bounce text-xs font-bold z-[999]">同步中...</div>
+        <div class="fixed bottom-8 right-8 bg-primary text-white px-4 py-2 rounded-full shadow-lg animate-bounce text-xs font-bold z-[999]">{MESSAGES.UI.LOADING}</div>
       {:else if isError}
          <div class="flex flex-col items-center justify-center py-20 text-danger font-bold">
-            <p>错误: {nav.errorMsg}</p>
-            <button onclick={() => showConfig = true} class="mt-4 underline cursor-pointer">检查配置</button>
+            <p>Error: {nav.errorMsg}</p>
+            <button onclick={() => showConfig = true} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
          </div>
       {:else}
          <LoadingSkeleton />
@@ -95,12 +95,12 @@
   {/if}
 
   {#if ui.confirmPayload}
-    <Modal onClose={() => ui.closeConfirm()} title="确认操作">
+    <Modal onClose={() => ui.closeConfirm()} title={MESSAGES.UI.CONFIRM_ACTION}>
       <div class="space-y-6 pt-2">
          <p class="text-text-dim font-bold text-sm leading-relaxed">{ui.confirmPayload.msg}</p>
         <div class="flex gap-3">
-          <Button variant="outline" onclick={() => ui.closeConfirm()} class="flex-1 text-text-dim">取消</Button>
-          <Button variant="danger" onclick={() => { ui.confirmPayload?.onConfirm(); ui.closeConfirm(); }} class="flex-1">确定</Button>
+          <Button variant="outline" onclick={() => ui.closeConfirm()} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
+          <Button variant="danger" onclick={() => { ui.confirmPayload?.onConfirm(); ui.closeConfirm(); }} class="flex-1">{MESSAGES.UI.CONFIRM}</Button>
         </div>
       </div>
     </Modal>

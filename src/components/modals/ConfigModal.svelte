@@ -2,6 +2,7 @@
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
   import { resolveError } from '$lib/utils';
+  import { MESSAGES } from '$lib/i18n';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
@@ -12,18 +13,18 @@
   let isSaving = $state(false);
   let errorMsg = $state('');
 
-  const saveBtnText = $derived(isSaving ? '正在连接...' : '保存并同步');
+  const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
 
   async function handleSave() {
     errorMsg = '';
     if (!repoPath || !token) { 
-      errorMsg = '请填写完整信息'; 
+      errorMsg = MESSAGES.TOAST.CONFIG_INCOMPLETE; 
       return;
     }
 
     const parts = repoPath.split('/');
     if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
-      errorMsg = '格式错误：用户名/仓库名';
+      errorMsg = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
       return;
     }
     
@@ -31,7 +32,7 @@
     try {
       await nav.updateConfig({ owner: parts[0].trim(), repo: parts[1].trim(), token: token.trim() });
       onClose();
-      ui.showToast('连接成功，配置已保存', 'success');
+      ui.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
     } catch (e: unknown) {
       errorMsg = resolveError(e);
     } finally {
@@ -45,18 +46,18 @@
   const actionBtnClass = "hover:text-primary transition-colors cursor-pointer";
 </script>
 
-<Modal {onClose} title="GitHub 配置">
+<Modal {onClose} title={MESSAGES.MODAL.CONFIG_TITLE}>
   {#if errorMsg}
     <div class={errorClass}>⚠️ {errorMsg}</div>
   {/if}
 
   <div class="space-y-2">
-    <label class={labelClass} for="repo">用户名 / 仓库名 (Owner/Repo)</label>
+    <label class={labelClass} for="repo">{MESSAGES.MODAL.CONFIG_LABEL_REPO}</label>
     <Input id="repo" bind:value={repoPath} placeholder="username/repo" oninput={() => errorMsg = ''} />
   </div>
   
   <div class="space-y-2">
-    <label class={labelClass} for="token">个人访问令牌 (Token)</label>
+    <label class={labelClass} for="token">{MESSAGES.MODAL.CONFIG_LABEL_TOKEN}</label>
     <Input id="token" bind:value={token} type="password" placeholder="ghp_..." oninput={() => errorMsg = ''} class="tracking-widest" />
   </div>
    
@@ -66,9 +67,9 @@
 
   <div class={footerClass}>
     <div class="flex gap-4">
-      <button onclick={() => nav.exportBackup()} class={actionBtnClass} title="导出 JSON 备份">导出数据</button>
+      <button onclick={() => nav.exportBackup()} class={actionBtnClass} title={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>
-      <button onclick={() => nav.importBackup()} class={actionBtnClass} title="从 JSON 恢复">导入数据</button>
+      <button onclick={() => nav.importBackup()} class={actionBtnClass} title={MESSAGES.MODAL.IMPORT_TITLE}>{MESSAGES.MODAL.IMPORT_DATA}</button>
     </div>
   </div>
 </Modal>
