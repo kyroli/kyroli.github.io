@@ -1,36 +1,31 @@
 <script lang="ts">
-  // 1. Imports
-  import { app } from '$lib/store.svelte';
+  import { nav } from '$lib/nav.svelte';
+  import { ui } from '$lib/ui.svelte';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
 
-  // 2. Props
   let { onClose, groupId, initialName = '' } = $props<{ 
     onClose: () => void, 
     groupId?: string, 
     initialName?: string 
   }>();
 
-  // 3. State
   let name = $state(initialName);
-
-  // 4. Derived
   const modalTitle = $derived(groupId ? "重命名分组" : "新建分组");
 
-  // 5. Handlers
   function handleSave() {
     if (!name.trim()) {
-        app.showToast('请输入分组名称', 'error');
+        ui.showToast('请输入分组名称', 'error');
         return;
     }
     
     if (groupId) {
-      app.renameGroup(groupId, name.trim());
-      app.showToast('分组已重命名', 'success');
+      nav.renameGroup(groupId, name.trim());
+      ui.showToast('分组已重命名', 'success');
     } else {
-      app.addGroup(name.trim());
-      app.showToast('分组已添加', 'success');
+      nav.addGroup(name.trim());
+      ui.showToast('分组已添加', 'success');
     }
     
     onClose();
