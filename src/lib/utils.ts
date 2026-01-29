@@ -73,7 +73,7 @@ export const getIcon = (url: string, custom?: string): string => {
   
   try {
     const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-    return `https://favicon.vemetric.com/${domain}&size=64`;
+    return `https://favicon.vemetric.com/${domain}&size=128`;
   } catch {
     return assets['globe'] || ''; 
   }
