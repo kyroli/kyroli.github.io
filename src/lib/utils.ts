@@ -1,11 +1,60 @@
 import type { GithubConfig, NavData } from './types';
 
+// =========================================
+// 1. 全局常量定义 (Global Constants)
+// =========================================
+export const UI_CONSTANTS = {
+  // 统一卡片高度，避免视觉拼接痕迹
+  CARD_HEIGHT: "h-[72px]"
+} as const;
+
+export const ERROR_MESSAGES: Record<string, string> = {
+  'REPO_NOT_FOUND': '找不到该仓库，请检查“用户名/仓库名”是否正确',
+  'TOKEN_INVALID': 'Token 无效或已过期，请重新生成',
+  'CONFLICT': '云端数据已更新（版本冲突），请刷新或强制覆盖',
+  'PUSH_FAILED': '同步推送失败，请检查网络连接',
+  'Failed to fetch': '网络连接失败，请检查网络设置',
+  'UNKNOWN': '发生未知错误'
+};
+
+// =========================================
+// 2. 工具函数 (Utilities)
+// =========================================
+
+/**
+ * 统一错误处理函数
+ * 将技术错误代码转换为用户友好的中文提示
+ */
+export function resolveError(err: unknown): string {
+  const code = err instanceof Error ? err.message : String(err);
+  
+  // 1. 精确匹配已知错误
+  if (ERROR_MESSAGES[code]) {
+    return ERROR_MESSAGES[code];
+  }
+  
+  // 2. 处理 HTTP 状态码错误
+  if (code.startsWith('HTTP_ERROR_')) {
+    const status = code.replace('HTTP_ERROR_', '');
+    if (status === '403') return 'API 调用受限或无权限 (403)';
+    if (status === '404') return '请求的资源不存在 (404)';
+    return `服务器响应错误 (${status})`;
+  }
+
+  // 3. 处理网络类模糊错误
+  if (code.toLowerCase().includes('fetch') || code.toLowerCase().includes('network')) {
+    return ERROR_MESSAGES['Failed to fetch'];
+  }
+
+  // 4. 兜底返回
+  return `${ERROR_MESSAGES['UNKNOWN']} (${code})`;
+}
+
 interface AssetModule {
   default?: string;
   src?: string;
 }
 
-// 使用 unknown 替代 any
 const glob = import.meta.glob<AssetModule>('@/assets/*.{png,jpg,jpeg,webp,svg}', { eager: true });
 
 const assets = Object.fromEntries(
@@ -30,6 +79,9 @@ export const getIcon = (url: string, custom?: string): string => {
   }
 };
 
+// =========================================
+// 3. 存储管理 (Storage)
+// =========================================
 const KEYS = {
   CONFIG: 'nav_cfg',
   DATA: 'nav_data',
@@ -38,7 +90,6 @@ const KEYS = {
   SHA: 'nav_sha'
 } as const;
 
-// 类型守卫：运行时校验数据结构
 function isGithubConfig(data: unknown): data is GithubConfig {
   return (
     typeof data === 'object' && 
@@ -63,7 +114,6 @@ export const storage = {
     try {
       const raw = localStorage.getItem(KEYS.CONFIG);
       const parsed: unknown = raw ? JSON.parse(raw) : null;
-      // 即使本地存储被篡改，也能保证返回类型安全
       return isGithubConfig(parsed) ? parsed : { owner: '', repo: '', token: '' };
     } catch { 
       return { owner: '', repo: '', token: '' }; 

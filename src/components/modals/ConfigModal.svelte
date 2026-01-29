@@ -1,6 +1,7 @@
 <script lang="ts">
   // 1. Imports
   import { app } from '$lib/store.svelte';
+  import { resolveError } from '$lib/utils'; // 引入统一错误处理
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
@@ -14,12 +15,6 @@
 
   // 3. Derived
   const saveBtnText = $derived(isSaving ? '正在连接...' : '保存并同步');
-  const ERROR_MAP: Record<string, string> = {
-    'REPO_NOT_FOUND': '找不到该仓库，请检查“用户名/仓库名”',
-    'TOKEN_INVALID': 'Token 无效或已过期',
-    'HTTP_ERROR_403': 'API 调用超限或无权限',
-    'Failed to fetch': '网络连接失败',
-  };
 
   // 4. Handlers
   async function handleSave() {
@@ -41,9 +36,7 @@
       onClose();
       app.showToast('连接成功，配置已保存', 'success');
     } catch (e: unknown) {
-      const err = e as Error;
-      const code = err.message || 'UNKNOWN';
-      errorMsg = `${ERROR_MAP[code] || '未知错误'} (${code})`;
+      errorMsg = resolveError(e); // 使用统一翻译
     } finally {
       isSaving = false;
     }
@@ -52,7 +45,7 @@
   // 5. Visual Constants
   const errorClass = "bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-600 dark:text-red-400 text-xs font-bold animate-fade";
   const labelClass = "text-xs font-bold text-text-dim tracking-wider ml-1";
-  const footerClass = "mt-6 pt-5 border-t border-border/40 flex items-center justify-between text-xs text-text-dim/60";
+  const footerClass = "mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs text-text-dim/60";
   const actionBtnClass = "hover:text-primary transition-colors cursor-pointer";
 </script>
 
@@ -76,11 +69,10 @@
   </Button>
 
   <div class={footerClass}>
-    <span class="font-mono tracking-wider opacity-70">DATA BACKUP</span>
     <div class="flex gap-4">
-      <button onclick={() => app.exportBackup()} class={actionBtnClass} title="导出 JSON 备份">导出</button>
+      <button onclick={() => app.exportBackup()} class={actionBtnClass} title="导出 JSON 备份">导出数据</button>
       <span class="opacity-30">|</span>
-      <button onclick={() => app.importBackup()} class={actionBtnClass} title="从 JSON 恢复">导入</button>
+      <button onclick={() => app.importBackup()} class={actionBtnClass} title="从 JSON 恢复">导入数据</button>
     </div>
   </div>
 </Modal>

@@ -2,15 +2,17 @@
   // 1. Imports
   import { app } from '$lib/store.svelte';
   import { ICONS } from '$lib/icons';
+  import { UI_CONSTANTS } from '$lib/utils'; // 引入统一视觉常量
   import { sortable } from '../../actions/sortable';
   import GroupModal from '../modals/GroupModal.svelte';
   import SiteCard from './SiteCard.svelte';
-
+  
   // 2. Props / State
   let { onEditSite, onAddSite } = $props<{ 
     onEditSite: (gid: string, sid: string) => void,
     onAddSite: (gid: string) => void
   }>();
+  
   let editingGroup = $state<{id?: string, name?: string} | null>(null);
 
   // 3. Handlers
@@ -34,13 +36,13 @@
   
   // Interactive Elements
   const groupHandleClass = "group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50";
-  
   const groupActionBtnClass = "text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer";
   const groupDeleteBtnClass = "text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer";
   
-  const addSiteBtnClass = "flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all h-[72px] cursor-pointer bg-surface/30 group active:scale-[0.98]";
-  const addSiteIconWrapperClass = "w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary";
+  // 使用统一高度变量
+  const addSiteBtnClass = `flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`;
   
+  const addSiteIconWrapperClass = "w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary";
   const addGroupBtnClass = "w-full py-8 border border-border/40 rounded-3xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group mt-4 active:scale-[0.99]";
 </script>
 
