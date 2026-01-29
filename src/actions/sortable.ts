@@ -52,9 +52,7 @@ export function sortable<T>(node: HTMLElement, params: SortableParams<T>) {
       onAdd: (evt) => {
         const { newIndex, item } = evt;
         const itemId = item.dataset.id;
-        
-        item.remove();
-        
+                
         if (itemId && newIndex !== undefined && params.onTransfer) {
           params.onTransfer(itemId, newIndex);
         }

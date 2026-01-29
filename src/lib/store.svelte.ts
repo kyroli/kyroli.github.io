@@ -1,5 +1,5 @@
 import { getRemoteInfo, pushNav } from './github';
-import { storage, resolveError } from './utils'; // 引入统一错误处理
+import { storage, resolveError } from './utils';
 import type { NavData, GithubConfig, Group, Site, ToastState } from './types';
 
 class AppState {
@@ -80,7 +80,7 @@ class AppState {
       this.saveAll();
       this.status = 'ready';
     } catch (e: unknown) {
-      const friendlyMsg = resolveError(e); // 使用统一翻译
+      const friendlyMsg = resolveError(e);
       
       if (this.data.groups.length > 0) {
         this.status = 'ready';
@@ -88,9 +88,11 @@ class AppState {
       } else {
         this.status = 'error';
         this.errorMsg = friendlyMsg;
-        // 不再抛出原始错误，避免未捕获异常
         console.error(e);
       }
+      
+      // [FIX] 重新抛出错误，以便 ConfigModal 等调用者能捕获并正确处理 UI 状态
+      throw e;
     }
   }
 
@@ -115,7 +117,7 @@ class AppState {
       if (err.message === 'CONFLICT') {
         this.handleConflict();
       } else {
-        this.showToast(resolveError(err), 'error'); // 使用统一翻译
+        this.showToast(resolveError(err), 'error');
       }
     }
   }
@@ -141,7 +143,7 @@ class AppState {
       this.saveAll();
       this.showToast('覆盖成功！', 'success');
     } catch (e: unknown) {
-       this.showToast('覆盖失败: ' + resolveError(e), 'error'); // 使用统一翻译
+       this.showToast('覆盖失败: ' + resolveError(e), 'error');
     } finally {
        this.isSyncing = false;
     }
@@ -156,7 +158,7 @@ class AppState {
       await this.init();
       this.showToast('已重置为云端版本', 'success');
     } catch (e: unknown) {
-      this.showToast('重置失败：' + resolveError(e), 'error'); // 使用统一翻译
+      this.showToast('重置失败：' + resolveError(e), 'error');
       this.isDirty = true; 
       this.isEdit = true;
     }
