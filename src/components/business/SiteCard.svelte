@@ -10,7 +10,6 @@
     site: Site,
     onEdit: () => void 
   }>();
-
   let loadError = $state(false);
 
   const displayHostname = $derived.by(() => {
@@ -21,7 +20,6 @@
       return '';
     }
   });
-
   const firstChar = $derived(site.name ? site.name.charAt(0).toUpperCase() : '?');
   const safeHref = $derived(!ui.isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
   const cardClass = $derived(`group relative transition-all duration-300 border ${
@@ -36,7 +34,6 @@
     background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
     color: hsl(${bgHue}, 70%, var(--fallback-text-l));
   `);
-
   function handleImgError() {
     loadError = true;
   }
@@ -51,10 +48,13 @@
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
-    const group = nav.data.groups.find(g => g.sites.some(s => s.id === site.id));
-    if (group) {
+    
+    ui.openConfirm('确定要删除这个站点吗？', () => {
+      const group = nav.data.groups.find(g => g.sites.some(s => s.id === site.id));
+      if (group) {
         nav.deleteSite(group.id, site.id);
-    }
+      }
+    });
   }
 
   const wrapperClass = "site-card relative h-full";
