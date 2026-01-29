@@ -1,47 +1,40 @@
 <script lang="ts">
   import { UI_CONSTANTS } from '$lib/utils';
   import { sortable } from '$lib/actions/sortable';
-  import type { Group, Site } from '$lib/types';
+  import { nav } from '$lib/nav.svelte';
+  import { ui } from '$lib/ui.svelte';
+  import { MESSAGES } from '$lib/i18n';
+  import type { Group } from '$lib/types';
+  
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import GroupModal from '../modals/GroupModal.svelte';
   import SiteCard from './SiteCard.svelte';
-  import { ui } from '$lib/ui.svelte';
-  import { MESSAGES } from '$lib/i18n';
 
-  let { 
-    groups,
-    onEditSite, 
-    onAddSite,
-    onSortGroups,
-    onSortSites,
-    onTransferSite,
-    onRenameGroup,
-    onDeleteGroup
-  } = $props<{ 
-    groups: Group[],
-    onEditSite: (gid: string, sid: string) => void,
-    onAddSite: (gid: string) => void,
-    onSortGroups: (items: Group[]) => void,
-    onSortSites: (gid: string, items: Site[]) => void,
-    onTransferSite: (sid: string, toGid: string, idx: number) => void,
-    onRenameGroup: (gid: string, name: string) => void,
-    onDeleteGroup: (gid: string) => void
-  }>();
+  let { groups } = $props<{ groups: Group[] }>();
+  
   let editingGroup = $state<{id?: string, name?: string} | null>(null);
 
-  function handleTransfer(siteId: string, toGroupId: string, newIndex: number) {
-    onTransferSite(siteId, toGroupId, newIndex);
-  }
+  const handleSortGroups = (items: Group[]) => nav.updateGroups(items);
+  const handleSortSites = (gid: string, items: any[]) => nav.updateSites(gid, items);
+  const handleTransfer = (siteId: string, toGroupId: string, newIndex: number) => {
+    const fromGroup = nav.data.groups.find(g => g.sites.some(s => s.id === siteId));
+    if (fromGroup) {
+        nav.moveSite(siteId, fromGroup.id, toGroupId, newIndex);
+    }
+  };
 
   function handleDeleteGroupClick(groupName: string, groupId: string) {
-      ui.openConfirm(`${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`, () => onDeleteGroup(groupId));
+      ui.openConfirm(
+        `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`, 
+        () => nav.deleteGroup(groupId) // [重构] 直接调用 nav
+      );
   }
 </script>
 
 <div class="w-full flex flex-col gap-5 pt-6 pb-0"
      use:sortable={{ 
        items: groups, 
-       onSort: onSortGroups,
+       onSort: handleSortGroups,
        disabled: !ui.isEdit,
        handle: '.group-handle',
        draggable: '.group-item'
@@ -51,7 +44,7 @@
     <div class="group-item flex flex-col gap-4">
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
         {#if ui.isEdit}
-          <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
+         <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
@@ -65,7 +58,7 @@
              </button>
 
              <button onclick={() => handleDeleteGroupClick(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
-                 <Trash2 class="w-4 h-4" />
+                  <Trash2 class="w-4 h-4" />
              </button>
            </div>
         {/if}
@@ -75,18 +68,18 @@
            use:sortable={{ 
              items: group.sites, 
              group: 'sites',
-             onSort: (items) => onSortSites(group.id, items),
+             onSort: (items) => handleSortSites(group.id, items),
              onTransfer: (siteId, newIdx) => handleTransfer(siteId, group.id, newIdx),
              disabled: !ui.isEdit,
              draggable: '.site-card' 
            }}>
         
           {#each group.sites as site (site.id)}
-             <SiteCard site={site} onEdit={() => onEditSite(group.id, site.id)} />
+             <SiteCard site={site} groupId={group.id} />
           {/each}
         
           {#if ui.isEdit}
-            <button onclick={() => onAddSite(group.id)} class={`flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}>
+            <button onclick={() => ui.openSiteModal(group.id)} class={`flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}>
                <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
                  <Plus class="w-4 h-4" />
               </div>
@@ -108,10 +101,6 @@
       groupId={editingGroup.id} 
       initialName={editingGroup.name} 
       onClose={() => editingGroup = null}
-      onSave={(gid, name) => {
-          if(gid) onRenameGroup(gid, name);
-          else editingGroup = null;
-      }} 
     />
   {/if}
 </div>

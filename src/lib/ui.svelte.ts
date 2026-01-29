@@ -8,6 +8,8 @@ class UIState {
   toast = $state<ToastState | null>(null);
   confirmPayload = $state<{ msg: string; onConfirm: () => void } | null>(null);
   
+  editingSite = $state<{ groupId: string; siteId?: string } | null>(null);
+  
   private toastTimer: number | null = null;
 
   constructor() {
@@ -30,6 +32,14 @@ class UIState {
 
   toggleEdit() {
     this.isEdit = !this.isEdit;
+  }
+
+  openSiteModal(groupId: string, siteId?: string) {
+    this.editingSite = { groupId, siteId };
+  }
+
+  closeSiteModal() {
+    this.editingSite = null;
   }
 
   showToast(msg: string, type: 'info' | 'error' | 'success') {

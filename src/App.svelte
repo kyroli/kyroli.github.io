@@ -13,11 +13,9 @@
   import Button from './components/ui/Button.svelte';
 
   let showConfig = $state(false);
-  let editingSite = $state<{groupId: string, siteId?: string} | null>(null);
 
   const needsConfig = $derived(nav.status === 'ready' && !nav.config.token);
   const showConfigTip = $derived(needsConfig && !showConfig);
-
   const isSyncingOrLoading = $derived(nav.status === 'syncing' || nav.status === 'loading');
   const isReady = $derived(nav.status === 'ready');
   const isError = $derived(nav.status === 'error');
@@ -33,13 +31,6 @@
        console.error("Init failed:", e);
     });
   });
-
-  const handleTransfer = (sid: string, toGid: string, idx: number) => {
-      const fromGroup = nav.data.groups.find(g => g.sites.some(s => s.id === sid));
-      if (fromGroup) {
-          nav.moveSite(sid, fromGroup.id, toGid, idx);
-      }
-  };
 </script>
 
 {#if nav.isSyncing}
@@ -57,17 +48,8 @@
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
         {/if}
-    
-        <SiteGrid 
-          groups={nav.data.groups}
-          onEditSite={(groupId, siteId) => editingSite = { groupId, siteId }}
-          onAddSite={(groupId) => editingSite = { groupId }}
-          onSortGroups={(items) => nav.updateGroups(items)}
-          onSortSites={(gid, items) => nav.updateSites(gid, items)}
-          onTransferSite={handleTransfer}
-          onRenameGroup={(gid, name) => nav.renameGroup(gid, name)}
-          onDeleteGroup={(gid) => nav.deleteGroup(gid)}
-        />
+        
+        <SiteGrid groups={nav.data.groups} />
         
       {:else if isSyncingOrLoading}
         <div class="fixed bottom-8 right-8 bg-primary text-white px-4 py-2 rounded-full shadow-lg animate-bounce text-xs font-bold z-[999]">{MESSAGES.UI.LOADING}</div>
@@ -86,11 +68,11 @@
     <ConfigModal onClose={() => showConfig = false} />
   {/if}
 
-  {#if editingSite}
+  {#if ui.editingSite}
     <SiteModal 
-      groupId={editingSite.groupId} 
-      siteId={editingSite.siteId} 
-      onClose={() => editingSite = null} 
+      groupId={ui.editingSite.groupId} 
+      siteId={ui.editingSite.siteId} 
+      onClose={() => ui.closeSiteModal()} 
     />
   {/if}
 

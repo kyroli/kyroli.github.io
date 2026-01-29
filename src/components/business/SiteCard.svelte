@@ -1,14 +1,15 @@
 <script lang="ts">
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
+  import { MESSAGES } from '$lib/i18n';
   import { getIcon } from '$lib/utils';
   import type { Site } from '$lib/types';
   import { X } from 'lucide-svelte';
   import CardBase from './CardBase.svelte';
 
-  let { site, onEdit } = $props<{ 
+  let { site, groupId } = $props<{ 
     site: Site,
-    onEdit: () => void 
+    groupId: string 
   }>();
 
   let loadError = $state(false);
@@ -24,7 +25,7 @@
 
   const firstChar = $derived(site.name ? site.name.charAt(0).toUpperCase() : '?');
   const safeHref = $derived(!ui.isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
-
+  
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     ui.isEdit 
       ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
@@ -47,18 +48,15 @@
   function handleClick(e: MouseEvent) {
       if(ui.isEdit) { 
         e.preventDefault();
-        onEdit(); 
+        ui.openSiteModal(groupId, site.id);
       } 
   }
 
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
-    ui.openConfirm('确定要删除这个站点吗？', () => {
-      const group = nav.data.groups.find(g => g.sites.some(s => s.id === site.id));
-      if (group) {
-        nav.deleteSite(group.id, site.id);
-      }
+    ui.openConfirm(MESSAGES.CONFIRM.DELETE_SITE, () => {
+      nav.deleteSite(groupId, site.id);
     });
   }
 
@@ -94,7 +92,7 @@
     </div>
 
     {#if ui.isEdit}
-      <button class={removeBtnClass} onclick={handleDelete} title="删除站点">
+      <button class={removeBtnClass} onclick={handleDelete} title={MESSAGES.UI.DELETE}>
         <X class="w-3 h-3" stroke-width={3} />
       </button>
     {/if}
