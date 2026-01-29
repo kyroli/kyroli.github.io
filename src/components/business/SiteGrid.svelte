@@ -5,13 +5,11 @@
   import { sortable } from '../../actions/sortable';
   import GroupModal from '../modals/GroupModal.svelte';
   import SiteCard from './SiteCard.svelte';
-
   // 2. Props / State
   let { onEditSite, onAddSite } = $props<{ 
     onEditSite: (gid: string, sid: string) => void,
     onAddSite: (gid: string) => void
   }>();
-  
   let editingGroup = $state<{id?: string, name?: string} | null>(null);
 
   // 3. Handlers
@@ -29,18 +27,15 @@
   // 4. Visual Constants
   const containerClass = "w-full flex flex-col gap-5 pt-6 pb-0";
   const groupItemClass = "group-item flex flex-col gap-4";
-  const groupHeaderClass = "flex items-center gap-3 border-b border-border/40 pb-2 px-1 h-11";
-  const groupTitleClass = "font-bold text-sm tracking-widest text-text-dim/80 select-none flex-1 truncate uppercase pt-1";
+  const groupHeaderClass = "flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40";
+  const groupTitleClass = "font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none flex-1 truncate uppercase";
   const gridClass = "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 content-start";
-  
   // Interactive Elements
   const groupHandleClass = "group-handle cursor-move p-1.5 rounded-lg border border-dashed border-text-dim/40 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50";
   const groupActionBtnClass = "text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer";
   const groupDeleteBtnClass = "text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer";
-  
   const addSiteBtnClass = "flex flex-col gap-2 items-center justify-center rounded-xl border border-dashed border-border/60 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all h-[72px] cursor-pointer bg-surface/30 group";
   const addSiteIconWrapperClass = "w-8 h-8 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary";
-  
   const addGroupBtnClass = "w-full py-8 border-2 border-dashed border-border/40 rounded-3xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group mt-4";
 </script>
 
@@ -58,7 +53,7 @@
       <div class={groupHeaderClass}>
         {#if app.isEdit}
           <div class={groupHandleClass} title="拖动排序分组">
-             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.drag.viewBox}>{@html ICONS.drag.path}</svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.drag.viewBox}>{@html ICONS.drag.path}</svg>
           </div>
         {/if}
         
@@ -91,7 +86,7 @@
              <SiteCard site={site} onEdit={() => onEditSite(group.id, site.id)} />
           {/each}
         
-        {#if app.isEdit}
+         {#if app.isEdit}
           <button onclick={() => onAddSite(group.id)} class={addSiteBtnClass}>
             <div class={addSiteIconWrapperClass}>
                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox={ICONS.add.viewBox}>{@html ICONS.add.path}</svg>
@@ -103,7 +98,7 @@
   {/each}
 
   {#if app.isEdit}
-    <button onclick={() => editingGroup = {}} class={addGroupBtnClass}>
+   <button onclick={() => editingGroup = {}} class={addGroupBtnClass}>
       <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox={ICONS.add.viewBox}>{@html ICONS.add.path}</svg>
       <span class="font-bold text-sm tracking-widest">新建分组</span>
     </button>

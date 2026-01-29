@@ -5,13 +5,11 @@
   import globeIcon from '@/assets/globe.svg';
   import type { Site } from '$lib/types';
   import Card from '../ui/Card.svelte';
-
   // 2. Props
   let { site, onEdit } = $props<{ 
     site: Site,
     onEdit: () => void 
   }>();
-
   // 3. Derived
   const displayHostname = $derived.by(() => {
     try {
@@ -21,10 +19,13 @@
       return '';
     }
   });
-
   const safeHref = $derived(!app.isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
   
-  const cardClass = $derived(`flex flex-row items-center gap-4 p-4 h-[72px] ${app.isEdit ? 'cursor-move border-dashed border-primary/40' : ''} hover:scale-[1.02] active:scale-[0.98]`);
+  const cardClass = $derived(`group relative flex flex-row items-center gap-4 p-4 h-[72px] bg-surface rounded-xl transition-all duration-200 border ${
+    app.isEdit 
+      ? 'cursor-move border-dashed border-primary/40' 
+      : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.99]'
+  }`);
 
   // 4. Handlers
   function handleImgError(e: Event, siteUrl: string) {
@@ -51,7 +52,9 @@
 
   // 5. Visual Constants
   const wrapperClass = "site-card relative h-full";
-  const iconContainerClass = "shrink-0 w-10 h-10 rounded-xl bg-icon-bg flex items-center justify-center p-2 border border-border/40 shadow-sm";
+  
+  const iconContainerClass = "shrink-0 w-10 h-10 rounded-[10px] bg-icon-bg flex items-center justify-center p-2 border border-black/5 dark:border-white/5 transition-transform duration-200 group-hover:scale-105 group-hover:brightness-95 dark:group-hover:brightness-110";
+  
   const imgClass = "w-full h-full object-contain pointer-events-none";
   const textContainerClass = "flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5";
   const nameClass = "text-[15px] font-bold text-text truncate tracking-tight leading-snug";
