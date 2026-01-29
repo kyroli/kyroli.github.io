@@ -91,9 +91,11 @@ class NavState {
 
   private async handleConflictMerge() {
     ui.showToast('云端数据更新，正在智能合并...', 'info');
+
     const { sha: remoteSha, content: remoteData } = await getRemoteInfo(this.config);
     const mergedData = this.mergeData(this.data, remoteData);
     const newSha = await pushNav(this.config, mergedData, remoteSha);
+
     this.data = mergedData;
     this.finalizeSync(newSha);
     
@@ -146,6 +148,7 @@ class NavState {
       this.isDirty = true;
     }
   }
+
 
   private saveAll() {
     storage.saveData(this.data);

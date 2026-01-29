@@ -42,7 +42,7 @@ interface AssetModule {
   src?: string;
 }
 
-const glob = import.meta.glob<AssetModule>('@/assets/*.{png,jpg,jpeg,webp,svg}', { eager: true });
+const glob = import.meta.glob<AssetModule>('../assets/*.{png,jpg,jpeg,webp,svg}', { eager: true });
 
 const assets = Object.fromEntries(
   Object.entries(glob).map(([path, module]) => {
