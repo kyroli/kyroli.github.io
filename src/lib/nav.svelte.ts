@@ -1,5 +1,7 @@
 import { getRemoteInfo, pushNav } from './github';
 import { storage, resolveError, AppError } from './utils';
+import { ui } from './ui.svelte';
+import { MESSAGES } from './i18n';
 import type { NavData, GithubConfig, Group, Site } from './types';
 
 class NavState {
@@ -93,6 +95,38 @@ class NavState {
       throw e;
     } finally {
       this.isSyncing = false;
+    }
+  }
+
+  async syncSafe() {
+    try {
+      await this.sync();
+      ui.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
+    } catch (e) {
+      if (e instanceof AppError && e.code === 'CONFLICT') {
+         ui.openConfirm(
+           MESSAGES.CONFIRM.CONFLICT, 
+           async () => {
+             try {
+               await this.forceSync();
+               ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
+             } catch (err) {
+               ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
+             }
+           }
+         );
+         return;
+      }
+      ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
+    }
+  }
+
+  async resetSafe() {
+    try {
+      await this.reset();
+      ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+    } catch (e) {
+      ui.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
     }
   }
 

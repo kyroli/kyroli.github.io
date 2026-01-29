@@ -32,14 +32,7 @@
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.99]'
   }`);
 
-  const bgHue = $derived(
-    site.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360
-  );
-
-  const fallbackStyle = $derived(`
-    background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
-    color: hsl(${bgHue}, 70%, var(--fallback-text-l));
-  `);
+  const fallbackStyle = $derived(ui.getSiteColor(site.name));
 
   function handleImgError() {
     loadError = true;

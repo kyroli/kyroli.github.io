@@ -58,6 +58,14 @@ class UIState {
   closeConfirm() {
     this.confirmPayload = null;
   }
+
+  getSiteColor(name: string) {
+    const bgHue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+    return `
+      background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
+      color: hsl(${bgHue}, 70%, var(--fallback-text-l));
+    `;
+  }
 }
 
 export const ui = new UIState();
