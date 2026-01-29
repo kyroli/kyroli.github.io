@@ -1,10 +1,10 @@
 import { getRemoteInfo, pushNav } from './github';
-import { storage, resolveError } from './utils';
+import { storage, resolveError, AppError } from './utils';
 import type { NavData, GithubConfig, Group, Site } from './types';
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
-  data = $state<NavData>({ groups: [], deletedIds: [] });
+  data = $state<NavData>({ groups: [] });
   
   status = $state<'init' | 'ready' | 'syncing' | 'error'>('init');
   errorMsg = $state('');
@@ -29,8 +29,7 @@ class NavState {
 
   private normalizeData(data: NavData): NavData {
     return {
-      groups: data.groups || [],
-      deletedIds: data.deletedIds || []
+      groups: data.groups || []
     };
   }
 
@@ -61,7 +60,7 @@ class NavState {
       const msg = resolveError(e);
       if (this.data.groups.length > 0) {
         this.status = 'ready';
-        throw new Error(msg); 
+        console.error(msg);
       } else {
         this.status = 'error';
         this.errorMsg = msg;
@@ -78,62 +77,23 @@ class NavState {
       const newSha = await pushNav(this.config, this.data, this.lastSha);
       this.finalizeSync(newSha);
     } catch (e) {
-      const err = e instanceof Error ? e : new Error(String(e));
-      
-      if (err.message === 'CONFLICT') {
-        await this.handleConflictMerge();
-      } else {
-        throw err;
-      }
+      throw e;
     } finally {
       this.isSyncing = false;
     }
   }
 
-  private async handleConflictMerge() {
-    const { sha: remoteSha, content: remoteData } = await getRemoteInfo(this.config);
-    const mergedData = this.mergeData(this.data, this.normalizeData(remoteData));
-    
-    const newSha = await pushNav(this.config, mergedData, remoteSha);
-
-    this.data = mergedData;
-    this.finalizeSync(newSha);
-  }
-
-  private mergeData(local: NavData, remote: NavData): NavData {
-    const merged = JSON.parse(JSON.stringify(local)) as NavData;
-    
-    const allDeleted = new Set([...(local.deletedIds || []), ...(remote.deletedIds || [])]);
-    merged.deletedIds = Array.from(allDeleted);
-
-    for (const rGroup of remote.groups) {
-      if (allDeleted.has(rGroup.id)) continue;
-
-      const lGroupIndex = merged.groups.findIndex(g => g.id === rGroup.id);
-
-      if (lGroupIndex === -1) {
-        const activeSites = rGroup.sites.filter(s => !allDeleted.has(s.id));
-        if (activeSites.length > 0 || rGroup.sites.length === 0) {
-           merged.groups.push({ ...rGroup, sites: activeSites });
-        }
-      } else {
-        const lGroup = merged.groups[lGroupIndex];
-        const localSiteIds = new Set(lGroup.sites.map(s => s.id));
-
-        for (const rSite of rGroup.sites) {
-          if (!allDeleted.has(rSite.id) && !localSiteIds.has(rSite.id)) {
-            lGroup.sites.push(rSite);
-          }
-        }
-      }
+  async forceSync() {
+    this.isSyncing = true;
+    try {
+      const { sha } = await getRemoteInfo(this.config);
+      const newSha = await pushNav(this.config, this.data, sha);
+      this.finalizeSync(newSha);
+    } catch (e) {
+      throw e;
+    } finally {
+      this.isSyncing = false;
     }
-    
-    merged.groups = merged.groups.filter(g => !allDeleted.has(g.id));
-    merged.groups.forEach(g => {
-        g.sites = g.sites.filter(s => !allDeleted.has(s.id));
-    });
-
-    return merged;
   }
 
   private finalizeSync(sha: string) {
@@ -166,13 +126,6 @@ class NavState {
     this.saveAll();
   }
 
-  private recordDeletion(id: string) {
-    if (!this.data.deletedIds) this.data.deletedIds = [];
-    if (!this.data.deletedIds.includes(id)) {
-      this.data.deletedIds.push(id);
-    }
-  }
-
   addGroup(name: string) {
     this.data.groups.push({ id: crypto.randomUUID(), name, sites: [] });
     this.markDirty();
@@ -184,14 +137,8 @@ class NavState {
   }
 
   deleteGroup(groupId: string) {
-    const g = this.data.groups.find(x => x.id === groupId);
-    if (g) {
-        this.recordDeletion(groupId);
-        g.sites.forEach(s => this.recordDeletion(s.id));
-        
-        this.data.groups = this.data.groups.filter(x => x.id !== groupId);
-        this.markDirty();
-    }
+    this.data.groups = this.data.groups.filter(x => x.id !== groupId);
+    this.markDirty();
   }
 
   updateGroups(groups: Group[]) {
@@ -225,17 +172,12 @@ class NavState {
     if (idx > -1) g.sites[idx] = site;
     else g.sites.push(site);
     
-    if (this.data.deletedIds) {
-        this.data.deletedIds = this.data.deletedIds.filter(id => id !== site.id);
-    }
-    
     this.markDirty();
   }
 
   deleteSite(groupId: string, siteId: string) {
     const g = this.data.groups.find(x => x.id === groupId);
     if (g) { 
-        this.recordDeletion(siteId);
         g.sites = g.sites.filter(s => s.id !== siteId); 
         this.markDirty(); 
     }

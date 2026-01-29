@@ -1,6 +1,5 @@
 export interface NavData {
   groups: Group[];
-  deletedIds?: string[];
 }
 
 export interface Group {

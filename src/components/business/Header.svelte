@@ -2,18 +2,22 @@
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
   import { Search, X, Save, RotateCcw, Moon, Pencil, Settings } from 'lucide-svelte';
-  import { resolveError } from '$lib/utils';
+  import { resolveError, AppError, UI_CONSTANTS } from '$lib/utils';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
 
   let { onConfig } = $props<{ onConfig: () => void }>();
   let search = $state('');
 
-  const logoHref = $derived(ui.isEdit ? undefined : "https://github.com/kyroli/kyroli.github.io");
-  
+  const logoHref = $derived(
+    !ui.isEdit && nav.config.owner && nav.config.repo 
+      ? `https://github.com/${nav.config.owner}/${nav.config.repo}` 
+      : undefined
+  );
+
   function handleSearch() {
     if (!search.trim()) return;
-    window.open(`https://www.bing.com/search?q=${encodeURIComponent(search)}`);
+    window.open(`${UI_CONSTANTS.SEARCH_ENGINE_URL}${encodeURIComponent(search)}`);
     search = '';
   }
 
@@ -30,6 +34,20 @@
           await nav.sync();
           ui.showToast('同步成功', 'success');
       } catch (e) {
+          if (e instanceof AppError && e.code === 'CONFLICT') {
+             ui.openConfirm(
+               '云端数据已更新，版本不一致。\n是否强制用本地数据覆盖云端？', 
+               async () => {
+                 try {
+                   await nav.forceSync();
+                   ui.showToast('覆盖成功', 'success');
+                 } catch (err) {
+                   ui.showToast(`覆盖失败: ${resolveError(err)}`, 'error');
+                 }
+               }
+             );
+             return;
+          }
           ui.showToast(`同步失败: ${resolveError(e)}`, 'error');
       }
   }
@@ -46,13 +64,23 @@
 
 <div class="w-full mt-8 mb-8 relative">
   <header class="w-full flex flex-col md:flex-row justify-between items-center gap-5">
-    <a href={logoHref} target="_blank" class={`flex items-center gap-3 hover:opacity-80 transition-opacity active:scale-95 group ${ui.isEdit ? 'pointer-events-none' : ''}`}>
-      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm group-hover:rotate-6 transition-transform">N</div>
-      <div class="flex flex-col">
-        <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
-        <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">Personal Startpage</span>
+    {#if logoHref}
+      <a href={logoHref} target="_blank" class={`flex items-center gap-3 hover:opacity-80 transition-opacity active:scale-95 group ${ui.isEdit ? 'pointer-events-none' : ''}`}>
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm group-hover:rotate-6 transition-transform">N</div>
+        <div class="flex flex-col">
+          <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
+          <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">Personal Startpage</span>
+        </div>
+      </a>
+    {:else}
+      <div class="flex items-center gap-3 select-none">
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm">N</div>
+        <div class="flex flex-col">
+          <h1 class="font-bold text-xl tracking-tight text-text leading-none">NAV-ZERO</h1>
+          <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">Personal Startpage</span>
+        </div>
       </div>
-    </a>
+    {/if}
     
     <div class="relative w-full md:w-[480px]">
       <Input 

@@ -2,41 +2,43 @@ import type { GithubConfig, NavData } from './types';
 import { MESSAGES } from './i18n';
 
 // =========================================
-// 1. 全局常量定义 (Global Constants)
+// 1. 全局常量 (Global Constants)
 // =========================================
 export const UI_CONSTANTS = {
-  CARD_HEIGHT: "h-[72px]"
+  CARD_HEIGHT: "h-[72px]",
+  SEARCH_ENGINE_URL: "https://www.bing.com/search?q=" 
 } as const;
 
 // =========================================
-// 2. 工具函数 (Utilities)
+// 2. 错误治理 (Error Handling)
 // =========================================
 
-export function resolveError(err: unknown): string {
-  const code = err instanceof Error ? err.message : String(err);
-  
-  // 1. 精确匹配已知错误
-  if (code in MESSAGES.ERRORS) {
-    return MESSAGES.ERRORS[code as keyof typeof MESSAGES.ERRORS];
+export class AppError extends Error {
+  code: string;
+  constructor(code: string, message?: string) {
+    super(message || code);
+    this.name = 'AppError';
+    this.code = code;
   }
-  
-  // 2. 处理 HTTP 状态码错误
-  if (code.startsWith('HTTP_ERROR_')) {
-    const status = code.replace('HTTP_ERROR_', '');
-    if (status === '403') return MESSAGES.ERRORS.FORBIDDEN;
-    if (status === '404') return MESSAGES.ERRORS.NOT_FOUND;
-    return `${MESSAGES.ERRORS.SERVER_ERROR} (${status})`;
-  }
-
-  // 3. 处理网络类模糊错误
-  if (code.toLowerCase().includes('fetch') || code.toLowerCase().includes('network')) {
-    return MESSAGES.ERRORS.NETWORK_ERROR;
-  }
-
-  // 4. 兜底返回
-  return `${MESSAGES.TOAST.UNKNOWN_ERROR} (${code})`;
 }
 
+export function resolveError(err: unknown): string {
+  if (err instanceof AppError) {
+    const msg = MESSAGES.ERRORS[err.code as keyof typeof MESSAGES.ERRORS];
+    return msg || `${MESSAGES.TOAST.UNKNOWN_ERROR} (${err.code})`;
+  }
+
+  if (err instanceof Error) {
+    if (err.message === 'Failed to fetch') return MESSAGES.ERRORS.NETWORK_ERROR;
+    return err.message;
+  }
+
+  return MESSAGES.TOAST.UNKNOWN_ERROR;
+}
+
+// =========================================
+// 3. 资源管理 (Assets)
+// =========================================
 interface AssetModule {
   default?: string;
   src?: string;
@@ -67,7 +69,7 @@ export const getIcon = (url: string, custom?: string): string => {
 };
 
 // =========================================
-// 3. 存储管理 (Storage)
+// 4. 存储管理 (Storage)
 // =========================================
 const KEYS = {
   CONFIG: 'nav_cfg',

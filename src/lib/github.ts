@@ -1,4 +1,5 @@
 import type { NavData, GithubConfig, GithubFileResponse, GithubPushResponse } from './types';
+import { AppError } from './utils';
 
 const API = 'https://api.github.com/repos';
 
@@ -15,10 +16,9 @@ const blobToBase64 = (data: unknown): Promise<string> => {
     reader.onloadend = () => {
         const result = reader.result as string;
         if (!result) {
-            reject(new Error('Failed to convert blob to base64'));
+            reject(new AppError('SERVER_ERROR', 'Blob conversion failed'));
             return;
         }
-        // DataURL format: "data:application/json;base64,xxxxx"
         const parts = result.split(',');
         resolve(parts.length > 1 ? parts[1] : result);
     };
@@ -31,27 +31,29 @@ export async function getRemoteInfo(cfg: GithubConfig): Promise<{ sha: string; c
   const repoUrl = `${API}/${cfg.owner}/${cfg.repo}`;
   const repoRes = await fetch(repoUrl, { headers: headers(cfg.token) });
 
-  if (repoRes.status === 404) throw new Error('REPO_NOT_FOUND');
-  if (repoRes.status === 401) throw new Error('TOKEN_INVALID');
-  if (!repoRes.ok) throw new Error(`HTTP_ERROR_${repoRes.status}`);
+  if (repoRes.status === 404) throw new AppError('REPO_NOT_FOUND');
+  if (repoRes.status === 401) throw new AppError('TOKEN_INVALID');
+  if (!repoRes.ok) throw new AppError(`HTTP_${repoRes.status}`);
 
   const fileUrl = `${API}/${cfg.owner}/${cfg.repo}/contents/bookmarks.json`;
   const res = await fetch(fileUrl, { headers: headers(cfg.token) });
   
   if (res.status === 404) return { sha: '', content: { groups: [] } };
-  
-  if (!res.ok) throw new Error(`HTTP_ERROR_${res.status}`);
+  if (!res.ok) throw new AppError(`HTTP_${res.status}`);
 
   const json = (await res.json()) as GithubFileResponse;
   
-  const decoded = new TextDecoder().decode(
-    Uint8Array.from(atob(json.content), c => c.charCodeAt(0))
-  );
-  
-  return {
-    sha: json.sha,
-    content: JSON.parse(decoded) as NavData
-  };
+  try {
+    const decoded = new TextDecoder().decode(
+      Uint8Array.from(atob(json.content), c => c.charCodeAt(0))
+    );
+    return {
+      sha: json.sha,
+      content: JSON.parse(decoded) as NavData
+    };
+  } catch {
+    throw new AppError('SERVER_ERROR', 'File decode failed');
+  }
 }
 
 export async function pushNav(cfg: GithubConfig, data: NavData, baseSha: string): Promise<string> {
@@ -71,10 +73,10 @@ export async function pushNav(cfg: GithubConfig, data: NavData, baseSha: string)
   });
 
   if (res.status === 409) {
-    throw new Error('CONFLICT');
+    throw new AppError('CONFLICT');
   }
 
-  if (!res.ok) throw new Error('PUSH_FAILED');
+  if (!res.ok) throw new AppError('PUSH_FAILED');
   
   const json = (await res.json()) as GithubPushResponse;
   return json.content.sha;
