@@ -30,6 +30,9 @@ class AppCore {
   private toastTimer: number | null = null;
 
   constructor() {
+  }
+
+  init() {
     $effect(() => {
       if (typeof document !== 'undefined') {
         document.documentElement.classList.toggle('dark', this.isDark);

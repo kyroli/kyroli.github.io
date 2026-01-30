@@ -18,7 +18,9 @@ class DataCore {
     this.config = storage.config;
     this.lastSha = storage.sha;
     this.isDirty = storage.isDirty;
+  }
 
+  init() {
     $effect(() => {
       storage.data = { groups: this.groups };
     });

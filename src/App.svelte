@@ -15,6 +15,9 @@
   import Modal from './components/ui/Modal.svelte';
   import Button from './components/ui/Button.svelte';
 
+  dataState.init();
+  appState.init();
+
   onMount(() => {
     sync.init();
   });
