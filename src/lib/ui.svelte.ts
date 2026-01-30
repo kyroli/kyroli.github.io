@@ -10,6 +10,7 @@ class UIState {
   confirmPayload = $state<{ msg: string; onConfirm: () => void } | null>(null);
   
   editingSite = $state<{ groupId: string; siteId?: string } | null>(null);
+  editingGroup = $state<{ groupId?: string } | null>(null);
   
   private toastTimer: number | null = null;
 
@@ -49,6 +50,14 @@ class UIState {
 
   closeSiteModal() {
     this.editingSite = null;
+  }
+
+  openGroupModal(groupId?: string) {
+    this.editingGroup = { groupId };
+  }
+
+  closeGroupModal() {
+    this.editingGroup = null;
   }
 
   showToast(msg: string, type: 'info' | 'error' | 'success') {

@@ -9,6 +9,7 @@
   import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
   import ConfigModal from './components/modals/ConfigModal.svelte';
   import SiteModal from './components/modals/SiteModal.svelte';
+  import GroupModal from './components/modals/GroupModal.svelte';
   import Modal from './components/ui/Modal.svelte';
   import Button from './components/ui/Button.svelte';
 
@@ -55,6 +56,7 @@
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
         {/if}
+   
         <SiteGrid groups={nav.data.groups} />
         
       {:else if isSyncingOrLoading}
@@ -63,13 +65,14 @@
          <div class="flex flex-col items-center justify-center py-20 text-danger font-bold">
             <p>Error: {nav.errorMsg}</p>
             <button onclick={() => ui.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
-         </div>
+          </div>
       {:else}
          <LoadingSkeleton />
       {/if}
     </main>
   </div>
-{#if ui.isConfigOpen}
+  
+  {#if ui.isConfigOpen}
     <ConfigModal onClose={() => ui.closeConfig()} />
   {/if}
 
@@ -81,9 +84,16 @@
     />
   {/if}
 
+  {#if ui.editingGroup}
+    <GroupModal 
+      groupId={ui.editingGroup.groupId}
+      onClose={() => ui.closeGroupModal()}
+    />
+  {/if}
+
   {#if ui.confirmPayload}
     <Modal onClose={() => ui.closeConfirm()} title={MESSAGES.UI.CONFIRM_ACTION}>
-      <div class="space-y-6 pt-2">
+       <div class="space-y-6 pt-2">
          <p class="text-text-dim font-bold text-sm leading-relaxed">{ui.confirmPayload.msg}</p>
         <div class="flex gap-3">
           <Button variant="outline" onclick={() => ui.closeConfirm()} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
