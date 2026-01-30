@@ -1,4 +1,3 @@
-import type { GithubConfig, NavData } from './types';
 import { MESSAGES } from './i18n';
 
 // =========================================
@@ -13,7 +12,6 @@ export const UI_CONSTANTS = {
 // =========================================
 // 2. 错误治理
 // =========================================
-
 export class AppError extends Error {
   code: string;
   constructor(code: string, message?: string) {
@@ -38,7 +36,7 @@ export function resolveError(err: unknown): string {
 }
 
 // =========================================
-// 3. 资源管理
+// 3. 资源管理 (图标加载)
 // =========================================
 interface AssetModule {
   default?: string;
@@ -67,71 +65,4 @@ export const getIcon = (url: string, custom?: string): string => {
   } catch {
     return assets['globe'] || ''; 
   }
-};
-
-// =========================================
-// 4. 存储管理
-// =========================================
-const KEYS = {
-  CONFIG: 'nav_cfg',
-  DATA: 'nav_data',
-  THEME: 'nav_theme',
-  DIRTY: 'nav_dirty',
-  SHA: 'nav_sha'
-} as const;
-
-function isGithubConfig(data: unknown): data is GithubConfig {
-  return (
-    typeof data === 'object' && 
-    data !== null && 
-    'owner' in data && 
-    'repo' in data && 
-    'token' in data
-  );
-}
-
-function isNavData(data: unknown): data is NavData {
-  return (
-    typeof data === 'object' && 
-    data !== null && 
-    'groups' in data && 
-    Array.isArray((data as any).groups)
-  );
-}
-
-export const storage = {
-  getConfig: (): GithubConfig => {
-    try {
-      const raw = localStorage.getItem(KEYS.CONFIG);
-      const parsed: unknown = raw ? JSON.parse(raw) : null;
-      return isGithubConfig(parsed) ? parsed : { owner: '', repo: '', token: '' };
-    } catch { 
-      return { owner: '', repo: '', token: '' }; 
-    }
-  },
-  
-  saveConfig: (cfg: GithubConfig) => localStorage.setItem(KEYS.CONFIG, JSON.stringify(cfg)),
-
-  getData: (): NavData => {
-    try {
-      const raw = localStorage.getItem(KEYS.DATA);
-      const parsed: unknown = raw ? JSON.parse(raw) : null;
-      return isNavData(parsed) ? parsed : { groups: [] };
-    } catch { 
-      return { groups: [] }; 
-    }
-  },
-
-  saveData: (data: NavData) => localStorage.setItem(KEYS.DATA, JSON.stringify(data)),
-
-  getSha: () => localStorage.getItem(KEYS.SHA) || '',
-  saveSha: (sha: string) => localStorage.setItem(KEYS.SHA, sha),
-
-  getDirty: () => localStorage.getItem(KEYS.DIRTY) === 'true',
-  setDirty: (isDirty: boolean) => localStorage.setItem(KEYS.DIRTY, String(isDirty)),
-
-  getTheme: () => localStorage.getItem(KEYS.THEME),
-  saveTheme: (isDark: boolean) => localStorage.setItem(KEYS.THEME, isDark ? 'dark' : 'light'),
-  
-  KEYS
 };
