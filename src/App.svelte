@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { nav, type NavEvent } from '$lib/nav.svelte';
+  import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
   import { MESSAGES } from '$lib/i18n';
 
@@ -24,15 +24,19 @@
       : 'bg-zinc-800/90 dark:bg-zinc-900/90 border-zinc-700/50 text-white'
   );
 
-  onMount(() => {
-    nav.onEvent = (e: NavEvent) => {
-      if (e.type === 'TOAST') {
-        ui.showToast(e.msg, e.level);
-      } else if (e.type === 'CONFIRM') {
-        ui.openConfirm(e.msg, e.onConfirm);
-      }
-    };
+  $effect(() => {
+    if (nav.toastState) {
+      ui.showToast(nav.toastState.msg, nav.toastState.level);
+    }
+  });
 
+  $effect(() => {
+    if (nav.confirmState) {
+      ui.openConfirm(nav.confirmState.msg, nav.confirmState.onConfirm);
+    }
+  });
+
+  onMount(() => {
     nav.init().catch(e => {
        console.error("Init failed:", e);
     });
@@ -54,7 +58,7 @@
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
         {/if}
-        
+   
         <SiteGrid groups={nav.data.groups} />
         
       {:else if isSyncingOrLoading}
@@ -62,6 +66,7 @@
       {:else if isError}
          <div class="flex flex-col items-center justify-center py-20 text-danger font-bold">
             <p>Error: {nav.errorMsg}</p>
+           
             <button onclick={() => ui.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
          </div>
       {:else}

@@ -3,9 +3,6 @@ import { storage, resolveError, AppError } from './utils';
 import { MESSAGES } from './i18n';
 import type { NavData, GithubConfig, Group, Site } from './types';
 
-export type NavEvent = 
-  | { type: 'TOAST'; msg: string; level: 'info' | 'error' | 'success' }
-  | { type: 'CONFIRM'; msg: string; onConfirm: () => void };
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -17,8 +14,9 @@ class NavState {
   isSyncing = $state(false);
   
   private lastSha = '';
-  
-  onEvent?: (e: NavEvent) => void;
+
+  toastState = $state<{ msg: string; level: 'info' | 'error' | 'success'; id: number } | null>(null);
+  confirmState = $state<{ msg: string; onConfirm: () => void; id: number } | null>(null);
 
   constructor() {
     this.loadLocal();
@@ -27,12 +25,12 @@ class NavState {
     }
   }
 
-  private emit(e: NavEvent) {
-    if (this.onEvent) {
-      this.onEvent(e);
-    } else {
-      console.warn('Nav event emitted but no listener attached:', e);
-    }
+  private triggerToast(msg: string, level: 'info' | 'error' | 'success') {
+    this.toastState = { msg, level, id: Date.now() };
+  }
+
+  private triggerConfirm(msg: string, onConfirm: () => void) {
+    this.confirmState = { msg, onConfirm, id: Date.now() };
   }
 
   private loadLocal() {
@@ -72,14 +70,13 @@ class NavState {
       if (isRemoteNewer) {
         if (this.isDirty) {
           this.status = 'ready';
-          this.emit({
-            type: 'CONFIRM',
-            msg: `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
-            onConfirm: () => {
+          this.triggerConfirm(
+            `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
+            () => {
                this.applyRemoteData(content, sha);
-               this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_SUCCESS, level: 'success' });
+               this.triggerToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
             }
-          });
+          );
         } else {
           this.applyRemoteData(content, sha);
         }
@@ -136,33 +133,32 @@ class NavState {
   async syncSafe() {
     try {
       await this.sync();
-      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.SYNC_SUCCESS, level: 'success' });
+      this.triggerToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
     } catch (e) {
       if (e instanceof AppError && e.code === 'CONFLICT') {
-         this.emit({
-            type: 'CONFIRM', 
-            msg: MESSAGES.CONFIRM.CONFLICT, 
-            onConfirm: async () => {
+         this.triggerConfirm(
+            MESSAGES.CONFIRM.CONFLICT, 
+            async () => {
               try {
                 await this.forceSync();
-                this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.OVERWRITE_SUCCESS, level: 'success' });
+                this.triggerToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
               } catch (err) {
-                this.emit({ type: 'TOAST', msg: `${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, level: 'error' });
+                this.triggerToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
               }
             }
-         });
+         );
          return;
       }
-      this.emit({ type: 'TOAST', msg: `${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, level: 'error' });
+      this.triggerToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
     }
   }
 
   async resetSafe() {
     try {
       await this.reset();
-      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_SUCCESS, level: 'success' });
+      this.triggerToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
     } catch (e) {
-      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_FAIL, level: 'error' });
+      this.triggerToast(MESSAGES.TOAST.RESET_FAIL, 'error');
     }
   }
 
