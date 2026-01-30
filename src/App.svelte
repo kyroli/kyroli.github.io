@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { nav } from '$lib/nav.svelte';
+  import { nav, type NavEvent } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
   import { MESSAGES } from '$lib/i18n';
 
@@ -27,6 +27,14 @@
   );
 
   onMount(() => {
+    nav.onEvent = (e: NavEvent) => {
+      if (e.type === 'TOAST') {
+        ui.showToast(e.msg, e.level);
+      } else if (e.type === 'CONFIRM') {
+        ui.openConfirm(e.msg, e.onConfirm);
+      }
+    };
+
     nav.init().catch(e => {
        console.error("Init failed:", e);
     });

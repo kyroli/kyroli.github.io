@@ -1,15 +1,22 @@
 <script lang="ts">
-  import { nav } from '$lib/nav.svelte';
-  import { ui } from '$lib/ui.svelte';
   import { MESSAGES } from '$lib/i18n';
   import { getIcon } from '$lib/utils';
   import type { Site } from '$lib/types';
   import { X } from 'lucide-svelte';
   import CardBase from './CardBase.svelte';
 
-  let { site, groupId } = $props<{ 
+  let { 
+    site, 
+    groupId,
+    isEdit = false,
+    onDelete,
+    onEdit
+  } = $props<{ 
     site: Site,
-    groupId: string 
+    groupId: string,
+    isEdit?: boolean,
+    onDelete?: (groupId: string, siteId: string) => void,
+    onEdit?: (groupId: string, siteId: string) => void
   }>();
 
   let loadError = $state(false);
@@ -24,33 +31,39 @@
   });
 
   const firstChar = $derived(site.name ? site.name.charAt(0).toUpperCase() : '?');
-  const safeHref = $derived(!ui.isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
-  
+  const safeHref = $derived(!isEdit && /^https?:\/\//i.test(site.url) ? site.url : undefined);
+
   const cardClass = $derived(`group relative transition-all duration-300 border ${
-    ui.isEdit 
+    isEdit 
       ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.99]'
   }`);
 
-  const fallbackStyle = $derived(ui.getSiteColor(site.name));
+  function getSiteColor(name: string) {
+    const bgHue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
+    return `
+      background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
+      color: hsl(${bgHue}, 70%, var(--fallback-text-l));
+    `;
+  }
+
+  const fallbackStyle = $derived(getSiteColor(site.name));
 
   function handleImgError() {
     loadError = true;
   }
 
   function handleClick(e: MouseEvent) {
-      if(ui.isEdit) { 
-        e.preventDefault();
-        ui.openSiteModal(groupId, site.id);
-      } 
+    if(isEdit) { 
+      e.preventDefault();
+      onEdit?.(groupId, site.id);
+    } 
   }
 
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
-    ui.openConfirm(MESSAGES.CONFIRM.DELETE_SITE, () => {
-      nav.deleteSite(groupId, site.id);
-    });
+    onDelete?.(groupId, site.id);
   }
 
   const wrapperClass = "site-card relative h-full";
@@ -84,7 +97,7 @@
       <span class={hostnameClass}>{displayHostname}</span>
     </div>
 
-    {#if ui.isEdit}
+    {#if isEdit}
       <button class={removeBtnClass} onclick={handleDelete} title={MESSAGES.UI.DELETE}>
         <X class="w-3 h-3" stroke-width={3} />
       </button>

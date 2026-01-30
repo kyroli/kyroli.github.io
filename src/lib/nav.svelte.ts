@@ -1,8 +1,11 @@
 import { getRemoteInfo, pushNav } from './github';
 import { storage, resolveError, AppError } from './utils';
-import { ui } from './ui.svelte';
 import { MESSAGES } from './i18n';
 import type { NavData, GithubConfig, Group, Site } from './types';
+
+export type NavEvent = 
+  | { type: 'TOAST'; msg: string; level: 'info' | 'error' | 'success' }
+  | { type: 'CONFIRM'; msg: string; onConfirm: () => void };
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -14,11 +17,21 @@ class NavState {
   isSyncing = $state(false);
   
   private lastSha = '';
+  
+  onEvent?: (e: NavEvent) => void;
 
   constructor() {
     this.loadLocal();
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (e) => this.handleStorageChange(e));
+    }
+  }
+
+  private emit(e: NavEvent) {
+    if (this.onEvent) {
+      this.onEvent(e);
+    } else {
+      console.warn('Nav event emitted but no listener attached:', e);
     }
   }
 
@@ -44,7 +57,7 @@ class NavState {
   }
 
   async init() {
-    if (!this.config.token || this.isDirty) {
+    if (!this.config.token) {
       this.status = 'ready';
       return;
     }
@@ -53,22 +66,44 @@ class NavState {
 
     try {
       const { sha, content } = await getRemoteInfo(this.config);
-      this.data = this.normalizeData(content);
-      this.lastSha = sha;
-      this.isDirty = false;
-      this.saveAll();
+      
+      const isRemoteNewer = sha !== this.lastSha;
+
+      if (isRemoteNewer) {
+        if (this.isDirty) {
+          this.status = 'ready';
+          this.emit({
+            type: 'CONFIRM',
+            msg: `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
+            onConfirm: () => {
+               this.applyRemoteData(content, sha);
+               this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_SUCCESS, level: 'success' });
+            }
+          });
+        } else {
+          this.applyRemoteData(content, sha);
+        }
+      } else {
+      }
+      
       this.status = 'ready';
     } catch (e) {
       const msg = resolveError(e);
       if (this.data.groups.length > 0) {
         this.status = 'ready';
-        console.error(msg);
+        console.error("Init sync skipped:", msg);
       } else {
         this.status = 'error';
         this.errorMsg = msg;
-        throw e;
       }
     }
+  }
+
+  private applyRemoteData(content: NavData, sha: string) {
+    this.data = this.normalizeData(content);
+    this.lastSha = sha;
+    this.isDirty = false;
+    this.saveAll();
   }
 
   async sync() {
@@ -101,32 +136,33 @@ class NavState {
   async syncSafe() {
     try {
       await this.sync();
-      ui.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
+      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.SYNC_SUCCESS, level: 'success' });
     } catch (e) {
       if (e instanceof AppError && e.code === 'CONFLICT') {
-         ui.openConfirm(
-           MESSAGES.CONFIRM.CONFLICT, 
-           async () => {
-             try {
-               await this.forceSync();
-               ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
-             } catch (err) {
-               ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
-             }
-           }
-         );
+         this.emit({
+            type: 'CONFIRM', 
+            msg: MESSAGES.CONFIRM.CONFLICT, 
+            onConfirm: async () => {
+              try {
+                await this.forceSync();
+                this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.OVERWRITE_SUCCESS, level: 'success' });
+              } catch (err) {
+                this.emit({ type: 'TOAST', msg: `${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, level: 'error' });
+              }
+            }
+         });
          return;
       }
-      ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
+      this.emit({ type: 'TOAST', msg: `${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, level: 'error' });
     }
   }
 
   async resetSafe() {
     try {
       await this.reset();
-      ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_SUCCESS, level: 'success' });
     } catch (e) {
-      ui.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
+      this.emit({ type: 'TOAST', msg: MESSAGES.TOAST.RESET_FAIL, level: 'error' });
     }
   }
 

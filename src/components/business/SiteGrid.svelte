@@ -11,7 +11,6 @@
   import SiteCard from './SiteCard.svelte';
 
   let { groups } = $props<{ groups: Group[] }>();
-  
   let editingGroup = $state<{id?: string, name?: string} | null>(null);
 
   const handleSortGroups = (items: Group[]) => nav.updateGroups(items);
@@ -26,8 +25,18 @@
   function handleDeleteGroupClick(groupName: string, groupId: string) {
       ui.openConfirm(
         `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`, 
-        () => nav.deleteGroup(groupId) // [重构] 直接调用 nav
+        () => nav.deleteGroup(groupId)
       );
+  }
+
+  function handleSiteDelete(groupId: string, siteId: string) {
+    ui.openConfirm(MESSAGES.CONFIRM.DELETE_SITE, () => {
+      nav.deleteSite(groupId, siteId);
+    });
+  }
+
+  function handleSiteEdit(groupId: string, siteId: string) {
+    ui.openSiteModal(groupId, siteId);
   }
 </script>
 
@@ -44,7 +53,7 @@
     <div class="group-item flex flex-col gap-4">
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
         {#if ui.isEdit}
-         <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
+          <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
@@ -58,7 +67,7 @@
              </button>
 
              <button onclick={() => handleDeleteGroupClick(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
-                  <Trash2 class="w-4 h-4" />
+               <Trash2 class="w-4 h-4" />
              </button>
            </div>
         {/if}
@@ -75,7 +84,13 @@
            }}>
         
           {#each group.sites as site (site.id)}
-             <SiteCard site={site} groupId={group.id} />
+             <SiteCard 
+                site={site} 
+                groupId={group.id} 
+                isEdit={ui.isEdit}
+                onDelete={handleSiteDelete}
+                onEdit={handleSiteEdit}
+             />
           {/each}
         
           {#if ui.isEdit}
