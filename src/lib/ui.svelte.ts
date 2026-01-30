@@ -4,6 +4,7 @@ import type { ToastState } from './types';
 class UIState {
   isDark = $state(false);
   isEdit = $state(false);
+  isConfigOpen = $state(false);
   
   toast = $state<ToastState | null>(null);
   confirmPayload = $state<{ msg: string; onConfirm: () => void } | null>(null);
@@ -34,6 +35,14 @@ class UIState {
     this.isEdit = !this.isEdit;
   }
 
+  openConfig() {
+    this.isConfigOpen = true;
+  }
+
+  closeConfig() {
+    this.isConfigOpen = false;
+  }
+
   openSiteModal(groupId: string, siteId?: string) {
     this.editingSite = { groupId, siteId };
   }
@@ -57,14 +66,6 @@ class UIState {
 
   closeConfirm() {
     this.confirmPayload = null;
-  }
-
-  getSiteColor(name: string) {
-    const bgHue = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % 360;
-    return `
-      background-color: hsl(${bgHue}, 65%, var(--fallback-bg-l)); 
-      color: hsl(${bgHue}, 70%, var(--fallback-text-l));
-    `;
   }
 }
 

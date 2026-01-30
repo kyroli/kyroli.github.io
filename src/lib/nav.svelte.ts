@@ -271,7 +271,26 @@ class NavState {
       const json = JSON.parse(text);
       if (!json || !Array.isArray(json.groups)) throw new Error('Invalid format');
       
-      this.data = this.normalizeData(json);
+      const cleanGroups = json.groups.map((g: any) => ({
+        id: g.id || crypto.randomUUID(),
+        name: g.name || 'Unnamed Group',
+        sites: Array.isArray(g.sites) ? g.sites.map((s: any) => {
+          let url = s.url || '';
+          if (url && !/^https?:\/\//i.test(url)) {
+            url = `https://${url}`;
+          }
+          if (!/^https?:\/\//i.test(url)) url = '';
+
+          return {
+            id: s.id || crypto.randomUUID(),
+            name: s.name || 'Unnamed',
+            url: url,
+            icon: s.icon || ''
+          };
+        }) : []
+      }));
+
+      this.data = { groups: cleanGroups };
       this.markDirty();
     } catch (e) {
       throw e;

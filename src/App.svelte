@@ -12,10 +12,8 @@
   import Modal from './components/ui/Modal.svelte';
   import Button from './components/ui/Button.svelte';
 
-  let showConfig = $state(false);
-
   const needsConfig = $derived(nav.status === 'ready' && !nav.config.token);
-  const showConfigTip = $derived(needsConfig && !showConfig);
+  const showConfigTip = $derived(needsConfig && !ui.isConfigOpen);
   const isSyncingOrLoading = $derived(nav.status === 'syncing' || nav.status === 'loading');
   const isReady = $derived(nav.status === 'ready');
   const isError = $derived(nav.status === 'error');
@@ -47,7 +45,7 @@
 
 <div class="min-h-screen w-full transition-colors duration-300 bg-bg text-text pb-20">
   <div class="w-full max-w-[1600px] mx-auto px-6 lg:px-12 2xl:px-24">
-    <Header onConfig={() => showConfig = true} />
+    <Header />
 
     <main>
       {#if isReady}
@@ -64,7 +62,7 @@
       {:else if isError}
          <div class="flex flex-col items-center justify-center py-20 text-danger font-bold">
             <p>Error: {nav.errorMsg}</p>
-            <button onclick={() => showConfig = true} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
+            <button onclick={() => ui.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
          </div>
       {:else}
          <LoadingSkeleton />
@@ -72,8 +70,8 @@
     </main>
   </div>
 
-  {#if showConfig}
-    <ConfigModal onClose={() => showConfig = false} />
+  {#if ui.isConfigOpen}
+    <ConfigModal onClose={() => ui.closeConfig()} />
   {/if}
 
   {#if ui.editingSite}

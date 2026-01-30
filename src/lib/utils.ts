@@ -6,7 +6,8 @@ import { MESSAGES } from './i18n';
 // =========================================
 export const UI_CONSTANTS = {
   CARD_HEIGHT: "h-[72px]",
-  SEARCH_ENGINE_URL: "https://www.bing.com/search?q=" 
+  SEARCH_ENGINE_URL: "https://www.bing.com/search?q=",
+  GRID_LAYOUT: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6"
 } as const;
 
 // =========================================
