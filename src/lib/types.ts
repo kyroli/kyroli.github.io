@@ -36,3 +36,8 @@ export interface GithubPushResponse {
     sha: string;
   };
 }
+
+export type OpResult<T = void> = 
+  | { success: true; data?: T; msg?: string }
+  | { success: false; type: 'conflict'; serverData?: NavData; serverSha?: string; msg: string }
+  | { success: false; type: 'error'; msg: string };

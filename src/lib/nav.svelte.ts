@@ -1,10 +1,7 @@
 import { getRemoteInfo, pushNav } from './github';
-import { storage, resolveError, AppError } from './utils';
-import type { NavData, GithubConfig, Group, Site } from './types';
-
-type InitResult = 
-  | { type: 'ready' | 'updated' }
-  | { type: 'conflict'; serverData: NavData; serverSha: string };
+import { storage, resolveError } from './utils';
+import { Validation } from './validation';
+import type { NavData, GithubConfig, Group, Site, OpResult } from './types';
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -26,29 +23,23 @@ class NavState {
 
   private loadLocal() {
     this.config = storage.getConfig();
-    this.data = this.normalizeData(storage.getData());
+    this.data = Validation.navData(storage.getData());
     this.lastSha = storage.getSha();
     this.isDirty = storage.getDirty();
   }
 
-  private normalizeData(data: NavData): NavData {
-    return {
-      groups: data.groups || []
-    };
-  }
-
   private handleStorageChange(e: StorageEvent) {
     if (e.key === storage.KEYS.DATA && e.newValue) {
-      try { this.data = this.normalizeData(JSON.parse(e.newValue)); } catch {}
+      try { this.data = Validation.navData(JSON.parse(e.newValue)); } catch {}
     }
     if (e.key === storage.KEYS.SHA && e.newValue) this.lastSha = e.newValue;
     if (e.key === storage.KEYS.DIRTY && e.newValue) this.isDirty = e.newValue === 'true';
   }
 
-  async init(): Promise<InitResult> {
+  async init(): Promise<OpResult> {
     if (!this.config.token) {
       this.status = 'ready';
-      return { type: 'ready' };
+      return { success: true };
     }
 
     this.status = this.data.groups.length > 0 ? 'ready' : 'syncing';
@@ -60,68 +51,77 @@ class NavState {
       if (isRemoteNewer) {
         if (this.isDirty) {
           this.status = 'ready';
-          return { type: 'conflict', serverData: content, serverSha: sha };
+          return { 
+            success: false, 
+            type: 'conflict', 
+            serverData: Validation.navData(content),
+            serverSha: sha,
+            msg: '云端数据已更新' 
+          };
         } else {
           this.applyRemoteData(content, sha);
           this.status = 'ready';
-          return { type: 'updated' };
+          return { success: true, msg: '已自动同步最新数据' };
         }
       }
       
       this.status = 'ready';
-      return { type: 'ready' };
+      return { success: true };
     } catch (e) {
       const msg = resolveError(e);
       if (this.data.groups.length > 0) {
         this.status = 'ready';
         console.error("Init sync skipped:", msg);
+        return { success: false, type: 'error', msg: `后台同步失败: ${msg}` };
       } else {
         this.status = 'error';
         this.errorMsg = msg;
+        return { success: false, type: 'error', msg };
       }
-      throw e;
     }
   }
 
   private applyRemoteData(content: NavData, sha: string) {
-    this.data = this.normalizeData(content);
-    this.lastSha = sha;
-    this.isDirty = false;
-    this.saveAll();
+    this.data = Validation.navData(content);
+    this.finalizeSync(sha);
   }
 
-  applyServerData(content: NavData, sha: string) {
-    this.applyRemoteData(content, sha);
-  }
-
-  async sync() {
-    if (!this.isDirty) return;
+  async sync(): Promise<OpResult> {
+    if (!this.isDirty) return { success: true };
     this.isSyncing = true;
     
     try {
       const newSha = await pushNav(this.config, this.data, this.lastSha);
       this.finalizeSync(newSha);
-    } catch (e) {
-      throw e;
+      return { success: true, msg: '同步成功' };
+    } catch (e: any) {
+      if (e.code === 'CONFLICT' || e.message === 'CONFLICT') {
+        return { success: false, type: 'conflict', msg: '云端版本冲突' };
+      }
+      return { success: false, type: 'error', msg: resolveError(e) };
     } finally {
       this.isSyncing = false;
     }
   }
 
-  async forceSync() {
+  async forceSync(): Promise<OpResult> {
     this.isSyncing = true;
     try {
       const { sha } = await getRemoteInfo(this.config);
       const newSha = await pushNav(this.config, this.data, sha);
       this.finalizeSync(newSha);
+      return { success: true, msg: '强制覆盖成功' };
     } catch (e) {
-      throw e;
+      return { success: false, type: 'error', msg: resolveError(e) };
     } finally {
       this.isSyncing = false;
     }
   }
 
-  async updateConfig(cfg: GithubConfig) {
+  async updateConfig(cfg: GithubConfig): Promise<OpResult> {
+    const check = Validation.config(cfg);
+    if (!check.valid) return { success: false, type: 'error', msg: check.error || '配置无效' };
+
     this.config = cfg;
     storage.saveConfig(cfg);
     return await this.init();
@@ -131,7 +131,7 @@ class NavState {
     this.isDirty = false;
     storage.setDirty(false);
     this.status = 'syncing';
-    await this.init(); 
+    return await this.init(); 
   }
 
   private finalizeSync(sha: string) {
@@ -208,6 +208,10 @@ class NavState {
     }
   }
 
+  applyServerData(content: NavData, sha: string) {
+    this.applyRemoteData(content, sha);
+  }
+
   exportBackup() {
     const blob = new Blob([JSON.stringify(this.data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -224,29 +228,10 @@ class NavState {
     try {
       const text = await file.text();
       const json = JSON.parse(text);
-      if (!json || !Array.isArray(json.groups)) throw new Error('Invalid format');
-      
-      const cleanGroups = json.groups.map((g: any) => ({
-        id: g.id || crypto.randomUUID(),
-        name: g.name || 'Unnamed Group',
-        sites: Array.isArray(g.sites) ? g.sites.map((s: any) => {
-          let url = s.url || '';
-          if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
-          if (!/^https?:\/\//i.test(url)) url = '';
-
-          return {
-            id: s.id || crypto.randomUUID(),
-            name: s.name || 'Unnamed',
-            url: url,
-            icon: s.icon || ''
-          };
-        }) : []
-      }));
-
-      this.data = { groups: cleanGroups };
+      this.data = Validation.navData(json);
       this.markDirty();
     } catch (e) {
-      throw e;
+      throw new Error('导入文件格式错误');
     }
   }
 }

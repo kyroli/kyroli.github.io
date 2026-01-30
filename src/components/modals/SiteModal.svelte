@@ -2,6 +2,7 @@
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
   import { MESSAGES } from '$lib/i18n';
+  import { Validation } from '$lib/validation';
   import { Trash2 } from 'lucide-svelte';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
@@ -12,9 +13,10 @@
     siteId?: string, 
     onClose: () => void 
   }>();
+
   const group = nav.data.groups.find(g => g.id === groupId);
   const site = siteId ? group?.sites.find(s => s.id === siteId) : null;
-  
+
   let name = $state(site?.name ?? '');
   let url = $state(site?.url ?? '');
   let icon = $state(site?.icon ?? '');
@@ -22,28 +24,18 @@
   const modalTitle = $derived(siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW);
 
   function handleSave() {
-    if (!name || !url) {
+    if (!name.trim()) {
       ui.showToast(MESSAGES.TOAST.SITE_INFO_REQUIRED, 'error');
       return;
     }
 
-    let finalUrl = url.trim();
-    if (!/^https?:\/\//i.test(finalUrl)) {
-      finalUrl = `https://${finalUrl}`;
-    }
-
-    try {
-      const u = new URL(finalUrl);
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-        ui.showToast(MESSAGES.TOAST.SITE_PROTOCOL_ERROR, 'error');
+    const urlCheck = Validation.url(url);
+    if (!urlCheck.valid) {
+        ui.showToast(urlCheck.error || MESSAGES.TOAST.SITE_URL_ERROR, 'error');
         return;
-      }
-    } catch {
-      ui.showToast(MESSAGES.TOAST.SITE_URL_ERROR, 'error');
-      return;
     }
 
-    const newSite = { id: site?.id ?? crypto.randomUUID(), name, url: finalUrl, icon };
+    const newSite = { id: site?.id ?? crypto.randomUUID(), name, url: urlCheck.value, icon };
     nav.saveSite(groupId, newSite);
     onClose();
     ui.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');

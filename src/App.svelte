@@ -14,7 +14,6 @@
 
   const needsConfig = $derived(nav.status === 'ready' && !nav.config.token);
   const showConfigTip = $derived(needsConfig && !ui.isConfigOpen);
-
   const isSyncingOrLoading = $derived(nav.status === 'syncing' || nav.status === 'loading');
   const isReady = $derived(nav.status === 'ready');
   const isError = $derived(nav.status === 'error');
@@ -26,19 +25,17 @@
   );
 
   onMount(async () => {
-    try {
-      const result = await nav.init();
-      if (result && result.type === 'conflict') {
+    const result = await nav.init();
+    
+    if (!result.success && result.type === 'conflict' && result.serverData && result.serverSha) {
+         const { serverData, serverSha } = result;
          ui.openConfirm(
             `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
             () => {
-               nav.applyServerData(result.serverData, result.serverSha);
+               nav.applyServerData(serverData, serverSha);
                ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
             }
          );
-      }
-    } catch (e) {
-       console.error("Init failed:", e);
     }
   });
 </script>
@@ -58,7 +55,6 @@
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
         {/if}
-   
         <SiteGrid groups={nav.data.groups} />
         
       {:else if isSyncingOrLoading}
@@ -73,8 +69,7 @@
       {/if}
     </main>
   </div>
-
-  {#if ui.isConfigOpen}
+{#if ui.isConfigOpen}
     <ConfigModal onClose={() => ui.closeConfig()} />
   {/if}
 

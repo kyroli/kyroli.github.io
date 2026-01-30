@@ -1,7 +1,6 @@
 <script lang="ts">
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
-  import { resolveError, AppError } from '$lib/utils';
   import { Search, X, Save, RotateCcw, Moon, Pencil, Settings } from 'lucide-svelte';
   import { UI_CONSTANTS } from '$lib/utils';
   import { MESSAGES } from '$lib/i18n';
@@ -30,30 +29,33 @@
   }
   
   async function handleSync() {
-    try {
-        await nav.sync();
+    const result = await nav.sync();
+    
+    if (result.success) {
         ui.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
-    } catch (e) {
-        if (e instanceof AppError && e.code === 'CONFLICT') {
-             ui.openConfirm(MESSAGES.CONFIRM.CONFLICT, async () => {
-                 try {
-                     await nav.forceSync();
-                     ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
-                 } catch (err) {
-                     ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
-                 }
-             });
-             return;
-        }
-        ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
+        return;
     }
+
+    if (result.type === 'conflict') {
+         ui.openConfirm(MESSAGES.CONFIRM.CONFLICT, async () => {
+             const forceRes = await nav.forceSync();
+             if (forceRes.success) {
+                 ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
+             } else {
+                 ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${forceRes.msg}`, 'error');
+             }
+         });
+         return;
+    }
+
+    ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${result.msg}`, 'error');
   }
 
   async function handleReset() {
-    try {
-        await nav.reset();
+    const result = await nav.reset();
+    if (result.success) {
         ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-    } catch (e) {
+    } else {
         ui.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
     }
   }
@@ -110,12 +112,12 @@
         {:else}
            <div class="flex gap-2 animate-fade">
                 <Button variant="outline" onclick={() => ui.toggleTheme()} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_SWITCH_THEME}>
-                   <Moon class="w-5 h-5" />
+                  <Moon class="w-5 h-5" />
                 </Button>
             
                 <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
                     <Pencil class="w-5 h-5" />
-                </Button>
+                 </Button>
 
                 <div class="relative group/tooltip">
                     <Button variant="outline" onclick={() => ui.openConfig()} class="w-10 h-10 !rounded-xl !p-0">
