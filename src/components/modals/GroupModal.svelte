@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { nav } from '$lib/nav.svelte';
-  import { ui } from '$lib/ui.svelte';
+  import { dataState } from '$lib/core/data.svelte';
+  import { appState } from '$lib/core/app.svelte';
+  import { manager } from '$lib/services/manager';
   import { MESSAGES } from '$lib/i18n';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
@@ -11,27 +12,22 @@
     groupId?: string 
   }>();
 
-  const group = groupId ? nav.data.groups.find(g => g.id === groupId) : null;
+  const group = groupId ? dataState.groups.find(g => g.id === groupId) : null;
   
   let name = $state(group?.name ?? '');
-
   const modalTitle = $derived(groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW);
 
   function handleSave() {
-    if (!name.trim()) {
-        ui.showToast(MESSAGES.TOAST.GROUP_NAME_REQUIRED, 'error');
-        return;
+    try {
+      if (groupId) {
+        manager.renameGroup(groupId, name);
+      } else {
+        manager.addGroup(name);
+      }
+      onClose();
+    } catch (e: any) {
+      appState.showToast(e.message, 'error');
     }
-    
-    if (groupId) {
-      nav.renameGroup(groupId, name.trim());
-      ui.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
-    } else {
-      nav.addGroup(name.trim());
-      ui.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
-    }
-    
-    onClose();
   }
 </script>
 

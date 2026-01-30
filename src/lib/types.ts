@@ -1,5 +1,8 @@
-export interface NavData {
-  groups: Group[];
+export interface Site {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
 }
 
 export interface Group {
@@ -8,11 +11,8 @@ export interface Group {
   sites: Site[];
 }
 
-export interface Site {
-  id: string;
-  name: string;
-  url: string;
-  icon: string;
+export interface NavData {
+  groups: Group[];
 }
 
 export interface GithubConfig {
@@ -21,23 +21,21 @@ export interface GithubConfig {
   token: string;
 }
 
-export interface ToastState {
-  msg: string;
-  type: 'info' | 'error' | 'success';
+export interface AppConfig {
+  github: GithubConfig;
+  theme: 'light' | 'dark' | 'system';
 }
 
-export interface GithubFileResponse {
+export type SyncStatus = 'idle' | 'checking' | 'syncing' | 'success' | 'error' | 'conflict';
+
+export interface SyncResult {
+  success: boolean;
+  error?: string;
+  remoteData?: NavData;
+  remoteSha?: string;
+}
+
+export interface RemoteFile {
   sha: string;
   content: string;
 }
-
-export interface GithubPushResponse {
-  content: {
-    sha: string;
-  };
-}
-
-export type OpResult<T = void> = 
-  | { success: true; data?: T; msg?: string }
-  | { success: false; type: 'conflict'; serverData?: NavData; serverSha?: string; msg: string }
-  | { success: false; type: 'error'; msg: string };

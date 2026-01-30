@@ -1,21 +1,25 @@
 <script lang="ts">
-  import { nav } from '$lib/nav.svelte';
-  import { ui } from '$lib/ui.svelte';
-  import { resolveError } from '$lib/utils';
+  import { dataState } from '$lib/core/data.svelte';
+  import { appState } from '$lib/core/app.svelte';
+  import { sync } from '$lib/services/sync';
+  import { manager } from '$lib/services/manager';
   import { MESSAGES } from '$lib/i18n';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
 
   let { onClose } = $props<{ onClose: () => void }>();
-  let repoPath = $state(nav.config.owner ? `${nav.config.owner}/${nav.config.repo}` : '');
-  let token = $state(nav.config.token);
+  
+  let repoPath = $state(dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : '');
+  let token = $state(dataState.config.token);
   let isSaving = $state(false);
   let errorMsg = $state('');
+
   const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
 
   async function handleSave() {
     errorMsg = '';
+    
     if (!repoPath || !token) { 
       errorMsg = MESSAGES.TOAST.CONFIG_INCOMPLETE; 
       return;
@@ -29,23 +33,25 @@
     
     isSaving = true;
     try {
-      const res = await nav.updateConfig({ owner: parts[0].trim(), repo: parts[1].trim(), token: token.trim() });
+      await sync.updateConfig({ 
+        owner: parts[0].trim(), 
+        repo: parts[1].trim(), 
+        token: token.trim() 
+      });
+      appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
       onClose();
-      ui.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
-      
-      if (res && res.type === 'conflict') {
-         ui.openConfirm(
-            `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
-            () => {
-               nav.applyServerData(res.serverData, res.serverSha);
-               ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-            }
-         );
-      }
-    } catch (e: unknown) {
-      errorMsg = resolveError(e);
+    } catch (e: any) {
+      errorMsg = typeof e === 'string' ? e : (e.message || MESSAGES.TOAST.UNKNOWN_ERROR);
     } finally {
       isSaving = false;
+    }
+  }
+
+  function handleFileImport(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      manager.importData(input.files[0]);
+      input.value = '';
     }
   }
 
@@ -76,9 +82,12 @@
 
   <div class={footerClass}>
     <div class="flex gap-4">
-      <button onclick={() => nav.exportBackup()} class={actionBtnClass} title={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
+      <button onclick={() => manager.exportData()} class={actionBtnClass} title={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>
-      <button onclick={() => nav.importBackup()} class={actionBtnClass} title={MESSAGES.MODAL.IMPORT_TITLE}>{MESSAGES.MODAL.IMPORT_DATA}</button>
+      <label class={actionBtnClass} title={MESSAGES.MODAL.IMPORT_TITLE}>
+        {MESSAGES.MODAL.IMPORT_DATA}
+        <input type="file" accept=".json" class="hidden" onchange={handleFileImport} />
+      </label>
     </div>
   </div>
 </Modal>

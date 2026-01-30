@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { nav } from '$lib/nav.svelte';
-  import { ui } from '$lib/ui.svelte';
+  import { dataState } from '$lib/core/data.svelte';
+  import { appState } from '$lib/core/app.svelte';
+  import { manager } from '$lib/services/manager';
   import { MESSAGES } from '$lib/i18n';
-  import { Validation } from '$lib/validation';
   import { Trash2 } from 'lucide-svelte';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
@@ -14,7 +14,7 @@
     onClose: () => void 
   }>();
 
-  const group = nav.data.groups.find(g => g.id === groupId);
+  const group = dataState.groups.find(g => g.id === groupId);
   const site = siteId ? group?.sites.find(s => s.id === siteId) : null;
 
   let name = $state(site?.name ?? '');
@@ -24,29 +24,28 @@
   const modalTitle = $derived(siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW);
 
   function handleSave() {
-    if (!name.trim()) {
-      ui.showToast(MESSAGES.TOAST.SITE_INFO_REQUIRED, 'error');
-      return;
+    try {
+      manager.saveSite(groupId, {
+        id: siteId,
+        name,
+        url,
+        icon
+      });
+      onClose();
+    } catch (e: any) {
+      appState.showToast(e.message, 'error');
     }
-
-    const urlCheck = Validation.url(url);
-    if (!urlCheck.valid) {
-        ui.showToast(urlCheck.error || MESSAGES.TOAST.SITE_URL_ERROR, 'error');
-        return;
-    }
-
-    const newSite = { id: site?.id ?? crypto.randomUUID(), name, url: urlCheck.value, icon };
-    nav.saveSite(groupId, newSite);
-    onClose();
-    ui.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
   }
 
   function handleDelete() {
     if (!siteId) return;
-    ui.openConfirm(MESSAGES.CONFIRM.DELETE_SITE, () => {
-      nav.deleteSite(groupId, siteId);
-      onClose();
-      ui.showToast(MESSAGES.TOAST.SITE_DELETED, 'success');
+    appState.openConfirm({
+      msg: MESSAGES.CONFIRM.DELETE_SITE,
+      onConfirm: () => {
+        manager.deleteSite(groupId, siteId);
+        onClose();
+      },
+      isDestructive: true
     });
   }
   
