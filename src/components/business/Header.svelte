@@ -1,6 +1,7 @@
 <script lang="ts">
   import { nav } from '$lib/nav.svelte';
   import { ui } from '$lib/ui.svelte';
+  import { resolveError, AppError } from '$lib/utils';
   import { Search, X, Save, RotateCcw, Moon, Pencil, Settings } from 'lucide-svelte';
   import { UI_CONSTANTS } from '$lib/utils';
   import { MESSAGES } from '$lib/i18n';
@@ -28,8 +29,34 @@
       ui.toggleEdit();
   }
   
-  const handleSync = () => nav.syncSafe();
-  const handleReset = () => nav.resetSafe();
+  async function handleSync() {
+    try {
+        await nav.sync();
+        ui.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
+    } catch (e) {
+        if (e instanceof AppError && e.code === 'CONFLICT') {
+             ui.openConfirm(MESSAGES.CONFIRM.CONFLICT, async () => {
+                 try {
+                     await nav.forceSync();
+                     ui.showToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
+                 } catch (err) {
+                     ui.showToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
+                 }
+             });
+             return;
+        }
+        ui.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
+    }
+  }
+
+  async function handleReset() {
+    try {
+        await nav.reset();
+        ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+    } catch (e) {
+        ui.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
+    }
+  }
 </script>
 
 <div class="w-full mt-8 mb-8 relative">
@@ -44,7 +71,7 @@
       </a>
     {:else}
       <div class="flex items-center gap-3 select-none">
-          <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm">N</div>
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm">N</div>
         <div class="flex flex-col">
           <h1 class="font-bold text-xl tracking-tight text-text leading-none">NAV-ZERO</h1>
           <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">Personal Startpage</span>
@@ -76,7 +103,7 @@
                 </Button>
 
                  <Button variant="danger" onclick={() => ui.openConfirm(MESSAGES.CONFIRM.DISCARD_CHANGES, handleReset)} class="h-10 w-28 !rounded-xl" title={MESSAGES.UI.RESET}>
-                   <span class="mr-1">{MESSAGES.UI.RESET}</span>
+                    <span class="mr-1">{MESSAGES.UI.RESET}</span>
                     <RotateCcw class="w-4 h-4" />
                 </Button>
             </div>
@@ -88,16 +115,16 @@
             
                 <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
                     <Pencil class="w-5 h-5" />
-                  </Button>
+                </Button>
 
                 <div class="relative group/tooltip">
                     <Button variant="outline" onclick={() => ui.openConfig()} class="w-10 h-10 !rounded-xl !p-0">
                       <Settings class="w-5 h-5" />
-                   </Button>
+                    </Button>
                     {#if !nav.config.token}
                        <div class="absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 font-medium shadow-xl translate-y-1 group-hover/tooltip:translate-y-0">{MESSAGES.UI.TIP_CONFIG_TOKEN}</div>
                     {/if}
-                  </div>
+                </div>
             </div>
         {/if}
       </div>

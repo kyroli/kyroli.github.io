@@ -14,6 +14,7 @@
 
   const needsConfig = $derived(nav.status === 'ready' && !nav.config.token);
   const showConfigTip = $derived(needsConfig && !ui.isConfigOpen);
+
   const isSyncingOrLoading = $derived(nav.status === 'syncing' || nav.status === 'loading');
   const isReady = $derived(nav.status === 'ready');
   const isError = $derived(nav.status === 'error');
@@ -24,22 +25,21 @@
       : 'bg-zinc-800/90 dark:bg-zinc-900/90 border-zinc-700/50 text-white'
   );
 
-  $effect(() => {
-    if (nav.toastState) {
-      ui.showToast(nav.toastState.msg, nav.toastState.level);
-    }
-  });
-
-  $effect(() => {
-    if (nav.confirmState) {
-      ui.openConfirm(nav.confirmState.msg, nav.confirmState.onConfirm);
-    }
-  });
-
-  onMount(() => {
-    nav.init().catch(e => {
+  onMount(async () => {
+    try {
+      const result = await nav.init();
+      if (result && result.type === 'conflict') {
+         ui.openConfirm(
+            `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
+            () => {
+               nav.applyServerData(result.serverData, result.serverSha);
+               ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+            }
+         );
+      }
+    } catch (e) {
        console.error("Init failed:", e);
-    });
+    }
   });
 </script>
 
@@ -66,7 +66,6 @@
       {:else if isError}
          <div class="flex flex-col items-center justify-center py-20 text-danger font-bold">
             <p>Error: {nav.errorMsg}</p>
-           
             <button onclick={() => ui.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
          </div>
       {:else}

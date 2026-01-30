@@ -12,7 +12,6 @@
   let token = $state(nav.config.token);
   let isSaving = $state(false);
   let errorMsg = $state('');
-
   const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
 
   async function handleSave() {
@@ -30,9 +29,19 @@
     
     isSaving = true;
     try {
-      await nav.updateConfig({ owner: parts[0].trim(), repo: parts[1].trim(), token: token.trim() });
+      const res = await nav.updateConfig({ owner: parts[0].trim(), repo: parts[1].trim(), token: token.trim() });
       onClose();
       ui.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
+      
+      if (res && res.type === 'conflict') {
+         ui.openConfirm(
+            `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
+            () => {
+               nav.applyServerData(res.serverData, res.serverSha);
+               ui.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+            }
+         );
+      }
     } catch (e: unknown) {
       errorMsg = resolveError(e);
     } finally {

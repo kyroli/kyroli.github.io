@@ -1,8 +1,10 @@
 import { getRemoteInfo, pushNav } from './github';
 import { storage, resolveError, AppError } from './utils';
-import { MESSAGES } from './i18n';
 import type { NavData, GithubConfig, Group, Site } from './types';
 
+type InitResult = 
+  | { type: 'ready' | 'updated' }
+  | { type: 'conflict'; serverData: NavData; serverSha: string };
 
 class NavState {
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -15,22 +17,11 @@ class NavState {
   
   private lastSha = '';
 
-  toastState = $state<{ msg: string; level: 'info' | 'error' | 'success'; id: number } | null>(null);
-  confirmState = $state<{ msg: string; onConfirm: () => void; id: number } | null>(null);
-
   constructor() {
     this.loadLocal();
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', (e) => this.handleStorageChange(e));
     }
-  }
-
-  private triggerToast(msg: string, level: 'info' | 'error' | 'success') {
-    this.toastState = { msg, level, id: Date.now() };
-  }
-
-  private triggerConfirm(msg: string, onConfirm: () => void) {
-    this.confirmState = { msg, onConfirm, id: Date.now() };
   }
 
   private loadLocal() {
@@ -54,36 +45,31 @@ class NavState {
     if (e.key === storage.KEYS.DIRTY && e.newValue) this.isDirty = e.newValue === 'true';
   }
 
-  async init() {
+  async init(): Promise<InitResult> {
     if (!this.config.token) {
       this.status = 'ready';
-      return;
+      return { type: 'ready' };
     }
 
     this.status = this.data.groups.length > 0 ? 'ready' : 'syncing';
 
     try {
       const { sha, content } = await getRemoteInfo(this.config);
-      
       const isRemoteNewer = sha !== this.lastSha;
 
       if (isRemoteNewer) {
         if (this.isDirty) {
           this.status = 'ready';
-          this.triggerConfirm(
-            `云端数据已有更新。${MESSAGES.CONFIRM.RESTORE}`,
-            () => {
-               this.applyRemoteData(content, sha);
-               this.triggerToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-            }
-          );
+          return { type: 'conflict', serverData: content, serverSha: sha };
         } else {
           this.applyRemoteData(content, sha);
+          this.status = 'ready';
+          return { type: 'updated' };
         }
-      } else {
       }
       
       this.status = 'ready';
+      return { type: 'ready' };
     } catch (e) {
       const msg = resolveError(e);
       if (this.data.groups.length > 0) {
@@ -93,6 +79,7 @@ class NavState {
         this.status = 'error';
         this.errorMsg = msg;
       }
+      throw e;
     }
   }
 
@@ -101,6 +88,10 @@ class NavState {
     this.lastSha = sha;
     this.isDirty = false;
     this.saveAll();
+  }
+
+  applyServerData(content: NavData, sha: string) {
+    this.applyRemoteData(content, sha);
   }
 
   async sync() {
@@ -130,55 +121,23 @@ class NavState {
     }
   }
 
-  async syncSafe() {
-    try {
-      await this.sync();
-      this.triggerToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
-    } catch (e) {
-      if (e instanceof AppError && e.code === 'CONFLICT') {
-         this.triggerConfirm(
-            MESSAGES.CONFIRM.CONFLICT, 
-            async () => {
-              try {
-                await this.forceSync();
-                this.triggerToast(MESSAGES.TOAST.OVERWRITE_SUCCESS, 'success');
-              } catch (err) {
-                this.triggerToast(`${MESSAGES.TOAST.OVERWRITE_FAIL_PREFIX}${resolveError(err)}`, 'error');
-              }
-            }
-         );
-         return;
-      }
-      this.triggerToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${resolveError(e)}`, 'error');
-    }
-  }
-
-  async resetSafe() {
-    try {
-      await this.reset();
-      this.triggerToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-    } catch (e) {
-      this.triggerToast(MESSAGES.TOAST.RESET_FAIL, 'error');
-    }
-  }
-
-  private finalizeSync(sha: string) {
-    this.lastSha = sha;
-    this.isDirty = false;
-    this.saveAll();
-  }
-
   async updateConfig(cfg: GithubConfig) {
     this.config = cfg;
     storage.saveConfig(cfg);
-    await this.init();
+    return await this.init();
   }
 
   async reset() {
     this.isDirty = false;
     storage.setDirty(false);
     this.status = 'syncing';
-    await this.init();
+    await this.init(); 
+  }
+
+  private finalizeSync(sha: string) {
+    this.lastSha = sha;
+    this.isDirty = false;
+    this.saveAll();
   }
 
   private saveAll() {
@@ -272,9 +231,7 @@ class NavState {
         name: g.name || 'Unnamed Group',
         sites: Array.isArray(g.sites) ? g.sites.map((s: any) => {
           let url = s.url || '';
-          if (url && !/^https?:\/\//i.test(url)) {
-            url = `https://${url}`;
-          }
+          if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
           if (!/^https?:\/\//i.test(url)) url = '';
 
           return {

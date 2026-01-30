@@ -6,12 +6,15 @@
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
 
-  let { onClose, groupId, initialName = '' } = $props<{ 
+  let { onClose, groupId } = $props<{ 
     onClose: () => void, 
-    groupId?: string, 
-    initialName?: string 
+    groupId?: string 
   }>();
-  let name = $state(initialName);
+
+  const group = groupId ? nav.data.groups.find(g => g.id === groupId) : null;
+  
+  let name = $state(group?.name ?? '');
+
   const modalTitle = $derived(groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW);
 
   function handleSave() {
