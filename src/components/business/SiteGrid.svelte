@@ -6,26 +6,27 @@
   import { MESSAGES } from '$lib/i18n';
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
-  import { dndzone, SOURCES, TRIGGERS } from 'svelte-dnd-action';
+  import { dndzone, SOURCES, TRIGGERS, type DndEvent } from 'svelte-dnd-action';
   
   const flipDurationMs = 200;
+  let isGrabbing = $state(false);
 
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
     const { items: newItems, info } = e.detail;
     dataState.groups = newItems;
-    
     if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
       dataState.markDirty();
+      isGrabbing = false;
     }
   }
 
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: newDisplayItems, info } = e.detail;
-    const realSites = newDisplayItems.filter((item: any) => !item.isAddBtn);
+    const { items: newSites, info } = e.detail;
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
+    
     if (groupIndex > -1) {
-        dataState.groups[groupIndex].sites = realSites;
-
+        dataState.groups[groupIndex].sites = newSites;
+        
         if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
             dataState.markDirty();
         }
@@ -45,12 +46,14 @@
   }
 </script>
 
+<svelte:window onmouseup={() => isGrabbing = false} />
+
 <div 
   class="w-full flex flex-col gap-5 pt-6 pb-0"
   use:dndzone={{
     items: dataState.groups, 
     flipDurationMs,
-    dragDisabled: !appState.isEditMode, 
+    dragDisabled: !appState.isEditMode || !isGrabbing, 
     type: 'group',
     dropTargetStyle: { outline: 'none', border: 'none' }
   }}
@@ -59,11 +62,6 @@
 >
   
   {#each dataState.groups as group (group.id)}
-    {@const displaySites = appState.isEditMode 
-        ? [...group.sites, { id: `__btn_${group.id}`, isAddBtn: true, name: '', url: '', icon: '' }] 
-        : group.sites
-    }
-
     <div 
         class="group-item flex flex-col gap-4 transition-colors duration-200 rounded-xl"
         role="group"
@@ -73,6 +71,10 @@
         {#if appState.isEditMode}
            <div 
              class="cursor-grab active:cursor-grabbing p-1.5 mr-3 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50 shrink-0"
+             onmousedown={(e) => { e.preventDefault(); isGrabbing = true; }}
+             ontouchstart={(e) => { isGrabbing = true; }}
+             role="button"
+             tabindex="0"
            >
              <GripHorizontal class="w-4 h-4" />
           </div>
@@ -104,35 +106,39 @@
         class={`${UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px] p-2 rounded-lg transition-colors`}
         onmousedown={stopPropagation}
         ontouchstart={stopPropagation}
-        use:dndzone={{
-            items: displaySites,
-            flipDurationMs,
-            dragDisabled: !appState.isEditMode,
-            type: 'site',
-            dropTargetStyle: { outline: '2px dashed var(--primary)', borderRadius: '0.5rem' }
-        }}
-        onconsider={(e) => handleSiteDnd(group.id, e)}
-        onfinalize={(e) => handleSiteDnd(group.id, e)}
       >
-          {#each displaySites as item (item.id)}
-            {#if (item as any).isAddBtn}
-                <div role="button" tabindex="0">
-                    <button 
-                        onclick={() => appState.openSiteModal(group.id)} 
-                        class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}
-                        title={MESSAGES.UI.NEW_SITE}
-                    >
-                       <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
-                           <Plus class="w-4 h-4" />
-                      </div>
-                    </button>
-                </div>
-            {:else}
+          <div 
+            style="display: contents"
+            use:dndzone={{
+                items: group.sites,
+                flipDurationMs,
+                dragDisabled: !appState.isEditMode,
+                type: 'site',
+                dropTargetStyle: {} 
+            }}
+            onconsider={(e) => handleSiteDnd(group.id, e)}
+            onfinalize={(e) => handleSiteDnd(group.id, e)}
+          >
+              {#each group.sites as item (item.id)}
                 <div role="listitem">
                     <SiteCard site={item} groupId={group.id} />
                 </div>
-            {/if}
-          {/each}
+              {/each}
+          </div>
+
+          {#if appState.isEditMode}
+            <div role="button" tabindex="0">
+                <button 
+                    onclick={() => appState.openSiteModal(group.id)} 
+                    class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}
+                    title={MESSAGES.UI.NEW_SITE}
+                >
+                    <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                        <Plus class="w-4 h-4" />
+                    </div>
+                </button>
+            </div>
+          {/if}
       </div>
     </div>
   {/each}
