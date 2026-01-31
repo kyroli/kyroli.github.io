@@ -84,10 +84,10 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.SITE_DELETED, 'success');
   }
 
-  moveSite(siteId: string, fromGroupId: string, toGroupId: string, newIndex: number) {
+  moveSite(siteId: string, toGroupId: string, newIndex: number) {
     const groups = structuredClone(dataState.groups);
     
-    const fromGroup = groups.find((g: Group) => g.id === fromGroupId);
+    const fromGroup = groups.find((g: Group) => g.sites.some((s: Site) => s.id === siteId));
     const toGroup = groups.find((g: Group) => g.id === toGroupId);
     
     if (!fromGroup || !toGroup) return;

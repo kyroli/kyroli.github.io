@@ -2,19 +2,55 @@
   import { Sun, Moon } from 'lucide-svelte';
   import { appState } from '$lib/core/app.svelte';
   import { MESSAGES } from '$lib/i18n';
+
+  async function handleToggle(e: MouseEvent) {
+    if (!document.startViewTransition) {
+      appState.toggleTheme();
+      return;
+    }
+
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y)
+    );
+
+    const transition = document.startViewTransition(async () => {
+      await appState.toggleTheme();
+    });
+
+    await transition.ready;
+
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: 300,
+        easing: 'ease-in',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    );
+  }
 </script>
 
 <button 
   type="button" 
   role="switch" 
   aria-checked={appState.isDark}
-  onclick={(e) => appState.toggleTheme(e)}
+  onclick={handleToggle}
   title={MESSAGES.UI.TIP_SWITCH_THEME}
   class="relative shrink-0 w-16 h-10 rounded-full border border-border cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 overflow-hidden bg-icon-bg hover:border-primary/30"
 >
   <span 
     class={`absolute top-1/2 -translate-y-1/2 left-1 h-8 w-8 rounded-full bg-surface shadow-sm border border-black/5 dark:border-white/5 flex items-center justify-center ${
-      appState.isDark ? 'left-[calc(100%-2.25rem)]' : 'left-1'
+      appState.isDark ?
+      'left-[calc(100%-2.25rem)]' : 'left-1'
     }`}
   >
     {#if appState.isDark}

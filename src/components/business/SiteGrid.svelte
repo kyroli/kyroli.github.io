@@ -5,16 +5,15 @@
   import { appState } from '$lib/core/app.svelte';
   import { manager } from '$lib/services/manager';
   import { MESSAGES } from '$lib/i18n';
+  import type { Group, Site } from '$lib/types';
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
-  
-  const handleSortGroups = (items: any[]) => manager.updateGroupOrder(items);
-  const handleSortSites = (gid: string, items: any[]) => manager.updateSiteOrder(gid, items);
+
+  const handleSortGroups = (items: Group[]) => manager.updateGroupOrder(items);
+  const handleSortSites = (gid: string, items: Site[]) => manager.updateSiteOrder(gid, items);
+
   const handleTransfer = (siteId: string, toGroupId: string, newIndex: number) => {
-    const fromGroup = dataState.groups.find(g => g.sites.some(s => s.id === siteId));
-    if (fromGroup) {
-      manager.moveSite(siteId, fromGroup.id, toGroupId, newIndex);
-    }
+    manager.moveSite(siteId, toGroupId, newIndex);
   };
 
   function handleDeleteGroup(groupName: string, groupId: string) {
@@ -70,7 +69,7 @@
            }}>
         
           {#each group.sites as site (site.id)}
-             <SiteCard 
+            <SiteCard 
                 {site} 
                 groupId={group.id} 
               />
@@ -83,7 +82,7 @@
               </div>
             </button>
           {/if}
-       </div>
+      </div>
     </div>
   {/each}
 
