@@ -52,20 +52,20 @@
 
 <div class="site-card relative h-full" data-id={site.id}>
   <CardBase href={safeHref} onclick={handleClick} class={cardClass}>
-    <div class="shrink-0 w-10 h-10 rounded-[10px] bg-icon-bg flex items-center justify-center overflow-hidden border border-black/5 dark:border-white/5 transition-transform duration-200 group-hover:scale-105 font-bold text-lg" 
-         style={loadError ? getSiteColor(site.name) : ''}>
-       {#if loadError}
-         <span>{firstChar}</span>
-       {:else}
-         <img 
-           src={getIcon(site.url, site.icon)} 
-           class="w-full h-full object-contain pointer-events-none" 
-           loading="lazy" 
-           decoding="async" 
-           alt="" 
-           onerror={() => loadError = true}
-         />
-       {/if}
+    <div class="shrink-0 w-10 h-10 rounded-[10px] bg-icon-bg flex items-center justify-center overflow-hidden border border-black/5 dark:border-white/5 transition-transform duration-200 group-hover:scale-105 font-bold text-lg p-2" 
+        style={loadError ? getSiteColor(site.name) : ''}>
+      {#if loadError}
+        <span>{firstChar}</span>
+      {:else}
+        <img 
+          src={getIcon(site.url, site.icon)} 
+          class="w-full h-full object-contain pointer-events-none" 
+          loading="lazy" 
+          decoding="async" 
+          alt="" 
+          onerror={() => loadError = true}
+        />
+      {/if}
     </div>
     
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5">
