@@ -35,7 +35,12 @@ export class GithubClient {
   }
 
   async updateFile(path: string, content: NavData, sha?: string): Promise<{ sha: string }> {
-    const base64Content = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
+    const jsonStr = JSON.stringify(content, null, 2);
+    
+    const encoder = new TextEncoder();
+    const data = encoder.encode(jsonStr);
+    const binaryStr = Array.from(data, b => String.fromCharCode(b)).join('');
+    const base64Content = btoa(binaryStr);
     
     const body = {
       message: 'update bookmarks via nav-zero',
@@ -53,7 +58,10 @@ export class GithubClient {
 
   static parseContent(base64: string): NavData {
     try {
-      const json = decodeURIComponent(escape(atob(base64)));
+      const binaryStr = atob(base64);
+      const bytes = Uint8Array.from(binaryStr, c => c.charCodeAt(0));
+      const decoder = new TextDecoder();
+      const json = decoder.decode(bytes);
       return JSON.parse(json);
     } catch {
       throw new Error('PARSE_ERROR');
