@@ -16,12 +16,7 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-
-  const syncIcon = $derived.by(() => {
-    if (dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking') return Loader2;
-    return CloudUpload;
-  });
-
+  
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
 
   function handleSearch() {
@@ -86,13 +81,7 @@
               <X class="w-5 h-5" />
             </Button>
 
-            <Button 
-              variant="primary" 
-              onclick={handleSync} 
-              class="h-10 px-4 !rounded-xl min-w-[100px]" 
-              title={MESSAGES.UI.SAVE_AND_SYNC} 
-              disabled={!dataState.isDirty || isSyncing}
-            >
+            <Button variant="primary" onclick={handleSync} class="h-10 px-4 !rounded-xl min-w-[100px]" title={MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing}>
               {#if isSyncing}
                 <Loader2 class="w-4 h-4 animate-spin mr-2" />
                 <span>{MESSAGES.UI.SYNCING}</span>
@@ -108,19 +97,25 @@
           </div>
         {:else}
           <div class="flex gap-3 animate-fade items-center">
-            
             <ThemeSwitch />
             
             <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
               <Pencil class="w-5 h-5" />
             </Button>
 
-            <div class="relative group/tooltip">
-              <Button variant="outline" onclick={appState.openConfig} class="w-10 h-10 !rounded-xl !p-0">
-                <Settings class={`w-5 h-5 ${!dataState.hasToken ? 'text-text-dim' : ''}`} />
+            <div class="relative group">
+              <Button 
+                variant="outline" 
+                onclick={appState.openConfig} 
+                class="w-10 h-10 !rounded-xl !p-0"
+              >
+                 <Settings class={`w-5 h-5 ${!dataState.hasToken ? 'text-text-dim' : ''}`} />
               </Button>
+
               {#if !dataState.hasToken}
-                <div class="absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 font-medium shadow-xl translate-y-1 group-hover/tooltip:translate-y-0">
+                <div 
+                  class="absolute right-0 top-full mt-2 w-max px-3 py-1.5 bg-text text-bg text-xs rounded-lg font-medium shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 translate-y-1 group-hover:translate-y-0 pointer-events-none"
+                >
                   {MESSAGES.UI.TIP_CONFIG_TOKEN}
                 </div>
               {/if}

@@ -7,28 +7,45 @@
     title?: string;
   }>();
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') onClose();
+  let dialog = $state<HTMLDialogElement>();
+
+  $effect(() => {
+    if (dialog) {
+      dialog.showModal();
+      return () => dialog.close();
+    }
+  });
+
+  function handleBackdropClick(e: MouseEvent) {
+    if (e.target === dialog) {
+      dialog.close();
+    }
   }
 
-  const overlayClass = "fixed inset-0 z-[100] flex items-center justify-center p-6";
-  const backdropClass = "absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity w-full h-full cursor-default";
-  
-  const panelClass = "relative bg-surface/90 backdrop-blur-xl rounded-2xl w-full max-w-sm p-8 animate-fade border border-border/80 flex flex-col gap-6 pointer-events-auto ring-1 ring-black/5 shadow-2xl shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]";
-  
-  const titleClass = "text-xl font-bold tracking-tight text-text";
+  const dialogClass = `
+    bg-surface/90 backdrop-blur-xl text-text 
+    rounded-2xl w-full max-w-sm p-8 
+    border border-border/80 
+    shadow-2xl shadow-black/20 
+    outline-none
+    animate-fade
+    backdrop:bg-black/40 backdrop:backdrop-blur-[2px] backdrop:transition-opacity
+  `;
+
+  const titleClass = "text-xl font-bold tracking-tight text-text m-0";
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-<div class={overlayClass} role="presentation">
-  <button type="button" class={backdropClass} onclick={onClose} aria-label="关闭弹窗"></button>
-  
-  <div class={panelClass} role="dialog" aria-modal="true">
+<dialog 
+  bind:this={dialog} 
+  class={dialogClass}
+  onclose={onClose} 
+  onclick={handleBackdropClick}
+>
+  <div class="flex flex-col gap-6">
     {#if title}
       <h2 class={titleClass}>{title}</h2>
     {/if}
     
     {@render children()}
   </div>
-</div>
+</dialog>
