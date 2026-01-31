@@ -1,4 +1,5 @@
 import { storage } from '../infra/storage';
+import { tick } from 'svelte';
 
 type ToastType = 'info' | 'success' | 'error';
 
@@ -41,8 +42,35 @@ class AppCore {
     });
   }
 
-  toggleTheme = () => {
-    this.isDark = !this.isDark;
+  toggleTheme = async (e: MouseEvent) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    const endRadius = Math.hypot(
+      Math.max(x, innerWidth - x),
+      Math.max(y, innerHeight - y)
+    );
+
+    const transition = document.startViewTransition(async () => {
+      this.isDark = !this.isDark;
+      await tick();
+    });
+
+    await transition.ready;
+
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: 400,
+        easing: 'ease-in',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    );
   };
 
   toggleEditMode = () => {

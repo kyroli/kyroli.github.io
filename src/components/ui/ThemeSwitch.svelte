@@ -8,7 +8,7 @@
   type="button" 
   role="switch" 
   aria-checked={appState.isDark}
-  onclick={appState.toggleTheme}
+  onclick={(e) => appState.toggleTheme(e)}
   title={MESSAGES.UI.TIP_SWITCH_THEME}
   class="relative shrink-0 w-16 h-10 rounded-full border border-border transition-colors duration-300 ease-in-out cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 overflow-hidden bg-icon-bg hover:border-primary/30"
 >
