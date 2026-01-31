@@ -55,7 +55,6 @@
     <div 
         class="group-item flex flex-col gap-4 transition-all duration-300 rounded-2xl border bg-surface/30 p-2
                {appState.isEditMode ? 'border-border/60' : 'border-transparent'}
-               {dndState.isDragging && dndState.type === 'site' && dndState.groupId !== group.id ? 'ring-2 ring-primary/40 bg-primary/5' : ''}
                {dndState.id === group.id ? 'opacity-20' : ''}"
         animate:flip={{ duration: FLIP_DURATION }}
         

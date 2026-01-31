@@ -43,7 +43,21 @@ export function draggable(node, data) {
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
+            const originalTransition = node.style.transition;
+            node.style.transition = 'none';
+            
+            if (data.type === 'group') {
+                node.classList.add('bg-surface', '!opacity-100');
+                node.classList.remove('bg-surface/30');
+            }
+
             e.dataTransfer.setDragImage(node, x, y);
+
+            if (data.type === 'group') {
+                node.classList.remove('bg-surface', '!opacity-100');
+                node.classList.add('bg-surface/30');
+            }
+            node.style.transition = originalTransition;
         }
         
         requestAnimationFrame(() => {
