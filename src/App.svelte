@@ -23,7 +23,7 @@
   const toastClass = $derived(
     appState.toast?.type === 'error' 
       ? 'bg-danger/90 border-danger text-white' 
-      : 'bg-zinc-800/90 dark:bg-zinc-900/90 border-zinc-700/50 text-white'
+      : 'bg-surface/90 border-border text-text'
   );
 </script>
 
@@ -38,6 +38,7 @@
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
        
+        
         {/if}
   
         <SiteGrid />
@@ -49,6 +50,7 @@
           </div>
       {:else}
         
+  
         <LoadingSkeleton />
       {/if}
     </main>
@@ -71,6 +73,7 @@
       groupId={appState.editingGroupId}
       onClose={appState.closeModal}
     />
+ 
   
   {/if}
 
@@ -83,6 +86,7 @@
         <div class="flex gap-3">
           <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
           <Button 
+      
             variant={appState.confirmPayload.isDestructive ? 'danger' : 'primary'} 
             onclick={() => { 
               appState.confirmPayload?.onConfirm();
@@ -99,7 +103,8 @@
 
   {#if appState.toast}
     <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] animate-fade w-full max-w-sm px-4 pointer-events-none">
-      <div class={`px-6 py-4 rounded-xl shadow-2xl text-sm font-bold tracking-tight text-center transition-all backdrop-blur-md border-2 ${toastClass}`}>
+      <div class={`px-6 py-4 rounded-xl shadow-2xl text-sm font-bold tracking-tight text-center transition-all backdrop-blur-md 
+border-2 ${toastClass}`}>
         {appState.toast.msg}
       </div>
     </div>
