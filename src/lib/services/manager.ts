@@ -87,24 +87,53 @@ class DataManager {
   moveSite(siteId: string, toGroupId: string, newIndex: number) {
     const groups = structuredClone(dataState.groups);
     
-    const fromGroup = groups.find((g: Group) => g.sites.some((s: Site) => s.id === siteId));
+    let fromGroup: Group | undefined;
+    let site: Site | undefined;
+
+    for (const g of groups) {
+      const found = g.sites.find(s => s.id === siteId);
+      if (found) {
+        fromGroup = g;
+        site = found;
+        break;
+      }
+    }
+    
     const toGroup = groups.find((g: Group) => g.id === toGroupId);
     
-    if (!fromGroup || !toGroup) return;
+    if (!fromGroup || !toGroup || !site) return;
 
-    const siteIndex = fromGroup.sites.findIndex((s: Site) => s.id === siteId);
-    if (siteIndex === -1) return;
+    fromGroup.sites = fromGroup.sites.filter(s => s.id !== siteId);
 
-    const [site] = fromGroup.sites.splice(siteIndex, 1);
-    toGroup.sites.splice(newIndex, 0, site);
+    const targetIndex = Math.max(0, Math.min(newIndex, toGroup.sites.length));
+    toGroup.sites.splice(targetIndex, 0, site);
 
     dataState.setGroups(groups);
   }
 
-  updateSiteOrder(groupId: string, newSites: Site[]) {
-    const groups = dataState.groups.map(g => 
-      g.id === groupId ? { ...g, sites: newSites } : g
-    );
+  moveSiteToGroup(siteId: string, toGroupId: string) {
+    const groups = structuredClone(dataState.groups);
+    
+    let fromGroup: Group | undefined;
+    let site: Site | undefined;
+
+    for (const g of groups) {
+      const found = g.sites.find(s => s.id === siteId);
+      if (found) {
+        fromGroup = g;
+        site = found;
+        break;
+      }
+    }
+    
+    const toGroup = groups.find((g: Group) => g.id === toGroupId);
+    
+    if (!fromGroup || !toGroup || !site) return;
+
+    fromGroup.sites = fromGroup.sites.filter(s => s.id !== siteId);
+
+    toGroup.sites.push(site);
+
     dataState.setGroups(groups);
   }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { UI_CONSTANTS } from '$lib/utils';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
@@ -7,84 +8,53 @@
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
+  
+  import { pdndDraggable, pdndDropTarget } from '$lib/actions/pdnd.svelte';
+  import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+  import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 
   const FLIP_DURATION = 300;
 
-  let draggingType = $state<'group' | 'site' | null>(null);
-  let draggingId = $state<string | null>(null);
-  let draggingGroupId = $state<string | null>(null);
+  onMount(() => {
+    return monitorForElements({
+      onDrop({ source, location }) {
+        const target = location.current.dropTargets[0];
+        if (!target) return;
 
-  let isGroupHandleActive = false;
+        const sourceData = source.data;
+        const targetData = target.data;
 
-  function handleGroupDragStart(e: DragEvent, id: string) {
-    if (!isGroupHandleActive) {
-      e.preventDefault();
-      return;
-    }
-    draggingType = 'group';
-    draggingId = id;
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-    }
-  }
+        if (sourceData.type !== 'site') return;
 
-  function handleGroupDragEnter(targetGroupId: string) {
-    if (draggingType !== 'group' || draggingId === targetGroupId || !draggingId) return;
+        const sourceId = sourceData.id as string;
+        const targetGroupId = targetData.groupId as string;
 
-    const groups = dataState.groups;
-    const fromIndex = groups.findIndex(g => g.id === draggingId);
-    const toIndex = groups.findIndex(g => g.id === targetGroupId);
+        if (targetData.isAddButton) {
+          if (sourceData.groupId !== targetGroupId) {
+             manager.moveSiteToGroup(sourceId, targetGroupId);
+          }
+          return;
+        }
 
-    if (fromIndex !== -1 && toIndex !== -1) {
-      const item = groups[fromIndex];
-      groups.splice(fromIndex, 1);
-      groups.splice(toIndex, 0, item);
-    }
-  }
+        if (targetData.type === 'site') {
+           const targetId = targetData.id as string;
+           if (sourceId === targetId) return;
 
-  function handleSiteDragStart(e: DragEvent, siteId: string, groupId: string) {
-    draggingType = 'site';
-    draggingId = siteId;
-    draggingGroupId = groupId;
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move';
-    }
-    e.stopPropagation();
-  }
+           const group = dataState.groups.find(g => g.id === targetGroupId);
+           if (!group) return;
 
-  function handleSiteDragEnter(targetSiteId: string, targetGroupId: string) {
-    if (draggingType !== 'site' || !draggingId || !draggingGroupId) return;
-    if (draggingId === targetSiteId) return;
-    if (draggingGroupId !== targetGroupId) return;
+           const targetIndex = group.sites.findIndex(s => s.id === targetId);
+           if (targetIndex === -1) return;
 
-    const groupIndex = dataState.groups.findIndex(g => g.id === targetGroupId);
-    if (groupIndex === -1) return;
+           const edge = extractClosestEdge(targetData);
+           
+           const finalIndex = edge === 'right' ? targetIndex + 1 : targetIndex;
 
-    const sites = dataState.groups[groupIndex].sites;
-    const fromIndex = sites.findIndex(s => s.id === draggingId);
-    const toIndex = sites.findIndex(s => s.id === targetSiteId);
-
-    if (fromIndex !== -1 && toIndex !== -1) {
-      const item = sites[fromIndex];
-      sites.splice(fromIndex, 1);
-      sites.splice(toIndex, 0, item);
-    }
-  }
-
-  function handleDragEnd() {
-    draggingType = null;
-    draggingId = null;
-    draggingGroupId = null;
-    isGroupHandleActive = false;
-    dataState.markDirty();
-  }
-
-  function handleDragOver(e: DragEvent) {
-    e.preventDefault();
-    if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = 'move';
-    }
-  }
+           manager.moveSite(sourceId, targetGroupId, finalIndex);
+        }
+      }
+    });
+  });
 
   function handleDeleteGroup(groupName: string, groupId: string) {
     appState.openConfirm({
@@ -95,45 +65,16 @@
   }
 </script>
 
-<svelte:window onmouseup={() => isGroupHandleActive = false} />
-
 <div class="w-full flex flex-col gap-5 pt-6 pb-0">
   
   {#each dataState.groups as group (group.id)}
-    <div 
-        class="group-item flex flex-col gap-4 transition-colors duration-200 rounded-xl border
-               {appState.isEditMode ? 'border-border/40' : 'border-transparent'}
-               {draggingType === 'group' && draggingId === group.id ? 'opacity-40 scale-[0.99]' : ''}"
-        animate:flip={{ duration: FLIP_DURATION }}
-        
-        draggable={appState.isEditMode}
-        ondragstart={(e) => handleGroupDragStart(e, group.id)}
-        ondragenter={() => handleGroupDragEnter(group.id)}
-        ondragend={handleDragEnd}
-        ondragover={handleDragOver}
-    >
-      <div 
-        class="flex items-center pb-3 px-1 h-10 mt-3 border-b border-border/40 cursor-default"
-        onmousedown={(e) => e.stopPropagation()} 
-        role="presentation"
-      >
-        <div 
-           class="p-1.5 mr-3 rounded-lg border border-border/60 text-text-dim transition-all touch-none bg-surface/50 shrink-0
-                  {appState.isEditMode ? 'opacity-100 cursor-grab hover:border-primary/50 hover:text-primary active:cursor-grabbing' : 'opacity-0 pointer-events-none border-transparent'}"
-           onmousedown={() => isGroupHandleActive = true}
-           role="button"
-           tabindex="0"
-        >
-           <GripHorizontal class="w-4 h-4" />
-        </div>
-        
+    <div class="group-item flex flex-col gap-4 rounded-xl border border-transparent transition-colors">
+      
+      <div class="flex items-center pb-3 px-1 h-10 mt-3 border-b border-border/40 cursor-default">
         <div class="flex-1 flex items-center min-w-0 h-full">
-            <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate uppercase flex-1">{group.name}</h2>
+            <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate flex-1 uppercase">{group.name}</h2>
             
-            <div 
-                class="flex gap-1 transition-opacity animate-fade shrink-0 ml-2
-                       {appState.isEditMode ? 'opacity-60 hover:opacity-100' : 'opacity-0 pointer-events-none'}"
-            >
+            <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ? 'opacity-60 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}>
                  <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                    <Pencil class="w-4 h-4" />
                 </button>
@@ -144,29 +85,31 @@
         </div>
       </div>
 
-      <div 
-        class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px] p-2 rounded-lg transition-colors"
-        ondragover={handleDragOver} 
-        role="list"
-      >
+      <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px] p-2 rounded-lg">
           {#each group.sites as item (item.id)}
             <div 
-                role="listitem"
-                class="relative h-full" 
-                
+                class="relative h-full transition-opacity duration-200"
                 animate:flip={{ duration: FLIP_DURATION }}
                 
-                draggable={appState.isEditMode}
-                ondragstart={(e) => handleSiteDragStart(e, item.id, group.id)}
-                ondragenter={() => handleSiteDragEnter(item.id, group.id)}
-                ondragend={handleDragEnd}
+                use:pdndDraggable={{ 
+                    type: 'site', 
+                    id: item.id, 
+                    groupId: group.id 
+                }}
                 
-                style="opacity: {draggingType === 'site' && draggingId === item.id ? '0.4' : '1'}; transition: opacity 0.2s;"
+                use:pdndDropTarget={{ 
+                    type: 'site', 
+                    id: item.id, 
+                    groupId: group.id,
+                    isAddButton: false
+                }}
             >
-                <SiteCard site={item} groupId={group.id} />
-                
+                <div class="h-full {appState.isEditMode ? 'pointer-events-none' : ''}">
+                   <SiteCard site={item} groupId={group.id} />
+                </div>
+
                 {#if appState.isEditMode}
-                    <div class="absolute inset-0 z-10 cursor-grab active:cursor-grabbing rounded-xl"></div>
+                    <div class="absolute inset-0 z-10 rounded-xl border border-transparent hover:border-primary/30 transition-colors pointer-events-none"></div>
                 {/if}
             </div>
           {/each}
@@ -176,9 +119,14 @@
                 onclick={() => appState.openSiteModal(group.id)} 
                 class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}
                 title={MESSAGES.UI.NEW_SITE}
-                ondragenter={(e) => e.preventDefault()}
+                
+                use:pdndDropTarget={{ 
+                    type: 'site', 
+                    groupId: group.id, 
+                    isAddButton: true 
+                }}
             >
-                <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center pointer-events-none group-hover:scale-110 transition-transform">
                     <Plus class="w-4 h-4" />
                 </div>
             </button>

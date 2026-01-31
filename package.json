@@ -16,7 +16,9 @@
     "svelte": "^5.1.0",
     "tailwindcss": "^4.0.0",
     "lucide-svelte": "^0.473.0",
-    "svelte-dnd-action": "^0.9.56"
+    "svelte-dnd-action": "^0.9.56",
+    "@atlaskit/pragmatic-drag-and-drop": "^1.1.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
