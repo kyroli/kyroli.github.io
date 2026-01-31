@@ -9,6 +9,18 @@
   import { dndzone, SOURCES, TRIGGERS } from 'svelte-dnd-action';
   
   const flipDurationMs = 200;
+  
+  let groupDragDisabled = $state(true);
+
+  function handleGroupDragStart(e: MouseEvent) {
+    if (e.button === 0) {
+        groupDragDisabled = false;
+    }
+  }
+
+  function handleGlobalMouseUp() {
+    groupDragDisabled = true;
+  }
 
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
     const { items: newItems, info } = e.detail;
@@ -16,6 +28,7 @@
     
     if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
       dataState.markDirty();
+      groupDragDisabled = true;
     }
   }
 
@@ -41,12 +54,14 @@
   }
 </script>
 
+<svelte:window onmouseup={handleGlobalMouseUp} />
+
 <div 
   class="w-full flex flex-col gap-5 pt-6 pb-0"
   use:dndzone={{
     items: dataState.groups, 
     flipDurationMs,
-    dragDisabled: !appState.isEditMode,
+    dragDisabled: !appState.isEditMode || groupDragDisabled,
     type: 'group',
     dropTargetStyle: {}
   }}
@@ -61,7 +76,12 @@
     >
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
         {#if appState.isEditMode}
-           <div class="cursor-grab active:cursor-grabbing p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50">
+           <div 
+             class="cursor-grab active:cursor-grabbing p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50"
+             role="button"
+             tabindex="0"
+             onmousedown={handleGroupDragStart}
+           >
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
@@ -98,16 +118,19 @@
                 <SiteCard {site} groupId={group.id} />
             </div>
           {/each}
-      </div>
-      
-      {#if appState.isEditMode}
-        <div class="px-2 pb-2">
-            <button onclick={() => appState.openSiteModal(group.id)} class={`flex gap-2 items-center justify-center rounded-xl border border-dashed border-border/60 text-text-dim/60 hover:text-primary hover:border-primary/50 transition-all h-[48px] w-full cursor-pointer bg-surface/10 hover:bg-surface/50 group active:scale-[0.99]`}>
-               <Plus class="w-4 h-4 group-hover:scale-110 transition-transform" />
-               <span class="text-xs font-bold">{MESSAGES.UI.NEW_SITE}</span>
+
+          {#if appState.isEditMode}
+            <button 
+                onclick={() => appState.openSiteModal(group.id)} 
+                class={`flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}
+                title={MESSAGES.UI.NEW_SITE}
+            >
+               <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                   <Plus class="w-4 h-4" />
+              </div>
             </button>
-        </div>
-      {/if}
+          {/if}
+      </div>
     </div>
   {/each}
 
