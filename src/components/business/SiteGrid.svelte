@@ -11,44 +11,37 @@
 
   const FLIP_DURATION = 300;
 
-  // --- 分组逻辑 ---
-  function handleGroupHover(source: any, targetId: string) {
+  function handleGroupHover(source, targetId) {
     if (source.type === 'group') {
         manager.swapGroups(source.id, targetId);
     }
   }
 
-  function handleGroupDrop(source: any, targetId: string) {
-    // 跨组移动：拖到分组标题/背景上 -> 移动到该组末尾
+  function handleGroupDrop(source, targetId) {
     if (source.type === 'site' && source.groupId !== targetId) {
         manager.moveSite(source.id, null, targetId);
     }
   }
 
-  // --- 卡片逻辑 ---
-  function handleSiteHover(source: any, targetId: string, targetGroupId: string) {
-    // 同组排序：实时生效 (丝滑动画)
+  function handleSiteHover(source, targetId, targetGroupId) {
     if (source.type === 'site' && source.groupId === targetGroupId) {
         manager.moveSite(source.id, targetId, targetGroupId);
     }
-    // 跨组：Hover时不移动，防止DOM销毁导致拖拽断裂
   }
 
-  function handleSiteDrop(source: any, targetId: string, targetGroupId: string) {
-    // 跨组排序：松手生效
+  function handleSiteDrop(source, targetId, targetGroupId) {
     if (source.type === 'site' && source.groupId !== targetGroupId) {
         manager.moveSite(source.id, targetId, targetGroupId);
     }
   }
 
-  // --- 区域逻辑 ---
-  function handleZoneDrop(source: any, targetGroupId: string) {
+  function handleZoneDrop(source, targetGroupId) {
      if (source.type === 'site') {
         manager.moveSite(source.id, null, targetGroupId);
     }
   }
 
-  function handleDeleteGroup(groupName: string, groupId: string) {
+  function handleDeleteGroup(groupName, groupId) {
     appState.openConfirm({
       msg: `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`,
       onConfirm: () => manager.deleteGroup(groupId),
@@ -126,7 +119,7 @@
                 use:dropTarget={{ 
                     type: 'zone', 
                     groupId: group.id, 
-                    onHover: () => {}, // Zone 不需要 hover 交换
+                    onHover: () => {}, 
                     onDrop: (s) => handleZoneDrop(s, group.id)
                 }}
             >

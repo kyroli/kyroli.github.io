@@ -1,10 +1,6 @@
 import { appState } from '../core/app.svelte';
 
-// ----------------------------------------------------------------------
-// Zero-Dependency Native DnD Engine for Svelte 5 (Enhanced)
-// ----------------------------------------------------------------------
-
-let draggingItem = $state<{ type: 'group' | 'site', id: string, groupId?: string } | null>(null);
+let draggingItem = $state(null);
 
 export const dndState = {
     get isDragging() { return !!draggingItem; },
@@ -13,9 +9,9 @@ export const dndState = {
     get groupId() { return draggingItem?.groupId; }
 };
 
-function throttle(func: Function, limit: number) {
-  let inThrottle: boolean;
-  return function(this: any, ...args: any[]) {
+function throttle(func, limit) {
+  let inThrottle;
+  return function(...args) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -24,14 +20,14 @@ function throttle(func: Function, limit: number) {
   }
 }
 
-export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id: string, groupId?: string }) {
+export function draggable(node, data) {
     
     $effect(() => {
         node.draggable = appState.isEditMode;
         node.style.cursor = appState.isEditMode ? (data.type === 'group' ? 'grab' : 'move') : '';
     });
 
-    function onDragStart(e: DragEvent) {
+    function onDragStart(e) {
         if (!appState.isEditMode) {
             e.preventDefault();
             return;
@@ -47,35 +43,33 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            // 此时元素还是原样（不透明），浏览器会截取这个状态作为拖拽图
             e.dataTransfer.setDragImage(node, x, y);
         }
         
-        // 延时添加样式，只改变留在原地的元素，不影响鼠标上的拖拽图
         requestAnimationFrame(() => {
-            // 设计：让原地变成一个“虚线占位符”，看着更漂亮
             node.classList.add(
-                'opacity-100', // 保持不透明，因为我们要显示边框
-                'grayscale',   //以此区分
+                'opacity-30', 
+                'grayscale',   
                 'border-2', 
                 'border-dashed', 
-                'border-primary/50', 
-                'bg-surface/50',
-                '[&>*]:opacity-20' // 让内部内容变淡，只突出边框
+                'border-primary/50'
             );
+            
+            if (data.type === 'site') {
+                 node.classList.add('bg-surface/50');
+            }
         });
     }
 
     function onDragEnd() {
         draggingItem = null;
         node.classList.remove(
-            'opacity-100', 
+            'opacity-30', 
             'grayscale', 
             'border-2', 
             'border-dashed', 
             'border-primary/50', 
-            'bg-surface/50',
-            '[&>*]:opacity-20'
+            'bg-surface/50'
         );
     }
 
@@ -83,7 +77,7 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
     node.addEventListener('dragend', onDragEnd);
 
     return {
-        update(newData: any) { data = newData; },
+        update(newData) { data = newData; },
         destroy() {
             node.removeEventListener('dragstart', onDragStart);
             node.removeEventListener('dragend', onDragEnd);
@@ -91,16 +85,10 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
     };
 }
 
-export function dropTarget(node: HTMLElement, params: { 
-    type: 'group' | 'site' | 'zone', 
-    id?: string, 
-    groupId?: string,
-    onHover: (source: any) => void,
-    onDrop?: (source: any) => void  // 新增：支持 Drop 回调
-}) {
+export function dropTarget(node, params) {
     const checkHover = throttle(params.onHover, 100);
 
-    function onDragOver(e: DragEvent) {
+    function onDragOver(e) {
         e.preventDefault(); 
         e.stopPropagation();
 
@@ -111,8 +99,7 @@ export function dropTarget(node: HTMLElement, params: {
         checkHover(draggingItem);
     }
 
-    // 新增：处理松手时的逻辑
-    function onDrop(e: DragEvent) {
+    function onDrop(e) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -125,7 +112,7 @@ export function dropTarget(node: HTMLElement, params: {
     node.addEventListener('drop', onDrop);
 
     return {
-        update(newParams: any) { params = newParams; },
+        update(newParams) { params = newParams; },
         destroy() { 
             node.removeEventListener('dragover', onDragOver); 
             node.removeEventListener('drop', onDrop); 
