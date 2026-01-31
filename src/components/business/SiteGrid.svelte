@@ -6,32 +6,33 @@
   import { MESSAGES } from '$lib/i18n';
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
-  import { dndzone, SOURCES, TRIGGERS, type DndEvent } from 'svelte-dnd-action';
+  import { dndzone, type DndEvent } from 'svelte-dnd-action';
   
   const flipDurationMs = 200;
 
-  let canDragGroup = $state(false);
-
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
-    const { items: newItems, info } = e.detail;
+    const { items: newItems } = e.detail;
     dataState.groups = newItems;
     
-    if (info.source === SOURCES.POINTER && (info.trigger === TRIGGERS.DROPPED || info.trigger === TRIGGERS.DRAG_STOPPED)) {
+    if (e.detail.trigger === 'dropped') {
       dataState.markDirty();
-      canDragGroup = false; 
     }
   }
 
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: newSites, info } = e.detail;
+    const { items: newSites } = e.detail;
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
     
     if (groupIndex > -1) {
-        dataState.groups[groupIndex].sites = newSites;
-        
-        if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-            dataState.markDirty();
-        }
+      const currentGroup = dataState.groups[groupIndex];
+      dataState.groups[groupIndex] = { 
+        ...currentGroup, 
+        sites: newSites 
+      };
+
+      if (e.detail.trigger === 'dropped') {
+        dataState.markDirty();
+      }
     }
   }
 
@@ -44,14 +45,12 @@
   }
 </script>
 
-<svelte:window onmouseup={() => canDragGroup = false} />
-
 <div 
   class="w-full flex flex-col gap-6 pt-6 pb-20"
   use:dndzone={{
     items: dataState.groups, 
     flipDurationMs,
-    dragDisabled: !appState.isEditMode || !canDragGroup, 
+    dragDisabled: !appState.isEditMode, 
     type: 'group',
     dropTargetStyle: { outline: 'none', border: 'none' }
   }}
@@ -68,14 +67,13 @@
         
         {#if appState.isEditMode}
            <div 
-             class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
-             onmousedown={() => canDragGroup = true}
-             ontouchstart={() => canDragGroup = true}
-             role="button"
-             tabindex="0"
-           >
-             <GripHorizontal class="w-4 h-4" />
-          </div>
+              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
+              data-dnd-handle
+              role="button"
+              tabindex="0"
+            >
+              <GripHorizontal class="w-4 h-4" />
+           </div>
         {/if}
         
         <div class="flex-1 flex items-center min-w-0 justify-between">
@@ -108,7 +106,7 @@
         onfinalize={(e) => handleSiteDnd(group.id, e)}
       >
           {#each group.sites as item (item.id)}
-            <div role="listitem">
+            <div role="listitem" class="h-full">
                 <SiteCard site={item} groupId={group.id} />
             </div>
           {/each}
