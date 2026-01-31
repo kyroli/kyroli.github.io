@@ -1,11 +1,12 @@
 import { dataState } from '../core/data.svelte';
 import { appState } from '../core/app.svelte';
+import { MESSAGES } from '../i18n';
 import type { Group, Site, NavData } from '../types';
 
 class DataManager {
 
   addGroup(name: string) {
-    if (!name.trim()) throw new Error('分组名称不能为空');
+    if (!name.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
     
     const newGroup: Group = {
       id: crypto.randomUUID(),
@@ -14,23 +15,23 @@ class DataManager {
     };
     
     dataState.setGroups([...dataState.groups, newGroup]);
-    appState.showToast('分组已添加', 'success');
+    appState.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
   }
 
   renameGroup(groupId: string, newName: string) {
-    if (!newName.trim()) throw new Error('分组名称不能为空');
+    if (!newName.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
     
     const groups = dataState.groups.map(g => 
       g.id === groupId ? { ...g, name: newName.trim() } : g
     );
     dataState.setGroups(groups);
-    appState.showToast('分组已重命名', 'success');
+    appState.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
   }
 
   deleteGroup(groupId: string) {
     const groups = dataState.groups.filter(g => g.id !== groupId);
     dataState.setGroups(groups);
-    appState.showToast('分组已删除', 'success');
+    appState.showToast(MESSAGES.TOAST.GROUP_DELETED, 'success');
   }
 
   updateGroupOrder(newGroups: Group[]) {
@@ -41,7 +42,7 @@ class DataManager {
     const { name, url, icon, id } = siteData;
     
     if (!name?.trim() || !url?.trim()) {
-      throw new Error('名称和链接不能为空');
+      throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
     }
 
     let finalUrl = url.trim();
@@ -51,7 +52,7 @@ class DataManager {
 
     const groups = [...dataState.groups];
     const groupIndex = groups.findIndex(g => g.id === groupId);
-    if (groupIndex === -1) throw new Error('分组不存在');
+    if (groupIndex === -1) throw new Error(MESSAGES.TOAST.GROUP_NOT_FOUND);
 
     const group = { ...groups[groupIndex] };
     const newSite: Site = {
@@ -69,7 +70,7 @@ class DataManager {
 
     groups[groupIndex] = group;
     dataState.setGroups(groups);
-    appState.showToast('站点已保存', 'success');
+    appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
   }
 
   deleteSite(groupId: string, siteId: string) {
@@ -80,7 +81,7 @@ class DataManager {
       return g;
     });
     dataState.setGroups(groups);
-    appState.showToast('站点已删除', 'success');
+    appState.showToast(MESSAGES.TOAST.SITE_DELETED, 'success');
   }
 
   moveSite(siteId: string, fromGroupId: string, toGroupId: string, newIndex: number) {
@@ -118,19 +119,19 @@ class DataManager {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    appState.showToast('备份已下载', 'success');
+    appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
   }
 
   async importData(file: File) {
     try {
       const text = await file.text();
       const json = JSON.parse(text);
-      if (!Array.isArray(json.groups)) throw new Error('无效的备份文件');
+      if (!Array.isArray(json.groups)) throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
       
       dataState.setGroups(json.groups);
-      appState.showToast('数据已恢复', 'success');
+      appState.showToast(MESSAGES.TOAST.RESTORE_SUCCESS, 'success');
     } catch (e) {
-      appState.showToast('导入失败：文件格式错误', 'error');
+      appState.showToast(MESSAGES.TOAST.IMPORT_FAIL_FORMAT, 'error');
     }
   }
 }

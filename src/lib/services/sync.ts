@@ -1,6 +1,7 @@
 import { GithubClient } from '../infra/github';
 import { dataState } from '../core/data.svelte';
 import { appState } from '../core/app.svelte';
+import { MESSAGES } from '../i18n';
 import type { NavData, GithubConfig } from '../types';
 
 class SyncService {
@@ -34,12 +35,12 @@ class SyncService {
           console.warn('Conflict detected');
           
           appState.openConfirm({
-            msg: '云端数据已有更新，且本地有未保存修改。是否强制覆盖云端数据？(取消则保留本地修改，但这会导致下次同步失败)',
+            msg: MESSAGES.CONFIRM.CONFLICT_FORCE,
             onConfirm: () => this.forcePush(),
           });
         } else {
           dataState.replaceData(remoteContent, remote.sha);
-          appState.showToast('已同步云端最新数据', 'success');
+          appState.showToast(MESSAGES.TOAST.SYNC_PULL_SUCCESS, 'success');
         }
       } else {
         dataState.updateSyncState('success');
@@ -63,17 +64,17 @@ class SyncService {
       );
 
       dataState.updateSyncState('success', sha);
-      appState.showToast('同步成功', 'success');
+      appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
     } catch (e: any) {
       console.error('Push failed:', e);
       
       if (e.message === 'CONFLICT') {
         dataState.updateSyncState('conflict');
-        appState.showToast('同步失败：云端版本冲突', 'error');
+        appState.showToast(MESSAGES.TOAST.SYNC_CONFLICT, 'error');
         await this.init(); 
       } else {
         dataState.updateSyncState('error', undefined, this.formatError(e));
-        appState.showToast(`同步失败: ${this.formatError(e)}`, 'error');
+        appState.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${this.formatError(e)}`, 'error');
       }
     }
   }
@@ -91,10 +92,10 @@ class SyncService {
       );
 
       dataState.updateSyncState('success', sha);
-      appState.showToast('强制覆盖成功', 'success');
+      appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
     } catch (e: any) {
       dataState.updateSyncState('error', undefined, this.formatError(e));
-      appState.showToast('强制覆盖失败', 'error');
+      appState.showToast(MESSAGES.TOAST.FORCE_PUSH_FAIL, 'error');
     }
   }
 
@@ -105,12 +106,12 @@ class SyncService {
       if (remote) {
         const content = GithubClient.parseContent(remote.content);
         dataState.replaceData(content, remote.sha);
-        appState.showToast('已重置为云端版本', 'success');
+        appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
       } else {
-        throw new Error('云端无数据');
+        throw new Error(MESSAGES.TOAST.REMOTE_EMPTY);
       }
     } catch (e: any) {
-      appState.showToast('重置失败', 'error');
+      appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
       dataState.updateSyncState('error', undefined, this.formatError(e));
     }
   }
@@ -121,10 +122,10 @@ class SyncService {
   }
 
   private formatError(e: any): string {
-    if (e.message === 'TOKEN_INVALID') return 'Token 无效';
-    if (e.message === 'NOT_FOUND') return '仓库不存在';
-    if (e.message === 'CONFLICT') return '版本冲突';
-    return '网络或未知错误';
+    if (e.message === 'TOKEN_INVALID') return MESSAGES.ERRORS.TOKEN_INVALID;
+    if (e.message === 'NOT_FOUND') return MESSAGES.ERRORS.REPO_NOT_FOUND;
+    if (e.message === 'CONFLICT') return MESSAGES.ERRORS.CONFLICT;
+    return MESSAGES.ERRORS.UNKNOWN;
   }
 }
 

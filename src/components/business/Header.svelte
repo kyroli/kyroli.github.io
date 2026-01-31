@@ -63,7 +63,7 @@
       <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm group-hover:rotate-6 transition-transform">N</div>
       <div class="flex flex-col">
         <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
-        <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">Personal Startpage</span>
+        <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">{MESSAGES.UI.SUBTITLE}</span>
       </div>
     </a>
     
@@ -94,7 +94,7 @@
             >
               {#if isSyncing}
                 <Loader2 class="w-4 h-4 animate-spin mr-2" />
-                <span>Syncing</span>
+                <span>{MESSAGES.UI.SYNCING}</span>
               {:else}
                 <span class="mr-2">{MESSAGES.UI.SAVE}</span>
                 <Save class="w-4 h-4" />

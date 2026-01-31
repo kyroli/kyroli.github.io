@@ -1,6 +1,8 @@
 export const MESSAGES = {
   // 通用界面元素
   UI: {
+    APP_NAME: 'NAV-ZERO',
+    SUBTITLE: 'Personal Startpage',
     SAVE: '保存',
     CONFIRM: '确定',
     CANCEL: '取消',
@@ -11,6 +13,7 @@ export const MESSAGES = {
     SEARCH_PLACEHOLDER: 'Search...',
     LOADING: '同步中...',
     WAITING: '正在连接...',
+    SYNCING: '同步中',
     SAVE_AND_SYNC: '保存并同步',
     CHECK_CONFIG: '检查配置',
     CONFIRM_ACTION: '确认操作',
@@ -50,33 +53,42 @@ export const MESSAGES = {
 
   // 交互反馈 (Toast)
   TOAST: {
+    // 成功类
     SYNC_SUCCESS: '同步成功',
-    SYNC_FAIL_PREFIX: '同步失败: ',
+    SYNC_PULL_SUCCESS: '已同步云端最新数据',
     RESET_SUCCESS: '已重置为云端版本',
-    RESET_FAIL: '重置失败',
-    OVERWRITE_SUCCESS: '覆盖成功',
-    OVERWRITE_FAIL_PREFIX: '覆盖失败: ',
+    FORCE_PUSH_SUCCESS: '强制覆盖成功',
     BACKUP_DOWNLOADED: '备份已下载',
-    RESTORE_SUCCESS: '数据已恢复，请记得同步',
+    RESTORE_SUCCESS: '数据已恢复',
+    CONFIG_SAVED: '连接成功，配置已保存',
+    GROUP_RENAMED: '分组已重命名',
+    GROUP_ADDED: '分组已添加',
+    GROUP_DELETED: '分组已删除',
+    SITE_SAVED: '站点已保存',
+    SITE_DELETED: '站点已删除',
+    
+    // 错误类
+    SYNC_FAIL_PREFIX: '同步失败: ',
+    SYNC_CONFLICT: '同步失败：云端版本冲突',
+    RESET_FAIL: '重置失败',
+    FORCE_PUSH_FAIL: '强制覆盖失败',
     INVALID_BACKUP: '无效的备份文件',
+    IMPORT_FAIL_FORMAT: '导入失败：文件格式错误',
     UNKNOWN_ERROR: '发生未知错误',
     CONFIG_MISSING: '请先配置 GitHub Token',
     CONFIG_INCOMPLETE: '请填写完整信息',
     CONFIG_FORMAT_ERROR: '格式错误：用户名/仓库名',
-    CONFIG_SAVED: '连接成功，配置已保存',
-    GROUP_NAME_REQUIRED: '请输入分组名称',
-    GROUP_RENAMED: '分组已重命名',
-    GROUP_ADDED: '分组已添加',
+    GROUP_NAME_REQUIRED: '分组名称不能为空',
     SITE_INFO_REQUIRED: '请填写名称和链接',
     SITE_PROTOCOL_ERROR: '仅支持 HTTP/HTTPS 协议',
     SITE_URL_ERROR: '无效的链接格式',
-    SITE_SAVED: '站点已保存',
-    SITE_DELETED: '站点已删除',
+    GROUP_NOT_FOUND: '分组不存在',
+    REMOTE_EMPTY: '云端无数据',
   },
 
   // 确认对话框
   CONFIRM: {
-    CONFLICT: '云端数据已更新（版本冲突）。\n确定强制覆盖云端吗？（取消则请手动刷新页面）',
+    CONFLICT_FORCE: '云端数据已有更新，且本地有未保存修改。\n是否强制覆盖云端数据？\n(取消则保留本地修改，但这会导致下次同步失败)',
     RESTORE: '确定要覆盖当前所有数据吗？此操作不可撤销。',
     SYNC_CHANGES: '确定要同步当前修改到 GitHub 吗？',
     DISCARD_CHANGES: '确定丢弃修改并重置吗？',
@@ -87,13 +99,14 @@ export const MESSAGES = {
 
   // 错误代码映射
   ERRORS: {
-    REPO_NOT_FOUND: '找不到该仓库，请检查“用户名/仓库名”是否正确',
-    TOKEN_INVALID: 'Token 无效或已过期，请重新生成',
-    CONFLICT: '云端数据已更新（版本冲突），请刷新或强制覆盖',
+    REPO_NOT_FOUND: '仓库不存在',
+    TOKEN_INVALID: 'Token 无效',
+    CONFLICT: '版本冲突',
     PUSH_FAILED: '同步推送失败，请检查网络连接',
     NETWORK_ERROR: '网络连接失败，请检查网络设置',
     FORBIDDEN: 'API 调用受限或无权限 (403)',
     NOT_FOUND: '请求的资源不存在 (404)',
-    SERVER_ERROR: '服务器响应错误'
+    SERVER_ERROR: '服务器响应错误',
+    UNKNOWN: '网络或未知错误'
   }
 } as const;
