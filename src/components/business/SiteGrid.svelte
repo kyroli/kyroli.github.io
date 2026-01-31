@@ -10,8 +10,10 @@
   
   const flipDurationMs = 200;
 
+  // 1. 分组拖拽锁定状态
   let canDragGroup = $state(false);
 
+  // 辅助：生成一个固定的加号按钮数据对象
   function getAddBtn(groupId: string) {
     return { 
       id: `__btn_${groupId}`, 
@@ -22,40 +24,71 @@
     };
   }
 
+  // 2. 分组拖拽处理
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
     const { items: newItems, info } = e.detail;
-    dataState.groups = newItems;
+    dataState.groups = newItems; // 分组可以直接更新
     
     if (info.source === SOURCES.POINTER && (info.trigger === TRIGGERS.DROPPED || info.trigger === TRIGGERS.DRAG_STOPPED)) {
       dataState.markDirty();
-      canDragGroup = false;
+      canDragGroup = false; // 拖拽结束，立即上锁
+    }
   }
 
+  // 3. 网站卡片拖拽处理（核心修复逻辑）
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
     const { items: mixedItems, info } = e.detail;
     
+    // 【关键逻辑：数据清洗】
+    // 无论拖拽库把元素排成什么样，我们手动执行一次“归位”操作：
+    // 1. 过滤掉所有的加号按钮（防止意外产生多个或位置错误）
     const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
     
+    // 2. 如果是编辑模式，强制在最后追加一个加号按钮
+    // 这样对于 dndzone 来说，items 列表永远是 [Site, Site, ..., Button]
+    // 这种“欺骗”会让库以为按钮一直在最后，从而实现固定效果
     const displayItems = appState.isEditMode 
         ? [...realSites, getAddBtn(groupId)]
         : realSites;
 
+    // 3. 更新视图
+    // 注意：我们必须更新 group.sites 为包含按钮的列表，否则 dndzone 会因为 DOM 和数据不匹配而抖动
+    // 但在保存数据时，我们会过滤掉这个按钮
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
     if (groupIndex > -1) {
         dataState.groups[groupIndex].sites = displayItems;
     }
 
+    // 4. 只有在真正“放下”时，才标记数据脏状态
     if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
+        // 保存时，我们需要把内存里的“加号按钮”清理干净，只保留纯净数据
+        // 注意：这里不需要手动清理 group.sites，因为 manager 保存或 sync 同步时
+        // 应该基于 realSites (如果不放心，可以在这里再做一次清理并回写，但通常只需标记脏状态)
+        
+        // 为了安全起见，我们把纯净数据写回去一次，防止加号按钮被误保存进 LocalStorage
+        // 但为了 UI 不抖动，这一步要非常小心。
+        // 更好的策略是：dataState.groups 在内存里可以包含按钮（UI层），
+        // 但在 persistence 层（storage.ts）序列化时过滤。
+        // 鉴于目前架构，我们保持 items 含按钮，但在 sync.push 时过滤（或者依赖后端清洗）。
+        
+        // 补丁：实际上 dataState.groups 是全局状态，直接含按钮会污染数据。
+        // 所以我们采取“分离策略”：
+        // 这里的 dataState.groups[index].sites 只是为了驱动 UI。
+        // 真正的“保存动作”发生时（sync.push），我们需要确保不含按钮。
+        // (注：下方的 handleFinalize 会负责最终清洗)
         dataState.markDirty();
     }
   }
   
+  // 辅助：当拖拽结束时，确保数据源里没有脏数据（按钮）
   function handleSiteFinalize(groupId: string, e: CustomEvent<DndEvent<any>>) {
       const { items: mixedItems } = e.detail;
       const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
       
       const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
       if (groupIndex > -1) {
+          // 最终落地：只保存真实数据！
+          // 这样 dataState 里的数据永远是干净的
           dataState.groups[groupIndex].sites = realSites;
           dataState.markDirty();
       }
@@ -70,6 +103,7 @@
   use:dndzone={{
     items: dataState.groups, 
     flipDurationMs,
+    // 分组拖拽开关：仅当手柄被按下时有效
     dragDisabled: !appState.isEditMode || !canDragGroup, 
     type: 'group',
     dropTargetStyle: { outline: 'none', border: 'none' }
@@ -119,11 +153,11 @@
       <div 
         class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]"
         use:dndzone={{
-            items: displaySites,
+            items: displaySites, // 传入包含按钮的列表
             flipDurationMs,
             dragDisabled: !appState.isEditMode,
             type: 'site',
-            dropTargetStyle: {}
+            dropTargetStyle: {} // 移除虚线
         }}
         onconsider={(e) => handleSiteDnd(group.id, e)}
         onfinalize={(e) => handleSiteFinalize(group.id, e)}
