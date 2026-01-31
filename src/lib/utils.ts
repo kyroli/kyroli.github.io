@@ -10,33 +10,7 @@ export const UI_CONSTANTS = {
 } as const;
 
 // =========================================
-// 2. 错误治理
-// =========================================
-export class AppError extends Error {
-  code: string;
-  constructor(code: string, message?: string) {
-    super(message || code);
-    this.name = 'AppError';
-    this.code = code;
-  }
-}
-
-export function resolveError(err: unknown): string {
-  if (err instanceof AppError) {
-    const msg = MESSAGES.ERRORS[err.code as keyof typeof MESSAGES.ERRORS];
-    return msg || `${MESSAGES.TOAST.UNKNOWN_ERROR} (${err.code})`;
-  }
-
-  if (err instanceof Error) {
-    if (err.message === 'Failed to fetch') return MESSAGES.ERRORS.NETWORK_ERROR;
-    return err.message;
-  }
-
-  return MESSAGES.TOAST.UNKNOWN_ERROR;
-}
-
-// =========================================
-// 3. 资源管理 (图标加载)
+// 2. 资源管理 (图标加载)
 // =========================================
 interface AssetModule {
   default?: string;

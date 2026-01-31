@@ -33,13 +33,13 @@
 
     <main>
       {#if dataState.isReady}
-        {#if !dataState.hasToken && !appState.isConfigOpen}
+        {#if !dataState.hasToken && appState.activeModal !== 'config'}
           <div class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim animate-fade">
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
        
         {/if}
-   
+  
         <SiteGrid />
         
       {:else if dataState.syncError}
@@ -71,6 +71,7 @@
       groupId={appState.editingGroupId}
       onClose={appState.closeModal}
     />
+  
   {/if}
 
   {#if appState.activeModal === 'confirm' && appState.confirmPayload}
