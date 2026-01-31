@@ -11,7 +11,11 @@ const KEYS = {
 export const storage = {
   get config(): GithubConfig {
     const raw = localStorage.getItem(KEYS.CONFIG);
-    return raw ? JSON.parse(raw) : { owner: '', repo: '', token: '' };
+    try {
+      return raw ? JSON.parse(raw) : { owner: '', repo: '', token: '' };
+    } catch {
+      return { owner: '', repo: '', token: '' };
+    }
   },
 
   set config(v: GithubConfig) {
@@ -20,7 +24,11 @@ export const storage = {
 
   get data(): NavData {
     const raw = localStorage.getItem(KEYS.DATA);
-    return raw ? JSON.parse(raw) : { groups: [] };
+    try {
+      return raw ? JSON.parse(raw) : { groups: [] };
+    } catch {
+      return { groups: [] };
+    }
   },
 
   set data(v: NavData) {

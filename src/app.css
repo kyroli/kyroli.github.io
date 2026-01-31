@@ -25,9 +25,6 @@
     --text-dim: #71717a;
     --icon-bg: #f1f5f9; 
     --danger: #d32f2f;
-    
-    --fallback-bg-l: 90%;
-    --fallback-text-l: 30%;
   }
 
   :root.dark {
@@ -39,9 +36,6 @@
     --text-dim: #a1a1aa;
     --icon-bg: #27272a;
     --danger: #f44336;
-
-    --fallback-bg-l: 20%;
-    --fallback-text-l: 90%;
   }
 
   body {
