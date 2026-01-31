@@ -4,8 +4,6 @@
   "description": "A minimal personal startpage built with Svelte and TailwindCSS",
   "private": true,
   "type": "module",
-  "author": "Kyro Li",
-  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

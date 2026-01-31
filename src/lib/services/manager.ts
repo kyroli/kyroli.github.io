@@ -5,25 +5,17 @@ import type { Group, Site, NavData } from '../types';
 
 class DataManager {
 
+  // ... (保留 addGroup, renameGroup, deleteGroup 不变) ...
   addGroup(name: string) {
     if (!name.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
-    
-    const newGroup: Group = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      sites: []
-    };
-    
+    const newGroup: Group = { id: crypto.randomUUID(), name: name.trim(), sites: [] };
     dataState.setGroups([...dataState.groups, newGroup]);
     appState.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
   }
 
   renameGroup(groupId: string, newName: string) {
     if (!newName.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
-    
-    const groups = dataState.groups.map(g => 
-      g.id === groupId ? { ...g, name: newName.trim() } : g
-    );
+    const groups = dataState.groups.map(g => g.id === groupId ? { ...g, name: newName.trim() } : g);
     dataState.setGroups(groups);
     appState.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
   }
@@ -33,35 +25,81 @@ class DataManager {
     dataState.setGroups(groups);
     appState.showToast(MESSAGES.TOAST.GROUP_DELETED, 'success');
   }
+  // ... (以上保留) ...
 
   updateGroupOrder(newGroups: Group[]) {
     dataState.setGroups(newGroups);
   }
 
+  // --- 核心：原子化交换分组 ---
   swapGroups(sourceId: string, targetId: string) {
     const groups = [...dataState.groups];
     const srcIdx = groups.findIndex(g => g.id === sourceId);
     const tgtIdx = groups.findIndex(g => g.id === targetId);
     
-    if (srcIdx === -1 || tgtIdx === -1) return;
+    if (srcIdx === -1 || tgtIdx === -1 || srcIdx === tgtIdx) return;
 
-    const [removed] = groups.splice(srcIdx, 1);
-    groups.splice(tgtIdx, 0, removed);
+    // 移动元素
+    const [item] = groups.splice(srcIdx, 1);
+    groups.splice(tgtIdx, 0, item);
     
+    dataState.setGroups(groups);
+  }
+
+  // --- 核心：原子化移动卡片（支持跨组） ---
+  moveSite(sourceId: string, targetId: string | null, targetGroupId: string) {
+    // 使用深拷贝防止引用污染
+    const groups = structuredClone(dataState.groups);
+    
+    // 1. 寻找源卡片
+    let sourceSite: Site | undefined;
+    let sourceGroupIdx = -1;
+    let sourceSiteIdx = -1;
+
+    for (let i = 0; i < groups.length; i++) {
+        const idx = groups[i].sites.findIndex((s: Site) => s.id === sourceId);
+        if (idx !== -1) {
+            sourceSite = groups[i].sites[idx];
+            sourceGroupIdx = i;
+            sourceSiteIdx = idx;
+            break;
+        }
+    }
+
+    if (!sourceSite || sourceGroupIdx === -1) return;
+
+    // 2. 寻找目标分组
+    const targetGroupIdx = groups.findIndex((g: Group) => g.id === targetGroupId);
+    if (targetGroupIdx === -1) return;
+
+    // 3. 从源移除
+    groups[sourceGroupIdx].sites.splice(sourceSiteIdx, 1);
+
+    // 4. 插入目标
+    const targetGroup = groups[targetGroupIdx];
+    
+    if (targetId) {
+        // 插到某个卡片前面
+        const targetSiteIdx = targetGroup.sites.findIndex((s: Site) => s.id === targetId);
+        if (targetSiteIdx !== -1) {
+            targetGroup.sites.splice(targetSiteIdx, 0, sourceSite);
+        } else {
+            targetGroup.sites.push(sourceSite);
+        }
+    } else {
+        // 插到队尾 (Zone)
+        targetGroup.sites.push(sourceSite);
+    }
+
     dataState.setGroups(groups);
   }
 
   saveSite(groupId: string, siteData: Partial<Site>) {
     const { name, url, icon, id } = siteData;
-    
-    if (!name?.trim() || !url?.trim()) {
-      throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
-    }
+    if (!name?.trim() || !url?.trim()) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
 
     let finalUrl = url.trim();
-    if (!/^https?:\/\//i.test(finalUrl)) {
-      finalUrl = `https://${finalUrl}`;
-    }
+    if (!/^https?:\/\//i.test(finalUrl)) finalUrl = `https://${finalUrl}`;
 
     const groups = [...dataState.groups];
     const groupIndex = groups.findIndex(g => g.id === groupId);
@@ -97,38 +135,6 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.SITE_DELETED, 'success');
   }
 
-  moveSiteByTarget(sourceId: string, targetId: string | null, targetGroupId: string) {
-    const groups = structuredClone(dataState.groups);
-    
-    let site: Site | undefined;
-    
-    for (const g of groups) {
-      const idx = g.sites.findIndex(s => s.id === sourceId);
-      if (idx !== -1) {
-        [site] = g.sites.splice(idx, 1);
-        break;
-      }
-    }
-    
-    if (!site) return;
-
-    const toGroup = groups.find((g: Group) => g.id === targetGroupId);
-    if (!toGroup) return;
-
-    if (targetId) {
-        const targetIndex = toGroup.sites.findIndex(s => s.id === targetId);
-        if (targetIndex !== -1) {
-            toGroup.sites.splice(targetIndex, 0, site);
-        } else {
-            toGroup.sites.push(site);
-        }
-    } else {
-        toGroup.sites.push(site);
-    }
-
-    dataState.setGroups(groups);
-  }
-
   exportData() {
     const data: NavData = { groups: dataState.groups };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -148,7 +154,6 @@ class DataManager {
       const text = await file.text();
       const json = JSON.parse(text);
       if (!Array.isArray(json.groups)) throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
-      
       dataState.setGroups(json.groups);
       appState.showToast(MESSAGES.TOAST.RESTORE_SUCCESS, 'success');
     } catch (e) {

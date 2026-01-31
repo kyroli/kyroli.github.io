@@ -8,21 +8,29 @@
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
   
-  import { draggable, droppable } from '$lib/actions/pdnd.svelte';
+  // 引入我们刚才手写的极简引擎
+  import { draggable, dropTarget, dndState } from '$lib/actions/dnd.svelte';
 
-  const FLIP_DURATION = 300;
+  const FLIP_DURATION = 300; // 动画时长 ms
 
-  function handleGroupHover(source: any, targetGroupId: string) {
-    manager.swapGroups(source.id, targetGroupId);
+  // 1. 分组交换逻辑
+  function handleGroupDrop(source: any, targetId: string) {
+    if (source.type === 'group') {
+        manager.swapGroups(source.id, targetId);
+    }
   }
 
-  function handleSiteHover(source: any, targetSiteId: string, targetGroupId: string) {
-    manager.moveSiteByTarget(source.id, targetSiteId, targetGroupId);
-  }
-
-  function handleZoneHover(source: any, targetGroupId: string) {
+  // 2. 卡片排序逻辑 (插入到目标卡片前方)
+  function handleSiteDrop(source: any, targetId: string, targetGroupId: string) {
     if (source.type === 'site') {
-        manager.moveSiteByTarget(source.id, null, targetGroupId);
+        manager.moveSite(source.id, targetId, targetGroupId);
+    }
+  }
+
+  // 3. 卡片放入空区域逻辑 (追加到队尾)
+  function handleZoneDrop(source: any, targetGroupId: string) {
+    if (source.type === 'site') {
+        manager.moveSite(source.id, null, targetGroupId);
     }
   }
 
@@ -39,13 +47,14 @@
   {#each dataState.groups as group (group.id)}
     <div 
         class="group-item flex flex-col gap-4 transition-all duration-300 rounded-2xl border bg-surface/30
-               {appState.isEditMode ? 'border-border/60 p-4' : 'border-transparent p-0'}"
+               {appState.isEditMode ? 'border-border/60 p-4' : 'border-transparent p-0'}
+               {dndState.id === group.id ? 'opacity-20' : ''}"
         animate:flip={{ duration: FLIP_DURATION }}
         
-        use:droppable={{ 
+        use:dropTarget={{ 
             type: 'group', 
             id: group.id, 
-            onHover: (s) => handleGroupHover(s, group.id) 
+            onHover: (s) => handleGroupDrop(s, group.id) 
         }}
     >
       <div class="flex items-center h-9 cursor-default px-1">
@@ -79,11 +88,11 @@
                 animate:flip={{ duration: FLIP_DURATION }}
                 
                 use:draggable={{ type: 'site', id: item.id, groupId: group.id }}
-                use:droppable={{ 
+                use:dropTarget={{ 
                     type: 'site', 
                     id: item.id, 
                     groupId: group.id,
-                    onHover: (s) => handleSiteHover(s, item.id, group.id)
+                    onHover: (s) => handleSiteDrop(s, item.id, group.id)
                 }}
             >
                 <div class="h-full transform transition-transform">
@@ -98,10 +107,10 @@
                 class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-dashed border-border text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                 title={MESSAGES.UI.NEW_SITE}
                 
-                use:droppable={{ 
-                    type: 'zone',
+                use:dropTarget={{ 
+                    type: 'zone', // 设为区域，只接受 drop，不可 drag
                     groupId: group.id, 
-                    onHover: (s) => handleZoneHover(s, group.id)
+                    onHover: (s) => handleZoneDrop(s, group.id)
                 }}
             >
                 <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
