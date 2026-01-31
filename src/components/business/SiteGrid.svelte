@@ -11,7 +11,6 @@
 
   const handleSortGroups = (items: Group[]) => manager.updateGroupOrder(items);
   const handleSortSites = (gid: string, items: Site[]) => manager.updateSiteOrder(gid, items);
-
   const handleTransfer = (siteId: string, toGroupId: string, newIndex: number) => {
     manager.moveSite(siteId, toGroupId, newIndex);
   };
@@ -35,10 +34,10 @@
      }}>
   
   {#each dataState.groups as group (group.id)}
-    <div class="group-item flex flex-col gap-4">
+    <div class="group-item flex flex-col gap-4" data-id={group.id}>
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
         {#if appState.isEditMode}
-          <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
+         <div class="group-handle cursor-move p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50" title={MESSAGES.UI.TIP_DRAG_SORT}>
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
@@ -58,7 +57,7 @@
         {/if}
       </div>
 
-      <div class={`${UI_CONSTANTS.GRID_LAYOUT} content-start`}
+      <div class={`${UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[80px]`}
            use:sortable={{ 
              items: group.sites, 
              group: 'sites',
@@ -70,9 +69,9 @@
         
           {#each group.sites as site (site.id)}
             <SiteCard 
-                {site} 
-                groupId={group.id} 
-              />
+              {site} 
+              groupId={group.id} 
+            />
           {/each}
         
           {#if appState.isEditMode}
