@@ -85,7 +85,7 @@ class DataManager {
   }
 
   moveSite(siteId: string, fromGroupId: string, toGroupId: string, newIndex: number) {
-    const groups = JSON.parse(JSON.stringify(dataState.groups));
+    const groups = structuredClone(dataState.groups);
     
     const fromGroup = groups.find((g: Group) => g.id === fromGroupId);
     const toGroup = groups.find((g: Group) => g.id === toGroupId);

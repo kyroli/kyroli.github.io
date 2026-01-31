@@ -21,19 +21,7 @@ export interface GithubConfig {
   token: string;
 }
 
-export interface AppConfig {
-  github: GithubConfig;
-  theme: 'light' | 'dark' | 'system';
-}
-
 export type SyncStatus = 'idle' | 'checking' | 'syncing' | 'success' | 'error' | 'conflict';
-
-export interface SyncResult {
-  success: boolean;
-  error?: string;
-  remoteData?: NavData;
-  remoteSha?: string;
-}
 
 export interface RemoteFile {
   sha: string;

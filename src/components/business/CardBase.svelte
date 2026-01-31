@@ -14,7 +14,8 @@
     skeleton?: boolean;
   }>();
 
-  const baseLayout = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface rounded-xl`;
+  // 修改点：移除了 bg-surface rounded-xl border 等材质类，仅保留布局
+  const baseLayout = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4`;
 </script>
 
 {#if skeleton}

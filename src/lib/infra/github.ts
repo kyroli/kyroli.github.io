@@ -11,6 +11,14 @@ const API_BASE = 'https://api.github.com/repos';
 export class GithubClient {
   constructor(private config: GithubConfig) {}
 
+  static parseRepoPath(path: string): { owner: string; repo: string } {
+    const parts = path.split('/');
+    if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
+      throw new Error('Invalid repository format');
+    }
+    return { owner: parts[0].trim(), repo: parts[1].trim() };
+  }
+
   private get headers() {
     return {
       'Authorization': `Bearer ${this.config.token}`,
@@ -34,8 +42,8 @@ export class GithubClient {
   async getFile(path: string = 'bookmarks.json'): Promise<RemoteFile | null> {
     try {
       return await this.request<RemoteFile>(`/contents/${path}`);
-    } catch (e: any) {
-      if (e.message === GITHUB_ERRORS.NOT_FOUND) return null;
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message === GITHUB_ERRORS.NOT_FOUND) return null;
       throw e;
     }
   }

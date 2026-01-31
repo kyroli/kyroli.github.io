@@ -32,7 +32,6 @@ class SyncService {
         
         if (dataState.isDirty) {
           dataState.updateSyncState('conflict', remote.sha);
-          console.warn('Conflict detected');
           
           appState.openConfirm({
             msg: MESSAGES.CONFIRM.CONFLICT_FORCE,
@@ -45,7 +44,7 @@ class SyncService {
       } else {
         dataState.updateSyncState('success');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Init sync failed:', e);
       dataState.updateSyncState('error', undefined, this.formatError(e));
     }
@@ -65,10 +64,10 @@ class SyncService {
 
       dataState.updateSyncState('success', sha);
       appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Push failed:', e);
       
-      if (e.message === GITHUB_ERRORS.CONFLICT) {
+      if (e instanceof Error && e.message === GITHUB_ERRORS.CONFLICT) {
         dataState.updateSyncState('conflict');
         appState.showToast(MESSAGES.TOAST.SYNC_CONFLICT, 'error');
         await this.init(); 
@@ -93,7 +92,7 @@ class SyncService {
 
       dataState.updateSyncState('success', sha);
       appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
-    } catch (e: any) {
+    } catch (e: unknown) {
       dataState.updateSyncState('error', undefined, this.formatError(e));
       appState.showToast(MESSAGES.TOAST.FORCE_PUSH_FAIL, 'error');
     }
@@ -110,7 +109,7 @@ class SyncService {
       } else {
         throw new Error(MESSAGES.TOAST.REMOTE_EMPTY);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
       dataState.updateSyncState('error', undefined, this.formatError(e));
     }
@@ -121,10 +120,12 @@ class SyncService {
     await this.init();
   }
 
-  private formatError(e: any): string {
-    if (e.message === GITHUB_ERRORS.TOKEN_INVALID) return MESSAGES.ERRORS.TOKEN_INVALID;
-    if (e.message === GITHUB_ERRORS.NOT_FOUND) return MESSAGES.ERRORS.REPO_NOT_FOUND;
-    if (e.message === GITHUB_ERRORS.CONFLICT) return MESSAGES.ERRORS.CONFLICT;
+  private formatError(e: unknown): string {
+    if (e instanceof Error) {
+        if (e.message === GITHUB_ERRORS.TOKEN_INVALID) return MESSAGES.ERRORS.TOKEN_INVALID;
+        if (e.message === GITHUB_ERRORS.NOT_FOUND) return MESSAGES.ERRORS.REPO_NOT_FOUND;
+        if (e.message === GITHUB_ERRORS.CONFLICT) return MESSAGES.ERRORS.CONFLICT;
+    }
     return MESSAGES.ERRORS.UNKNOWN;
   }
 }

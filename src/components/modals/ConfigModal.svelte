@@ -3,6 +3,7 @@
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
   import { manager } from '$lib/services/manager';
+  import { GithubClient } from '$lib/infra/github';
   import { MESSAGES } from '$lib/i18n';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
@@ -25,23 +26,25 @@
       return;
     }
 
-    const parts = repoPath.split('/');
-    if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
-      errorMsg = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
-      return;
-    }
-    
-    isSaving = true;
     try {
+      const { owner, repo } = GithubClient.parseRepoPath(repoPath);
+      
+      isSaving = true;
+      
       await sync.updateConfig({ 
-        owner: parts[0].trim(), 
-        repo: parts[1].trim(), 
+        owner, 
+        repo, 
         token: token.trim() 
       });
+
       appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
       onClose();
-    } catch (e: any) {
-      errorMsg = typeof e === 'string' ? e : (e.message || MESSAGES.TOAST.UNKNOWN_ERROR);
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message === 'Invalid repository format') {
+         errorMsg = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
+      } else {
+         errorMsg = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
+      }
     } finally {
       isSaving = false;
     }
