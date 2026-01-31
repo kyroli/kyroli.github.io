@@ -12,9 +12,15 @@
   const FLIP_DURATION = 200;
 
   const visualGroups = $derived.by(() => {
+    // 1. 深拷贝数据
     let groups = dataState.groups.map(g => ({ ...g, sites: [...g.sites], isPlaceholder: false }));
 
-    if (dndState.isDragging && dndState.type === 'group' && dndState.hoverId) {
+    // 只有当 UI 状态确认进入拖拽模式后，才开始计算避让动画
+    // 这避免了 dragstart 瞬间的布局跳动
+    if (!dndState.isDragging) return groups;
+
+    // 2. 分组排序预览
+    if (dndState.type === 'group' && dndState.hoverId) {
         const srcIdx = groups.findIndex(g => g.id === dndState.id);
         const tgtIdx = groups.findIndex(g => g.id === dndState.hoverId);
         
@@ -25,17 +31,23 @@
         }
     }
 
+    // 3. 卡片排序预览
     return groups.map(g => {
         let sites = g.sites.map(s => ({ ...s, isPlaceholder: false, isHidden: false }));
 
-        if (dndState.isDragging && dndState.type === 'site') {
+        if (dndState.type === 'site') {
+            // A. 隐藏源卡片 (模拟被提起)
             if (g.id === dndState.sourceGroupId) {
                 const idx = sites.findIndex(s => s.id === dndState.id);
                 if (idx !== -1) {
+                    // 这里的 isHidden 会导致 opacity-0。
+                    // 因为 dndState.isDragging 也就是这里的触发条件被延时了，
+                    // 所以浏览器有充足时间先截取到 opacity-1 的快照。
                     sites[idx].isHidden = true;
                 }
             }
 
+            // B. 插入占位符
             if (g.id === dndState.hoverGroupId) {
                 const placeholder = { 
                     id: 'placeholder-site', 
