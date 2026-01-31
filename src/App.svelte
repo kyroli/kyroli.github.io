@@ -4,7 +4,6 @@
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
   import { MESSAGES } from '$lib/i18n';
-
   import Header from './components/business/Header.svelte';
   import SiteGrid from './components/business/SiteGrid.svelte';
   import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
@@ -17,7 +16,6 @@
 
   dataState.init();
   appState.init();
-
   onMount(() => {
     sync.init();
   });
@@ -29,10 +27,6 @@
   );
 </script>
 
-{#if dataState.syncStatus === 'syncing'}
-  <div class="fixed inset-0 z-[9999] cursor-wait bg-transparent"></div>
-{/if}
-
 <div class="min-h-screen w-full transition-colors duration-300 bg-bg text-text pb-20">
   <div class="w-full max-w-[1600px] mx-auto px-6 lg:px-12 2xl:px-24">
     <Header />
@@ -43,6 +37,7 @@
           <div class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim animate-fade">
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
+       
         {/if}
    
         <SiteGrid />
@@ -53,7 +48,8 @@
             <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
           </div>
       {:else}
-         <LoadingSkeleton />
+        
+        <LoadingSkeleton />
       {/if}
     </main>
   </div>

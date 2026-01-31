@@ -1,4 +1,4 @@
-import type { NavData, AppConfig, GithubConfig } from '../types';
+import type { NavData, GithubConfig } from '../types';
 
 const KEYS = {
   DATA: 'nav_data',
@@ -8,28 +8,10 @@ const KEYS = {
   DIRTY: 'nav_dirty'
 } as const;
 
-function safeParse<T>(key: string, validator: (data: any) => data is T, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    const data = JSON.parse(raw);
-    return validator(data) ? data : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function isGithubConfig(data: any): data is GithubConfig {
-  return data && typeof data.owner === 'string' && typeof data.repo === 'string';
-}
-
-function isNavData(data: any): data is NavData {
-  return data && Array.isArray(data.groups);
-}
-
 export const storage = {
   get config(): GithubConfig {
-    return safeParse(KEYS.CONFIG, isGithubConfig, { owner: '', repo: '', token: '' });
+    const raw = localStorage.getItem(KEYS.CONFIG);
+    return raw ? JSON.parse(raw) : { owner: '', repo: '', token: '' };
   },
 
   set config(v: GithubConfig) {
@@ -37,7 +19,8 @@ export const storage = {
   },
 
   get data(): NavData {
-    return safeParse(KEYS.DATA, isNavData, { groups: [] });
+    const raw = localStorage.getItem(KEYS.DATA);
+    return raw ? JSON.parse(raw) : { groups: [] };
   },
 
   set data(v: NavData) {

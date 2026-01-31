@@ -14,15 +14,11 @@
     <title>Nav Zero - 个人导航</title>
 
     <script>
-      (function() {
-        try {
-          const saved = localStorage.getItem('nav_theme');
-          const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (saved === 'dark' || (!saved && isDark)) {
-            document.documentElement.classList.add('dark');
-          }
-        } catch (e) {}
-      })();
+      const saved = localStorage.getItem('nav_theme');
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && isDark)) {
+        document.documentElement.classList.add('dark');
+      }
     </script>
   </head>
   <body>

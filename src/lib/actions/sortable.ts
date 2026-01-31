@@ -20,23 +20,14 @@ export function sortable<T>(node: HTMLElement, params: SortableParams<T>) {
       group: params.group,
       animation: 250,
       
-      forceFallback: false, 
-      fallbackOnBody: false,
-      
-      dragClass: 'cursor-grabbing', 
-      ghostClass: 'opacity-40',
-      
-      scroll: true, 
-      bubbleScroll: true,
-      scrollSensitivity: 30,
-      
-      delay: 0, 
-      delayOnTouchOnly: true,
-      touchStartThreshold: 3,
+      delay: 0,
       
       handle: params.handle,
       draggable: params.draggable,
       disabled: params.disabled ?? false,
+      
+      dragClass: 'cursor-grabbing', 
+      ghostClass: 'opacity-40',
       
       onUpdate: (evt) => {
         const { oldIndex, newIndex } = evt;
