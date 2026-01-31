@@ -9,49 +9,46 @@
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
   
-  import { pdndDraggable, pdndDropTarget } from '$lib/actions/pdnd.svelte';
-  import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-  import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+  import { pdndDraggable, pdndDropTarget, initDnDMonitor } from '$lib/actions/pdnd.svelte';
 
   const FLIP_DURATION = 300;
 
   onMount(() => {
-    return monitorForElements({
-      onDrop({ source, location }) {
-        const target = location.current.dropTargets[0];
-        if (!target) return;
+    return initDnDMonitor({
+      onMoveToGroupEnd: (itemId, targetGroupId) => {
+         manager.moveSiteToGroup(itemId, targetGroupId);
+      },
+      
+      onMoveItem: (itemId, targetGroupId, targetId, edge) => {
+         const group = dataState.groups.find(g => g.id === targetGroupId);
+         if (!group) return;
 
-        const sourceData = source.data;
-        const targetData = target.data;
+         const targetIndex = group.sites.findIndex(s => s.id === targetId);
+         if (targetIndex === -1) return;
 
-        if (sourceData.type !== 'site') return;
+         const finalIndex = edge === 'right' ? targetIndex + 1 : targetIndex;
+         manager.moveSite(itemId, targetGroupId, finalIndex);
+      },
 
-        const sourceId = sourceData.id as string;
-        const targetGroupId = targetData.groupId as string;
+      onMoveGroup: (sourceGroupId, targetGroupId, edge) => {
+         const groups = [...dataState.groups];
+         const fromIndex = groups.findIndex(g => g.id === sourceGroupId);
+         const toIndex = groups.findIndex(g => g.id === targetGroupId);
 
-        if (targetData.isAddButton) {
-          if (sourceData.groupId !== targetGroupId) {
-             manager.moveSiteToGroup(sourceId, targetGroupId);
-          }
-          return;
-        }
+         if (fromIndex === -1 || toIndex === -1) return;
 
-        if (targetData.type === 'site') {
-           const targetId = targetData.id as string;
-           if (sourceId === targetId) return;
-
-           const group = dataState.groups.find(g => g.id === targetGroupId);
-           if (!group) return;
-
-           const targetIndex = group.sites.findIndex(s => s.id === targetId);
-           if (targetIndex === -1) return;
-
-           const edge = extractClosestEdge(targetData);
-           
-           const finalIndex = edge === 'right' ? targetIndex + 1 : targetIndex;
-
-           manager.moveSite(sourceId, targetGroupId, finalIndex);
-        }
+         const [item] = groups.splice(fromIndex, 1);
+         let finalIndex = toIndex;
+         if (edge === 'bottom' && fromIndex > toIndex) finalIndex++;
+         if (edge === 'bottom' && fromIndex < toIndex) { /* no-op, splice handles shift */ }
+         if (edge === 'top' && fromIndex < toIndex) finalIndex--;
+         
+         const targetReIndex = edge === 'bottom' ? toIndex + 1 : toIndex;
+         const newToIndex = groups.findIndex(g => g.id === targetGroupId);
+         const insertIndex = edge === 'bottom' ? newToIndex + 1 : newToIndex;
+         
+         groups.splice(insertIndex, 0, item);
+         manager.updateGroupOrder(groups);
       }
     });
   });
@@ -66,11 +63,23 @@
 </script>
 
 <div class="w-full flex flex-col gap-5 pt-6 pb-0">
-  
   {#each dataState.groups as group (group.id)}
-    <div class="group-item flex flex-col gap-4 rounded-xl border border-transparent transition-colors">
-      
+    <div 
+        class="group-item flex flex-col gap-4 transition-colors duration-200 rounded-xl border
+               {appState.isEditMode ? 'border-border/40' : 'border-transparent'}"
+        animate:flip={{ duration: FLIP_DURATION }}
+        
+        use:pdndDropTarget={{ type: 'group', id: group.id }}
+    >
       <div class="flex items-center pb-3 px-1 h-10 mt-3 border-b border-border/40 cursor-default">
+        <div 
+           class="p-1.5 mr-3 rounded-lg border border-border/60 text-text-dim transition-all touch-none bg-surface/50 shrink-0
+                  {appState.isEditMode ? 'opacity-100 cursor-grab hover:border-primary/50 hover:text-primary active:cursor-grabbing' : 'opacity-0 pointer-events-none border-transparent'}"
+           use:pdndDraggable={{ type: 'group', id: group.id, enabled: appState.isEditMode }}
+        >
+           <GripHorizontal class="w-4 h-4" />
+        </div>
+        
         <div class="flex-1 flex items-center min-w-0 h-full">
             <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate flex-1 uppercase">{group.name}</h2>
             
@@ -88,28 +97,28 @@
       <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px] p-2 rounded-lg">
           {#each group.sites as item (item.id)}
             <div 
-                class="relative h-full transition-opacity duration-200"
+                class="relative h-full transition-opacity duration-200 select-none"
                 animate:flip={{ duration: FLIP_DURATION }}
                 
                 use:pdndDraggable={{ 
                     type: 'site', 
                     id: item.id, 
-                    groupId: group.id 
+                    groupId: group.id,
+                    enabled: appState.isEditMode
                 }}
                 
                 use:pdndDropTarget={{ 
                     type: 'site', 
                     id: item.id, 
-                    groupId: group.id,
-                    isAddButton: false
+                    groupId: group.id
                 }}
             >
-                <div class="h-full {appState.isEditMode ? 'pointer-events-none' : ''}">
+                <div class="h-full">
                    <SiteCard site={item} groupId={group.id} />
                 </div>
-
+                
                 {#if appState.isEditMode}
-                    <div class="absolute inset-0 z-10 rounded-xl border border-transparent hover:border-primary/30 transition-colors pointer-events-none"></div>
+                   <div class="absolute inset-0 z-0 rounded-xl pointer-events-none border border-transparent hover:border-primary/30"></div>
                 {/if}
             </div>
           {/each}

@@ -3,21 +3,34 @@ import { attachClosestEdge, extractClosestEdge, type Edge } from '@atlaskit/prag
 import { appState } from '../core/app.svelte';
 import type { Action } from 'svelte/action';
 
-type DragData = { type: 'site' | 'group', id: string, groupId?: string };
-type DropData = { type: 'site' | 'group', id?: string, groupId: string, isAddButton?: boolean };
+type DragData = { type: 'site' | 'group', id: string, groupId?: string, enabled?: boolean };
+type DropData = { type: 'site' | 'group', id?: string, groupId?: string, isAddButton?: boolean };
 
 export const pdndDraggable: Action<HTMLElement, DragData> = (node, data) => {
+    let currentData = data;
+
     const cleanup = draggable({
         element: node,
-        getInitialData: () => data,
+        getInitialData: () => ({ ...currentData, type: currentData.type }),
+        canDrag: () => currentData.enabled !== false, 
         onDragStart: () => {
            document.body.setAttribute('data-dragging', 'true');
+           if (currentData.type === 'site') {
+               node.classList.add('opacity-20');
+           }
         },
         onDrop: () => {
            document.body.removeAttribute('data-dragging');
+           node.classList.remove('opacity-20');
         }
     });
-    return { destroy: cleanup };
+
+    return { 
+        update(newData) {
+            currentData = newData;
+        },
+        destroy: cleanup 
+    };
 };
 
 export const pdndDropTarget: Action<HTMLElement, DropData> = (node, data) => {
@@ -27,7 +40,7 @@ export const pdndDropTarget: Action<HTMLElement, DropData> = (node, data) => {
             return attachClosestEdge(data, {
                 element,
                 input,
-                allowedEdges: ['left', 'right']
+                allowedEdges: data.type === 'group' ? ['top', 'bottom'] : ['left', 'right']
             });
         },
         onDragEnter: () => {
@@ -46,7 +59,8 @@ export const pdndDropTarget: Action<HTMLElement, DropData> = (node, data) => {
 export function initDnDMonitor(
     callbacks: { 
         onMoveItem: (itemId: string, targetGroupId: string, targetIndex: number, edge: Edge | null) => void,
-        onMoveToGroupEnd: (itemId: string, targetGroupId: string) => void
+        onMoveToGroupEnd: (itemId: string, targetGroupId: string) => void,
+        onMoveGroup: (sourceGroupId: string, targetGroupId: string, edge: Edge | null) => void
     }
 ) {
     return monitorForElements({
@@ -57,20 +71,27 @@ export function initDnDMonitor(
             const sourceData = source.data as DragData;
             const targetData = target.data as DropData;
 
-            if (sourceData.type !== 'site') return;
-
-            if (targetData.isAddButton) {
-                if (sourceData.groupId !== targetData.groupId) {
-                    callbacks.onMoveToGroupEnd(sourceData.id, targetData.groupId);
-                }
+            if (sourceData.type === 'group' && targetData.type === 'group') {
+                if (sourceData.id === targetData.id) return;
+                const edge = extractClosestEdge(targetData);
+                callbacks.onMoveGroup(sourceData.id, targetData.id as string, edge);
                 return;
             }
 
-            if (targetData.type === 'site' && targetData.id) {
-                if (sourceData.id === targetData.id) return;
+            if (sourceData.type === 'site') {
+                if (targetData.isAddButton) {
+                    if (sourceData.groupId !== targetData.groupId) {
+                        callbacks.onMoveToGroupEnd(sourceData.id, targetData.groupId as string);
+                    }
+                    return;
+                }
 
-                const edge = extractClosestEdge(targetData);
-                
+                if (targetData.type === 'site' && targetData.id) {
+                    if (sourceData.id === targetData.id) return;
+                    
+                    const edge = extractClosestEdge(targetData);
+                    callbacks.onMoveItem(sourceData.id, targetData.groupId, targetData.id, edge);
+                }
             }
         }
     });
