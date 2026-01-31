@@ -12,36 +12,55 @@
 
   let canDragGroup = $state(false);
 
+  function getAddBtn(groupId: string) {
+    return { 
+      id: `__btn_${groupId}`, 
+      isAddBtn: true, 
+      name: '', 
+      url: '', 
+      icon: '' 
+    };
+  }
+
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
     const { items: newItems, info } = e.detail;
     dataState.groups = newItems;
     
     if (info.source === SOURCES.POINTER && (info.trigger === TRIGGERS.DROPPED || info.trigger === TRIGGERS.DRAG_STOPPED)) {
       dataState.markDirty();
-      canDragGroup = false; 
-    }
+      canDragGroup = false;
   }
 
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: newSites, info } = e.detail;
-    const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
+    const { items: mixedItems, info } = e.detail;
     
+    const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
+    
+    const displayItems = appState.isEditMode 
+        ? [...realSites, getAddBtn(groupId)]
+        : realSites;
+
+    const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
     if (groupIndex > -1) {
-        dataState.groups[groupIndex].sites = newSites;
-        
-        if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-            dataState.markDirty();
-        }
+        dataState.groups[groupIndex].sites = displayItems;
+    }
+
+    if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
+        dataState.markDirty();
     }
   }
-
-  function handleDeleteGroup(groupName: string, groupId: string) {
-    appState.openConfirm({
-      msg: `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`,
-      onConfirm: () => manager.deleteGroup(groupId),
-      isDestructive: true
-    });
+  
+  function handleSiteFinalize(groupId: string, e: CustomEvent<DndEvent<any>>) {
+      const { items: mixedItems } = e.detail;
+      const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
+      
+      const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
+      if (groupIndex > -1) {
+          dataState.groups[groupIndex].sites = realSites;
+          dataState.markDirty();
+      }
   }
+
 </script>
 
 <svelte:window onmouseup={() => canDragGroup = false} />
@@ -60,8 +79,13 @@
 >
   
   {#each dataState.groups as group (group.id)}
+    {@const displaySites = appState.isEditMode 
+        ? [...group.sites.filter((s: any) => !s.isAddBtn), getAddBtn(group.id)] 
+        : group.sites
+    }
+
     <div 
-        class="group-item flex flex-col bg-surface/30 rounded-2xl border border-transparent transition-colors duration-200 pb-4
+        class="group-item flex flex-col bg-surface/30 rounded-2xl border border-transparent transition-colors duration-200 pb-2
                {appState.isEditMode ? 'border-border/40 hover:border-primary/20' : ''}"
     >
       <div class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px]">
@@ -92,40 +116,46 @@
         </div>
       </div>
 
-      <div class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]">
-          
-          <div 
-            style="display: contents"
-            use:dndzone={{
-                items: group.sites,
-                flipDurationMs,
-                dragDisabled: !appState.isEditMode,
-                type: 'site',
-                dropTargetStyle: {}
-            }}
-            onconsider={(e) => handleSiteDnd(group.id, e)}
-            onfinalize={(e) => handleSiteDnd(group.id, e)}
-          >
-              {#each group.sites as item (item.id)}
-                <div class="h-full"> 
+      <div 
+        class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]"
+        use:dndzone={{
+            items: displaySites,
+            flipDurationMs,
+            dragDisabled: !appState.isEditMode,
+            type: 'site',
+            dropTargetStyle: {}
+        }}
+        onconsider={(e) => handleSiteDnd(group.id, e)}
+        onfinalize={(e) => handleSiteFinalize(group.id, e)}
+      >
+          {#each displaySites as item (item.id)}
+            {#if (item as any).isAddBtn}
+                <div 
+                    role="button" 
+                    tabindex="0"
+                    class="h-full min-h-[72px]" 
+                    data-id={item.id}
+                    onmousedown={(e) => e.stopPropagation()} 
+                    ontouchstart={(e) => e.stopPropagation()}
+                    style="order: 9999;" 
+                >
+                    <button 
+                        onclick={() => appState.openSiteModal(group.id)} 
+                        class="w-full h-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer active:scale-[0.98] group"
+                        title={MESSAGES.UI.NEW_SITE}
+                    >
+                        <div class="w-8 h-8 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                            <Plus class="w-4 h-4" />
+                        </div>
+                        <span class="text-[10px] font-bold tracking-wider uppercase">{MESSAGES.UI.NEW_SITE}</span>
+                    </button>
+                </div>
+            {:else}
+                <div role="listitem" data-id={item.id}>
                     <SiteCard site={item} groupId={group.id} />
                 </div>
-              {/each}
-          </div>
-
-          {#if appState.isEditMode}
-            <button 
-                onclick={() => appState.openSiteModal(group.id)} 
-                class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer active:scale-[0.98] group h-full min-h-[100px]"
-                title={MESSAGES.UI.NEW_SITE}
-            >
-                <div class="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
-                    <Plus class="w-5 h-5" />
-                </div>
-                <span class="text-[11px] font-bold tracking-wider uppercase">{MESSAGES.UI.NEW_SITE}</span>
-            </button>
-          {/if}
-
+            {/if}
+          {/each}
       </div>
 
     </div>
