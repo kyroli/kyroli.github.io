@@ -7,27 +7,22 @@
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
-  
-  // 引入我们刚才手写的极简引擎
   import { draggable, dropTarget, dndState } from '$lib/actions/dnd.svelte';
 
-  const FLIP_DURATION = 300; // 动画时长 ms
+  const FLIP_DURATION = 300;
 
-  // 1. 分组交换逻辑
   function handleGroupDrop(source: any, targetId: string) {
     if (source.type === 'group') {
         manager.swapGroups(source.id, targetId);
     }
   }
 
-  // 2. 卡片排序逻辑 (插入到目标卡片前方)
   function handleSiteDrop(source: any, targetId: string, targetGroupId: string) {
     if (source.type === 'site') {
         manager.moveSite(source.id, targetId, targetGroupId);
     }
   }
 
-  // 3. 卡片放入空区域逻辑 (追加到队尾)
   function handleZoneDrop(source: any, targetGroupId: string) {
     if (source.type === 'site') {
         manager.moveSite(source.id, null, targetGroupId);
@@ -46,8 +41,8 @@
 <div class="w-full flex flex-col gap-6 pt-6 pb-0">
   {#each dataState.groups as group (group.id)}
     <div 
-        class="group-item flex flex-col gap-4 transition-all duration-300 rounded-2xl border bg-surface/30
-               {appState.isEditMode ? 'border-border/60 p-4' : 'border-transparent p-0'}
+        class="group-item flex flex-col gap-4 transition-all duration-300 rounded-2xl border bg-surface/30 p-2
+               {appState.isEditMode ? 'border-border/60' : 'border-transparent'}
                {dndState.id === group.id ? 'opacity-20' : ''}"
         animate:flip={{ duration: FLIP_DURATION }}
         
@@ -60,7 +55,7 @@
       <div class="flex items-center h-9 cursor-default px-1">
         <div 
            class="p-1.5 mr-3 rounded-lg text-text-dim transition-all touch-none shrink-0
-                  {appState.isEditMode ? 'opacity-100 cursor-grab hover:bg-surface hover:text-primary active:cursor-grabbing' : 'opacity-0 pointer-events-none'}"
+               {appState.isEditMode ? 'opacity-100 cursor-grab hover:bg-surface hover:text-primary active:cursor-grabbing' : 'opacity-0 pointer-events-none'}"
            use:draggable={{ type: 'group', id: group.id }}
         >
            <GripHorizontal class="w-5 h-5" />
@@ -69,13 +64,12 @@
         <div class="flex-1 flex items-center min-w-0 h-full">
             <h2 class="font-bold text-xs tracking-[0.15em] text-text-dim/80 select-none truncate flex-1 uppercase pl-1">{group.name}</h2>
             
-            <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ?
-                 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                  <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer">
                    <Pencil class="w-4 h-4" />
                 </button>
                  <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer">
-                   <Trash2 class="w-4 h-4" />
+                    <Trash2 class="w-4 h-4" />
                  </button>
             </div>
         </div>
@@ -108,7 +102,7 @@
                 title={MESSAGES.UI.NEW_SITE}
                 
                 use:dropTarget={{ 
-                    type: 'zone', // 设为区域，只接受 drop，不可 drag
+                    type: 'zone', 
                     groupId: group.id, 
                     onHover: (s) => handleZoneDrop(s, group.id)
                 }}
@@ -121,8 +115,7 @@
   {/each}
 
   {#if appState.isEditMode}
-   <button onclick={() => appState.openGroupModal()} class="w-full py-6 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer 
-      group mt-2 active:scale-[0.99] animate-fade">
+   <button onclick={() => appState.openGroupModal()} class="w-full py-6 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.99] animate-fade">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>
