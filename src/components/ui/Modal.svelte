@@ -24,12 +24,13 @@
 
   const dialogClass = `
     bg-surface/90 backdrop-blur-xl text-text 
-    rounded-2xl w-full max-w-sm p-8 
+    rounded-2xl w-full max-w-sm p-8 m-auto
     border border-border/80 
     shadow-2xl shadow-black/20 
     outline-none
     animate-fade
     backdrop:bg-black/40 backdrop:backdrop-blur-[2px] backdrop:transition-opacity
+    max-h-[90vh] overflow-y-auto
   `;
 
   const titleClass = "text-xl font-bold tracking-tight text-text m-0";

@@ -1,6 +1,7 @@
 import type { Action } from 'svelte/action';
 import type Sortable from 'sortablejs';
 import { appState } from '$lib/core/app.svelte';
+
 interface SortableParams<T> {
   items: T[];
   onSort: (items: T[]) => void;
@@ -32,10 +33,20 @@ export const sortable: Action<HTMLElement, SortableParams<any>> = (node, params)
         disabled: false,
         ghostClass: 'opacity-40', 
         dragClass: 'cursor-grabbing', 
+        forceFallback: true,
+        swapThreshold: 0.65,
         
         onUpdate: (evt) => {
-          const { oldIndex, newIndex } = evt;
+          const { oldIndex, newIndex, item, from } = evt;
           if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+          
+          const children = Array.from(from.children);
+          const referenceNode = children[oldIndex];
+          if (referenceNode && referenceNode !== item) {
+            from.insertBefore(item, referenceNode);
+          } else {
+            from.appendChild(item);
+          }
           
           const newItems = [...params.items];
           const [moved] = newItems.splice(oldIndex, 1);
@@ -46,6 +57,8 @@ export const sortable: Action<HTMLElement, SortableParams<any>> = (node, params)
         onAdd: (evt) => {
           const { newIndex, item } = evt;
           const itemId = item.dataset.id;
+          
+          item.remove();
           
           if (itemId && newIndex !== undefined && params.onTransfer) {
             params.onTransfer(itemId, newIndex);
