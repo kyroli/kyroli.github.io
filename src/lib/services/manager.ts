@@ -38,6 +38,19 @@ class DataManager {
     dataState.setGroups(newGroups);
   }
 
+  swapGroups(sourceId: string, targetId: string) {
+    const groups = [...dataState.groups];
+    const srcIdx = groups.findIndex(g => g.id === sourceId);
+    const tgtIdx = groups.findIndex(g => g.id === targetId);
+    
+    if (srcIdx === -1 || tgtIdx === -1) return;
+
+    const [removed] = groups.splice(srcIdx, 1);
+    groups.splice(tgtIdx, 0, removed);
+    
+    dataState.setGroups(groups);
+  }
+
   saveSite(groupId: string, siteData: Partial<Site>) {
     const { name, url, icon, id } = siteData;
     
@@ -84,55 +97,34 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.SITE_DELETED, 'success');
   }
 
-  moveSite(siteId: string, toGroupId: string, newIndex: number) {
+  moveSiteByTarget(sourceId: string, targetId: string | null, targetGroupId: string) {
     const groups = structuredClone(dataState.groups);
     
-    let fromGroup: Group | undefined;
     let site: Site | undefined;
-
+    
     for (const g of groups) {
-      const found = g.sites.find(s => s.id === siteId);
-      if (found) {
-        fromGroup = g;
-        site = found;
+      const idx = g.sites.findIndex(s => s.id === sourceId);
+      if (idx !== -1) {
+        [site] = g.sites.splice(idx, 1);
         break;
       }
     }
     
-    const toGroup = groups.find((g: Group) => g.id === toGroupId);
-    
-    if (!fromGroup || !toGroup || !site) return;
+    if (!site) return;
 
-    fromGroup.sites = fromGroup.sites.filter(s => s.id !== siteId);
+    const toGroup = groups.find((g: Group) => g.id === targetGroupId);
+    if (!toGroup) return;
 
-    const targetIndex = Math.max(0, Math.min(newIndex, toGroup.sites.length));
-    toGroup.sites.splice(targetIndex, 0, site);
-
-    dataState.setGroups(groups);
-  }
-
-  moveSiteToGroup(siteId: string, toGroupId: string) {
-    const groups = structuredClone(dataState.groups);
-    
-    let fromGroup: Group | undefined;
-    let site: Site | undefined;
-
-    for (const g of groups) {
-      const found = g.sites.find(s => s.id === siteId);
-      if (found) {
-        fromGroup = g;
-        site = found;
-        break;
-      }
+    if (targetId) {
+        const targetIndex = toGroup.sites.findIndex(s => s.id === targetId);
+        if (targetIndex !== -1) {
+            toGroup.sites.splice(targetIndex, 0, site);
+        } else {
+            toGroup.sites.push(site);
+        }
+    } else {
+        toGroup.sites.push(site);
     }
-    
-    const toGroup = groups.find((g: Group) => g.id === toGroupId);
-    
-    if (!fromGroup || !toGroup || !site) return;
-
-    fromGroup.sites = fromGroup.sites.filter(s => s.id !== siteId);
-
-    toGroup.sites.push(site);
 
     dataState.setGroups(groups);
   }

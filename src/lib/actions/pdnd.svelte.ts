@@ -1,98 +1,90 @@
-import { draggable, dropTargetForElements, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { attachClosestEdge, extractClosestEdge, type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { appState } from '../core/app.svelte';
-import type { Action } from 'svelte/action';
 
-type DragData = { type: 'site' | 'group', id: string, groupId?: string, enabled?: boolean };
-type DropData = { type: 'site' | 'group', id?: string, groupId?: string, isAddButton?: boolean };
+let source = $state<{ type: 'group' | 'site', id: string, groupId?: string } | null>(null);
 
-export const pdndDraggable: Action<HTMLElement, DragData> = (node, data) => {
-    let currentData = data;
-
-    const cleanup = draggable({
-        element: node,
-        getInitialData: () => ({ ...currentData, type: currentData.type }),
-        canDrag: () => currentData.enabled !== false, 
-        onDragStart: () => {
-           document.body.setAttribute('data-dragging', 'true');
-           if (currentData.type === 'site') {
-               node.classList.add('opacity-20');
-           }
-        },
-        onDrop: () => {
-           document.body.removeAttribute('data-dragging');
-           node.classList.remove('opacity-20');
-        }
-    });
-
-    return { 
-        update(newData) {
-            currentData = newData;
-        },
-        destroy: cleanup 
-    };
-};
-
-export const pdndDropTarget: Action<HTMLElement, DropData> = (node, data) => {
-    const cleanup = dropTargetForElements({
-        element: node,
-        getData: ({ input, element }) => {
-            return attachClosestEdge(data, {
-                element,
-                input,
-                allowedEdges: data.type === 'group' ? ['top', 'bottom'] : ['left', 'right']
-            });
-        },
-        onDragEnter: () => {
-            if (appState.isEditMode) node.setAttribute('data-drag-over', 'true');
-        },
-        onDragLeave: () => {
-            node.removeAttribute('data-drag-over');
-        },
-        onDrop: () => {
-            node.removeAttribute('data-drag-over');
-        }
-    });
-    return { destroy: cleanup };
-};
-
-export function initDnDMonitor(
-    callbacks: { 
-        onMoveItem: (itemId: string, targetGroupId: string, targetIndex: number, edge: Edge | null) => void,
-        onMoveToGroupEnd: (itemId: string, targetGroupId: string) => void,
-        onMoveGroup: (sourceGroupId: string, targetGroupId: string, edge: Edge | null) => void
+function throttle(func: Function, limit: number) {
+  let inThrottle: boolean;
+  return function(this: any, ...args: any[]) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
     }
-) {
-    return monitorForElements({
-        onDrop({ source, location }) {
-            const target = location.current.dropTargets[0];
-            if (!target) return;
+  }
+}
 
-            const sourceData = source.data as DragData;
-            const targetData = target.data as DropData;
+export const dndState = {
+    get isDragging() { return !!source; },
+    get type() { return source?.type; },
+    get sourceId() { return source?.id; }
+};
 
-            if (sourceData.type === 'group' && targetData.type === 'group') {
-                if (sourceData.id === targetData.id) return;
-                const edge = extractClosestEdge(targetData);
-                callbacks.onMoveGroup(sourceData.id, targetData.id as string, edge);
-                return;
-            }
-
-            if (sourceData.type === 'site') {
-                if (targetData.isAddButton) {
-                    if (sourceData.groupId !== targetData.groupId) {
-                        callbacks.onMoveToGroupEnd(sourceData.id, targetData.groupId as string);
-                    }
-                    return;
-                }
-
-                if (targetData.type === 'site' && targetData.id) {
-                    if (sourceData.id === targetData.id) return;
-                    
-                    const edge = extractClosestEdge(targetData);
-                    callbacks.onMoveItem(sourceData.id, targetData.groupId, targetData.id, edge);
-                }
-            }
+export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id: string, groupId?: string }) {
+    
+    function onDragStart(e: DragEvent) {
+        if (!appState.isEditMode) {
+            e.preventDefault();
+            return;
         }
-    });
+        
+        e.stopPropagation(); 
+        source = data;
+        
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        setTimeout(() => node.classList.add('opacity-30', 'grayscale'), 0);
+        document.body.style.cursor = 'grabbing';
+    }
+
+    function onDragEnd() {
+        source = null;
+        node.classList.remove('opacity-30', 'grayscale');
+        document.body.style.cursor = '';
+    }
+
+    node.addEventListener('dragstart', onDragStart);
+    node.addEventListener('dragend', onDragEnd);
+
+    return {
+        update(newData: any) { data = newData; },
+        destroy() {
+            node.removeEventListener('dragstart', onDragStart);
+            node.removeEventListener('dragend', onDragEnd);
+        }
+    };
+}
+
+export function droppable(node: HTMLElement, params: { 
+    type: 'group' | 'site' | 'zone',
+    id?: string, 
+    groupId?: string,
+    onHover: (source: any) => void 
+}) {
+    const checkHover = throttle(params.onHover, 120);
+
+    function onDragOver(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!source || !e.dataTransfer) return;
+        
+        e.dataTransfer.dropEffect = 'move';
+        
+        if (source.type === 'group' && params.type !== 'group') return;
+        
+        if (source.type === 'site' && params.type === 'group') return; 
+
+        if (source.id === params.id && source.type === params.type) return;
+
+        checkHover(source);
+    }
+
+    node.addEventListener('dragover', onDragOver);
+
+    return {
+        update(newParams: any) { params = newParams; },
+        destroy() { node.removeEventListener('dragover', onDragOver); }
+    };
 }
