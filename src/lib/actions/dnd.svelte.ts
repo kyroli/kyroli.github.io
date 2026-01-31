@@ -1,13 +1,41 @@
+{
+type: uploaded file
+fileName: kyroli/kyroli.github.io/kyroli.github.io-05846a41e5199ba3824669e4e909a4d861ffc96c/src/lib/actions/dnd.svelte.ts
+fullContent:
 import { appState } from '../core/app.svelte';
 
-let draggingItem = $state(null);
+class DndState {
+    isDragging = $state(false);
+    draggedItem = $state(null);
+    
+    hoverGroupId = $state(null);
+    hoverId = $state(null);
+    
+    constructor() {}
 
-export const dndState = {
-    get isDragging() { return !!draggingItem; },
-    get type() { return draggingItem?.type; },
-    get id() { return draggingItem?.id; },
-    get groupId() { return draggingItem?.groupId; }
-};
+    start(item) {
+        this.isDragging = true;
+        this.draggedItem = item;
+    }
+
+    updateHover(groupId, itemId) {
+        this.hoverGroupId = groupId;
+        this.hoverId = itemId;
+    }
+
+    reset() {
+        this.isDragging = false;
+        this.draggedItem = null;
+        this.hoverGroupId = null;
+        this.hoverId = null;
+    }
+
+    get type() { return this.draggedItem?.type; }
+    get id() { return this.draggedItem?.id; }
+    get sourceGroupId() { return this.draggedItem?.groupId; }
+}
+
+export const dndState = new DndState();
 
 function throttle(func, limit) {
   let inThrottle;
@@ -25,6 +53,7 @@ export function draggable(node, data) {
     $effect(() => {
         node.draggable = appState.isEditMode;
         node.style.cursor = appState.isEditMode ? (data.type === 'group' ? 'grab' : 'move') : '';
+        node.style.userSelect = appState.isEditMode ? 'none' : '';
     });
 
     function onDragStart(e) {
@@ -33,58 +62,41 @@ export function draggable(node, data) {
             return;
         }
         
-        e.stopPropagation(); 
-        draggingItem = data;
+        e.stopPropagation();
+        dndState.start(data);
         
         if (e.dataTransfer) {
             e.dataTransfer.effectAllowed = 'move';
             
             const rect = node.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
             
-            const originalTransition = node.style.transition;
-            node.style.transition = 'none';
+            const clone = node.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.top = '-9999px';
+            clone.style.left = '-9999px';
+            clone.style.width = `${rect.width}px`;
+            clone.style.height = `${rect.height}px`;
+            clone.style.opacity = '1';
+            clone.style.backgroundColor = 'var(--bg)'; 
+            clone.style.zIndex = '9999';
+            clone.style.pointerEvents = 'none';
+            clone.classList.remove('opacity-30', 'opacity-20'); 
+            clone.classList.add('shadow-xl', 'ring-2', 'ring-primary', 'rounded-xl'); 
+
+            document.body.appendChild(clone);
             
-            if (data.type === 'group') {
-                node.classList.add('bg-surface', '!opacity-100');
-                node.classList.remove('bg-surface/30');
-            }
-
-            e.dataTransfer.setDragImage(node, x, y);
-
-            if (data.type === 'group') {
-                node.classList.remove('bg-surface', '!opacity-100');
-                node.classList.add('bg-surface/30');
-            }
-            node.style.transition = originalTransition;
+            e.dataTransfer.setDragImage(clone, e.clientX - rect.left, e.clientY - rect.top);
+            
+            requestAnimationFrame(() => {
+                document.body.removeChild(clone);
+                node.classList.add('opacity-0');
+            });
         }
-        
-        requestAnimationFrame(() => {
-            node.classList.add(
-                'opacity-30', 
-                'grayscale',   
-                'border-2', 
-                'border-dashed', 
-                'border-primary/50'
-            );
-            
-            if (data.type === 'site') {
-                 node.classList.add('bg-surface/50');
-            }
-        });
     }
 
     function onDragEnd() {
-        draggingItem = null;
-        node.classList.remove(
-            'opacity-30', 
-            'grayscale', 
-            'border-2', 
-            'border-dashed', 
-            'border-primary/50', 
-            'bg-surface/50'
-        );
+        dndState.reset();
+        node.classList.remove('opacity-0');
     }
 
     node.addEventListener('dragstart', onDragStart);
@@ -100,25 +112,28 @@ export function draggable(node, data) {
 }
 
 export function dropTarget(node, params) {
-    const checkHover = throttle(params.onHover, 100);
+    const checkHover = throttle(() => {
+        if (!dndState.isDragging) return;
+        
+        if (dndState.type === 'site') {
+            dndState.updateHover(params.groupId, params.id);
+        } else if (dndState.type === 'group' && params.type === 'group') {
+            dndState.updateHover(null, params.id);
+        }
+    }, 50);
 
     function onDragOver(e) {
         e.preventDefault(); 
         e.stopPropagation();
-
-        if (!draggingItem) return;
-        if (draggingItem.type === 'group' && params.type !== 'group') return;
-        if (draggingItem.id === params.id) return;
-
-        checkHover(draggingItem);
+        e.dataTransfer.dropEffect = 'move';
+        checkHover();
     }
 
     function onDrop(e) {
         e.preventDefault();
         e.stopPropagation();
-        
-        if (draggingItem && params.onDrop) {
-            params.onDrop(draggingItem);
+        if (dndState.isDragging && params.onDrop) {
+            params.onDrop(dndState.draggedItem, params.groupId, params.id);
         }
     }
 
@@ -132,4 +147,5 @@ export function dropTarget(node, params) {
             node.removeEventListener('drop', onDrop); 
         }
     };
+}
 }

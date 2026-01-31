@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: kyroli/kyroli.github.io/kyroli.github.io-05846a41e5199ba3824669e4e909a4d861ffc96c/src/lib/services/manager.ts
+fullContent:
 import { dataState } from '../core/data.svelte';
 import { appState } from '../core/app.svelte';
 import { MESSAGES } from '../i18n';
@@ -24,19 +28,25 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.GROUP_DELETED, 'success');
   }
 
-  updateGroupOrder(newGroups) {
-    dataState.setGroups(newGroups);
-  }
-
-  swapGroups(sourceId, targetId) {
+  moveGroup(sourceId, targetId) {
+    if (sourceId === targetId) return;
+    
     const groups = [...dataState.groups];
     const srcIdx = groups.findIndex(g => g.id === sourceId);
-    const tgtIdx = groups.findIndex(g => g.id === targetId);
+    if (srcIdx === -1) return;
     
-    if (srcIdx === -1 || tgtIdx === -1 || srcIdx === tgtIdx) return;
-
-    const [item] = groups.splice(srcIdx, 1);
-    groups.splice(tgtIdx, 0, item);
+    const [group] = groups.splice(srcIdx, 1);
+    
+    if (targetId) {
+        const tgtIdx = groups.findIndex(g => g.id === targetId);
+        if (tgtIdx !== -1) {
+            groups.splice(tgtIdx, 0, group);
+        } else {
+            groups.push(group);
+        }
+    } else {
+        groups.push(group);
+    }
     
     dataState.setGroups(groups);
   }
@@ -147,6 +157,11 @@ class DataManager {
       appState.showToast(MESSAGES.TOAST.IMPORT_FAIL_FORMAT, 'error');
     }
   }
+  
+  swapGroups(sourceId, targetId) {
+      this.moveGroup(sourceId, targetId);
+  }
 }
 
 export const manager = new DataManager();
+}
