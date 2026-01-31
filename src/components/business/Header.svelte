@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X, Save, RotateCcw, Moon, Sun, Pencil, Settings, CloudUpload, Loader2 } from 'lucide-svelte';
+  import { Search, X, Save, RotateCcw, Pencil, Settings, CloudUpload, Loader2 } from 'lucide-svelte';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
@@ -7,6 +7,7 @@
   import { MESSAGES } from '$lib/i18n';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
+  import ThemeSwitch from '../ui/ThemeSwitch.svelte';
 
   let search = $state('');
   
@@ -106,15 +107,12 @@
             </Button>
           </div>
         {:else}
-          <div class="flex gap-2 animate-fade">
-            <Button variant="outline" onclick={appState.toggleTheme} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_SWITCH_THEME}>
-              {#if appState.isDark}
-                <Sun class="w-5 h-5" />
-              {:else}
-                <Moon class="w-5 h-5" />
-              {/if}
-            </Button>
+          <div class="flex gap-2 animate-fade items-center">
             
+            <ThemeSwitch />
+            
+            <div class="w-px h-4 bg-border mx-1"></div>
+
             <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
               <Pencil class="w-5 h-5" />
             </Button>
