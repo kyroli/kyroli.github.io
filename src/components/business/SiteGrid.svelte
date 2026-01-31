@@ -67,20 +67,19 @@
         
         {#if appState.isEditMode}
            <div 
-              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
+              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none select-none"
               data-dnd-handle
-              role="button"
-              tabindex="0"
+              aria-label="Drag handle"
             >
-              <GripHorizontal class="w-4 h-4" />
+              <GripHorizontal class="w-4 h-4 pointer-events-none" />
            </div>
         {/if}
         
         <div class="flex-1 flex items-center min-w-0 justify-between">
-            <h2 class="font-bold text-xs tracking-[0.15em] text-text-dim/80 select-none truncate uppercase">{group.name}</h2>
+            <h2 class="font-bold text-xs tracking-[0.15em] text-text-dim/80 select-none truncate uppercase pointer-events-none">{group.name}</h2>
 
             {#if appState.isEditMode}
-               <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity">
+               <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity z-10">
                  <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                    <Pencil class="w-3.5 h-3.5" />
                 </button>
