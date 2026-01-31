@@ -66,7 +66,7 @@ class AppCore {
         ]
       },
       {
-        duration: 400,
+        duration: 300,
         easing: 'ease-in',
         pseudoElement: '::view-transition-new(root)'
       }
