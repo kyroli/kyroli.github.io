@@ -6,44 +6,77 @@
   import { MESSAGES } from '$lib/i18n';
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
-  import { dndzone, SOURCES, TRIGGERS, type DndEvent } from 'svelte-dnd-action';
+  import { flip } from 'svelte/animate';
+  import { fade } from 'svelte/transition';
+
+  const FLIP_DURATION = 300;
+
+  let draggingType = $state<'group' | 'site' | null>(null);
+  let draggingId = $state<string | null>(null);
+  let draggingGroupId = $state<string | null>(null);
   
-  const flipDurationMs = 200;
-
-  function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
-    const { items: newItems, info } = e.detail;
-    dataState.groups = newItems;
-    
-    if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-      dataState.markDirty();
+  function handleGroupDragStart(e: DragEvent, id: string) {
+    draggingType = 'group';
+    draggingId = id;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
     }
   }
 
-  function ensureButtonAtEnd(items: any[], groupId: string) {
-    const sites = items.filter((i: any) => !i.isAddBtn);
-    const btn = items.find((i: any) => i.isAddBtn) || { 
-      id: `__btn_${groupId}`, 
-      isAddBtn: true, 
-      name: '', url: '', icon: '' 
-    };
-    
-    return [...sites, btn];
+  function handleGroupDragEnter(targetGroupId: string) {
+    if (draggingType !== 'group' || draggingId === targetGroupId || !draggingId) return;
+
+    const groups = dataState.groups;
+    const fromIndex = groups.findIndex(g => g.id === draggingId);
+    const toIndex = groups.findIndex(g => g.id === targetGroupId);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      const item = groups[fromIndex];
+      groups.splice(fromIndex, 1);
+      groups.splice(toIndex, 0, item);
+    }
   }
 
-  function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: newItems, info } = e.detail;
-    
-    const sortedItems = appState.isEditMode 
-        ? ensureButtonAtEnd(newItems, groupId)
-        : newItems.filter((i: any) => !i.isAddBtn);
+  function handleDragEnd() {
+    draggingType = null;
+    draggingId = null;
+    draggingGroupId = null;
+    dataState.markDirty();
+  }
 
-    const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
-    if (groupIndex > -1) {
-        dataState.groups[groupIndex].sites = sortedItems;
+  function handleSiteDragStart(e: DragEvent, siteId: string, groupId: string) {
+    draggingType = 'site';
+    draggingId = siteId;
+    draggingGroupId = groupId;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
     }
+    e.stopPropagation();
+  }
 
-    if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-        dataState.markDirty();
+  function handleSiteDragEnter(targetSiteId: string, targetGroupId: string) {
+    if (draggingType !== 'site' || !draggingId || !draggingGroupId) return;
+    if (draggingId === targetSiteId) return;
+    if (draggingGroupId !== targetGroupId) return;
+
+    const groupIndex = dataState.groups.findIndex(g => g.id === targetGroupId);
+    if (groupIndex === -1) return;
+
+    const sites = dataState.groups[groupIndex].sites;
+    const fromIndex = sites.findIndex(s => s.id === draggingId);
+    const toIndex = sites.findIndex(s => s.id === targetSiteId);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      const item = sites[fromIndex];
+      sites.splice(fromIndex, 1);
+      sites.splice(toIndex, 0, item);
+    }
+  }
+
+  function handleDragOver(e: DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
     }
   }
 
@@ -54,49 +87,32 @@
       isDestructive: true
     });
   }
-
-  function stopPropagation(e: Event) {
-    e.stopPropagation();
-  }
 </script>
 
-<div 
-  class="w-full flex flex-col gap-6 pt-6 pb-20"
-  use:dndzone={{
-    items: dataState.groups, 
-    flipDurationMs,
-    dragDisabled: !appState.isEditMode, 
-    type: 'group',
-    dropTargetStyle: { outline: 'none', border: 'none' }
-  }}
-  onconsider={handleGroupDnd}
-  onfinalize={handleGroupDnd}
->
+<div class="w-full flex flex-col gap-6 pt-6 pb-20">
   
   {#each dataState.groups as group (group.id)}
-    {@const displaySites = appState.isEditMode 
-        ? ensureButtonAtEnd(group.sites, group.id)
-        : group.sites.filter((s: any) => !s.isAddBtn)
-    }
-
     <div 
         class="group-item flex flex-col bg-surface/30 rounded-2xl border border-transparent transition-colors duration-200 pb-2
-               {appState.isEditMode ? 'border-border/40 hover:border-primary/20' : ''}"
-        role="group"
+               {appState.isEditMode ? 'border-border/40 hover:border-primary/20' : ''}
+               {draggingType === 'group' && draggingId === group.id ? 'opacity-50 scale-[0.98]' : ''}"
+        animate:flip={{ duration: FLIP_DURATION }}
+        
+        draggable={appState.isEditMode}
+        ondragstart={(e) => handleGroupDragStart(e, group.id)}
+        ondragenter={() => handleGroupDragEnter(group.id)}
+        ondragend={handleDragEnd}
+        ondragover={handleDragOver}
     >
       <div 
-        class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px]"
-        onmousedown={stopPropagation}
-        ontouchstart={stopPropagation}
-        role="presentation"
+        class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px] cursor-default"
+        onmousedown={(e) => e.stopPropagation()} 
       >
         {#if appState.isEditMode}
            <div 
              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
              onmousedown={(e) => { 
              }}
-             role="button"
-             tabindex="0"
            >
              <GripHorizontal class="w-4 h-4" />
           </div>
@@ -119,48 +135,47 @@
 
       <div 
         class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]"
-        onmousedown={stopPropagation}
-        ontouchstart={stopPropagation}
-        role="list"
-        use:dndzone={{
-            items: displaySites,
-            flipDurationMs,
-            dragDisabled: !appState.isEditMode,
-            type: 'site',
-            dropTargetStyle: {} 
-        }}
-        onconsider={(e) => handleSiteDnd(group.id, e)}
-        onfinalize={(e) => handleSiteDnd(group.id, e)}
+        ondragover={handleDragOver} 
       >
-          {#each displaySites as item (item.id)}
-            {#if (item as any).isAddBtn}
-                <div 
-                    role="button" 
-                    tabindex="0"
-                    class="h-full min-h-[72px]" 
-                    data-id={item.id}
-                    onmousedown={stopPropagation}
-                    ontouchstart={stopPropagation}
-                >
-                    <button 
-                        onclick={() => appState.openSiteModal(group.id)} 
-                        class="w-full h-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer active:scale-[0.98] group"
-                        title={MESSAGES.UI.NEW_SITE}
-                    >
-                        <div class="w-8 h-8 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
-                            <Plus class="w-4 h-4" />
-                        </div>
-                        <span class="text-[10px] font-bold tracking-wider uppercase">{MESSAGES.UI.NEW_SITE}</span>
-                    </button>
-                </div>
-            {:else}
-                <div role="listitem" data-id={item.id}>
-                    <SiteCard site={item} groupId={group.id} />
-                </div>
-            {/if}
+          {#each group.sites as item (item.id)}
+            <div 
+                role="listitem"
+                class="relative"
+                
+                animate:flip={{ duration: FLIP_DURATION }}
+                
+                draggable={appState.isEditMode}
+                ondragstart={(e) => handleSiteDragStart(e, item.id, group.id)}
+                ondragenter={() => handleSiteDragEnter(item.id, group.id)}
+                ondragend={handleDragEnd}
+                
+                style="opacity: {draggingType === 'site' && draggingId === item.id ? '0' : '1'}"
+            >
+                <SiteCard site={item} groupId={group.id} />
+                
+                {#if appState.isEditMode}
+                    <div class="absolute inset-0 z-10 cursor-grab active:cursor-grabbing"></div>
+                {/if}
+            </div>
           {/each}
-      </div>
 
+          {#if appState.isEditMode}
+            <button 
+                onclick={() => appState.openSiteModal(group.id)} 
+                class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer active:scale-[0.98] group h-full min-h-[100px]"
+                title={MESSAGES.UI.NEW_SITE}
+                ondragenter={(e) => {
+                    e.preventDefault();
+                }}
+            >
+                <div class="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                    <Plus class="w-5 h-5" />
+                </div>
+                <span class="text-[11px] font-bold tracking-wider uppercase">{MESSAGES.UI.NEW_SITE}</span>
+            </button>
+          {/if}
+
+      </div>
     </div>
   {/each}
 
