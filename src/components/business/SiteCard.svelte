@@ -20,7 +20,7 @@
 
   const firstChar = $derived(site.name ? site.name.charAt(0).toUpperCase() : '?');
   const safeHref = $derived(!appState.isEditMode && /^https?:\/\//i.test(site.url) ? site.url : undefined);
-  
+
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
       ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
@@ -70,12 +70,12 @@
     
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5">
       <span class="text-[15px] font-medium text-text truncate tracking-tight leading-snug">{site.name}</span>
-      <span class="text-[11px] text-text-dim/50 truncate font-mono tracking-tight">{displayHostname}</span>
+      <span class="text-[11px] text-text-dim/50 truncate font-mono tracking-wider uppercase">{displayHostname}</span>
     </div>
 
     {#if appState.isEditMode}
       <button class="absolute -top-2 -right-2 w-6 h-6 bg-danger text-white rounded-full flex items-center justify-center shadow-md cursor-pointer hover:scale-110 transition-transform z-20" 
-              onclick={handleDelete} title={MESSAGES.UI.DELETE}>
+        onclick={handleDelete} title={MESSAGES.UI.DELETE}>
         <X class="w-3 h-3" stroke-width={3} />
       </button>
     {/if}
