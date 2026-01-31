@@ -41,8 +41,9 @@ export const sortable: Action<HTMLElement, SortableParams<any>> = (node, params)
           if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
           
           const children = Array.from(from.children);
-          const referenceNode = children[oldIndex];
-          if (referenceNode && referenceNode !== item) {
+          from.removeChild(item);
+          const referenceNode = children[oldIndex < newIndex ? oldIndex : oldIndex + 1];
+          if (referenceNode) {
             from.insertBefore(item, referenceNode);
           } else {
             from.appendChild(item);
@@ -55,11 +56,21 @@ export const sortable: Action<HTMLElement, SortableParams<any>> = (node, params)
         },
 
         onAdd: (evt) => {
-          const { newIndex, item } = evt;
+          const { newIndex, item, from, oldIndex } = evt;
           const itemId = item.dataset.id;
           
-          item.remove();
-          
+          if (from && oldIndex !== undefined) {
+             const children = Array.from(from.children);
+             const ref = children[oldIndex];
+             if (ref) {
+                 from.insertBefore(item, ref);
+             } else {
+                 from.appendChild(item);
+             }
+          } else {
+             if (from) from.appendChild(item);
+          }
+
           if (itemId && newIndex !== undefined && params.onTransfer) {
             params.onTransfer(itemId, newIndex);
           }
