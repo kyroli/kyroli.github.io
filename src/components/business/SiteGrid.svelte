@@ -7,14 +7,13 @@
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
-  import { fade } from 'svelte/transition';
 
   const FLIP_DURATION = 300;
 
   let draggingType = $state<'group' | 'site' | null>(null);
   let draggingId = $state<string | null>(null);
   let draggingGroupId = $state<string | null>(null);
-  
+
   function handleGroupDragStart(e: DragEvent, id: string) {
     draggingType = 'group';
     draggingId = id;
@@ -107,12 +106,14 @@
       <div 
         class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px] cursor-default"
         onmousedown={(e) => e.stopPropagation()} 
+        role="presentation"
       >
         {#if appState.isEditMode}
            <div 
              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
-             onmousedown={(e) => { 
-             }}
+             onmousedown={() => {}}
+             role="button"
+             tabindex="0"
            >
              <GripHorizontal class="w-4 h-4" />
           </div>
@@ -136,6 +137,7 @@
       <div 
         class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]"
         ondragover={handleDragOver} 
+        role="list"
       >
           {#each group.sites as item (item.id)}
             <div 
@@ -164,9 +166,7 @@
                 onclick={() => appState.openSiteModal(group.id)} 
                 class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border/40 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer active:scale-[0.98] group h-full min-h-[100px]"
                 title={MESSAGES.UI.NEW_SITE}
-                ondragenter={(e) => {
-                    e.preventDefault();
-                }}
+                ondragenter={(e) => e.preventDefault()}
             >
                 <div class="w-10 h-10 rounded-full bg-surface border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
                     <Plus class="w-5 h-5" />
@@ -174,7 +174,6 @@
                 <span class="text-[11px] font-bold tracking-wider uppercase">{MESSAGES.UI.NEW_SITE}</span>
             </button>
           {/if}
-
       </div>
     </div>
   {/each}
