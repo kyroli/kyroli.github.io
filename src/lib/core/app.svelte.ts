@@ -35,10 +35,8 @@ class AppCore {
 
   init() {
     $effect(() => {
-      if (typeof document !== 'undefined') {
-        document.documentElement.classList.toggle('dark', this.isDark);
-        storage.theme = this.isDark ? 'dark' : 'light';
-      }
+      document.documentElement.classList.toggle('dark', this.isDark);
+      storage.theme = this.isDark ? 'dark' : 'light';
     });
   }
 

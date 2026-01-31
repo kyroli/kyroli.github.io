@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { HTMLAttributes } from 'svelte/elements';
   import { UI_CONSTANTS } from '$lib/utils';
   import Card from '../ui/Card.svelte';
 
@@ -8,11 +9,9 @@
     class: className = '', 
     skeleton = false,
     ...rest 
-  } = $props<{
+  } = $props<HTMLAttributes<HTMLDivElement> & {
     children: Snippet;
-    class?: string;
     skeleton?: boolean;
-    [key: string]: any;
   }>();
 
   const baseLayout = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface rounded-xl`;
