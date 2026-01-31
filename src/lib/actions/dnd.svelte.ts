@@ -1,24 +1,20 @@
-{
-type: uploaded file
-fileName: kyroli/kyroli.github.io/kyroli.github.io-05846a41e5199ba3824669e4e909a4d861ffc96c/src/lib/actions/dnd.svelte.ts
-fullContent:
 import { appState } from '../core/app.svelte';
 
 class DndState {
     isDragging = $state(false);
-    draggedItem = $state(null);
+    draggedItem = $state<any>(null);
     
-    hoverGroupId = $state(null);
-    hoverId = $state(null);
+    hoverGroupId = $state<string | null>(null);
+    hoverId = $state<string | null>(null);
     
     constructor() {}
 
-    start(item) {
+    start(item: any) {
         this.isDragging = true;
         this.draggedItem = item;
     }
 
-    updateHover(groupId, itemId) {
+    updateHover(groupId: string | null, itemId: string | null) {
         this.hoverGroupId = groupId;
         this.hoverId = itemId;
     }
@@ -37,9 +33,9 @@ class DndState {
 
 export const dndState = new DndState();
 
-function throttle(func, limit) {
-  let inThrottle;
-  return function(...args) {
+function throttle(func: Function, limit: number) {
+  let inThrottle: boolean;
+  return function(this: any, ...args: any[]) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -48,7 +44,7 @@ function throttle(func, limit) {
   }
 }
 
-export function draggable(node, data) {
+export function draggable(node: HTMLElement, data: any) {
     
     $effect(() => {
         node.draggable = appState.isEditMode;
@@ -56,7 +52,7 @@ export function draggable(node, data) {
         node.style.userSelect = appState.isEditMode ? 'none' : '';
     });
 
-    function onDragStart(e) {
+    function onDragStart(e: DragEvent) {
         if (!appState.isEditMode) {
             e.preventDefault();
             return;
@@ -70,7 +66,7 @@ export function draggable(node, data) {
             
             const rect = node.getBoundingClientRect();
             
-            const clone = node.cloneNode(true);
+            const clone = node.cloneNode(true) as HTMLElement;
             clone.style.position = 'absolute';
             clone.style.top = '-9999px';
             clone.style.left = '-9999px';
@@ -103,7 +99,7 @@ export function draggable(node, data) {
     node.addEventListener('dragend', onDragEnd);
 
     return {
-        update(newData) { data = newData; },
+        update(newData: any) { data = newData; },
         destroy() {
             node.removeEventListener('dragstart', onDragStart);
             node.removeEventListener('dragend', onDragEnd);
@@ -111,7 +107,7 @@ export function draggable(node, data) {
     };
 }
 
-export function dropTarget(node, params) {
+export function dropTarget(node: HTMLElement, params: any) {
     const checkHover = throttle(() => {
         if (!dndState.isDragging) return;
         
@@ -122,14 +118,14 @@ export function dropTarget(node, params) {
         }
     }, 50);
 
-    function onDragOver(e) {
+    function onDragOver(e: DragEvent) {
         e.preventDefault(); 
         e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
         checkHover();
     }
 
-    function onDrop(e) {
+    function onDrop(e: DragEvent) {
         e.preventDefault();
         e.stopPropagation();
         if (dndState.isDragging && params.onDrop) {
@@ -141,11 +137,10 @@ export function dropTarget(node, params) {
     node.addEventListener('drop', onDrop);
 
     return {
-        update(newParams) { params = newParams; },
+        update(newParams: any) { params = newParams; },
         destroy() { 
             node.removeEventListener('dragover', onDragOver); 
             node.removeEventListener('drop', onDrop); 
         }
     };
-}
 }

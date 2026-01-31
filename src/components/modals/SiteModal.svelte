@@ -14,19 +14,30 @@
     onClose: () => void 
   }>();
 
-  const group = dataState.groups.find(g => g.id === groupId);
-  const site = siteId ? group?.sites.find(s => s.id === siteId) : null;
+  const group = $derived(dataState.groups.find(g => g.id === groupId));
+  const site = $derived(siteId ? group?.sites.find(s => s.id === siteId) : null);
 
   let name = $state(site?.name ?? '');
   let url = $state(site?.url ?? '');
   let icon = $state(site?.icon ?? '');
-  
+
   const modalTitle = $derived(siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW);
+
+  $effect(() => {
+    if (site) {
+        name = site.name;
+        url = site.url;
+        icon = site.icon;
+    } else {
+        name = '';
+        url = '';
+        icon = '';
+    }
+  });
 
   function handleSave() {
     try {
       const trimmedUrl = url?.trim();
-      
       if (trimmedUrl) {
          new URL(trimmedUrl.startsWith('http') ? trimmedUrl : `https://${trimmedUrl}`);
       } else {

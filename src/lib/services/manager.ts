@@ -1,34 +1,30 @@
-{
-type: uploaded file
-fileName: kyroli/kyroli.github.io/kyroli.github.io-05846a41e5199ba3824669e4e909a4d861ffc96c/src/lib/services/manager.ts
-fullContent:
 import { dataState } from '../core/data.svelte';
 import { appState } from '../core/app.svelte';
 import { MESSAGES } from '../i18n';
 
 class DataManager {
 
-  addGroup(name) {
+  addGroup(name: string) {
     if (!name.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
     const newGroup = { id: crypto.randomUUID(), name: name.trim(), sites: [] };
     dataState.setGroups([...dataState.groups, newGroup]);
     appState.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
   }
 
-  renameGroup(groupId, newName) {
+  renameGroup(groupId: string, newName: string) {
     if (!newName.trim()) throw new Error(MESSAGES.TOAST.GROUP_NAME_REQUIRED);
     const groups = dataState.groups.map(g => g.id === groupId ? { ...g, name: newName.trim() } : g);
     dataState.setGroups(groups);
     appState.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
   }
 
-  deleteGroup(groupId) {
+  deleteGroup(groupId: string) {
     const groups = dataState.groups.filter(g => g.id !== groupId);
     dataState.setGroups(groups);
     appState.showToast(MESSAGES.TOAST.GROUP_DELETED, 'success');
   }
 
-  moveGroup(sourceId, targetId) {
+  moveGroup(sourceId: string, targetId: string) {
     if (sourceId === targetId) return;
     
     const groups = [...dataState.groups];
@@ -51,7 +47,7 @@ class DataManager {
     dataState.setGroups(groups);
   }
 
-  moveSite(sourceId, targetId, targetGroupId) {
+  moveSite(sourceId: string, targetId: string | null, targetGroupId: string) {
     const groups = JSON.parse(JSON.stringify(dataState.groups));
     
     let sourceSite;
@@ -91,7 +87,7 @@ class DataManager {
     dataState.setGroups(groups);
   }
 
-  saveSite(groupId, siteData) {
+  saveSite(groupId: string, siteData: { id?: string, name: string, url: string, icon: string }) {
     const { name, url, icon, id } = siteData;
     if (!name?.trim() || !url?.trim()) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
 
@@ -121,7 +117,7 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
   }
 
-  deleteSite(groupId, siteId) {
+  deleteSite(groupId: string, siteId: string) {
     const groups = dataState.groups.map(g => {
       if (g.id === groupId) {
         return { ...g, sites: g.sites.filter(s => s.id !== siteId) };
@@ -146,7 +142,7 @@ class DataManager {
     appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
   }
 
-  async importData(file) {
+  async importData(file: File) {
     try {
       const text = await file.text();
       const json = JSON.parse(text);
@@ -158,10 +154,9 @@ class DataManager {
     }
   }
   
-  swapGroups(sourceId, targetId) {
+  swapGroups(sourceId: string, targetId: string) {
       this.moveGroup(sourceId, targetId);
   }
 }
 
 export const manager = new DataManager();
-}

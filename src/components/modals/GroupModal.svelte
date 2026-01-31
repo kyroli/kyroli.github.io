@@ -12,10 +12,19 @@
     groupId?: string 
   }>();
 
-  const group = groupId ? dataState.groups.find(g => g.id === groupId) : null;
+  const group = $derived(groupId ? dataState.groups.find(g => g.id === groupId) : null);
   
   let name = $state(group?.name ?? '');
+
   const modalTitle = $derived(groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW);
+
+  $effect(() => {
+    if (group) {
+        name = group.name;
+    } else if (!groupId) {
+        name = '';
+    }
+  });
 
   function handleSave() {
     try {
