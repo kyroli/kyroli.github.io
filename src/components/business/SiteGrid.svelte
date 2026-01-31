@@ -130,16 +130,17 @@
         <div class="flex-1 flex items-center min-w-0 h-full">
             <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate uppercase flex-1">{group.name}</h2>
             
-            {#if appState.isEditMode}
-               <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity animate-fade shrink-0 ml-2">
+            <div 
+                class="flex gap-1 transition-opacity animate-fade shrink-0 ml-2
+                       {appState.isEditMode ? 'opacity-60 hover:opacity-100' : 'opacity-0 pointer-events-none'}"
+            >
                  <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                    <Pencil class="w-4 h-4" />
                 </button>
                  <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
                    <Trash2 class="w-4 h-4" />
                  </button>
-               </div>
-            {/if}
+            </div>
         </div>
       </div>
 
