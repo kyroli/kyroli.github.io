@@ -25,6 +25,14 @@
 
   function handleSave() {
     try {
+      const trimmedUrl = url?.trim();
+      
+      if (trimmedUrl) {
+         new URL(trimmedUrl.startsWith('http') ? trimmedUrl : `https://${trimmedUrl}`);
+      } else {
+        throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
+      }
+
       manager.saveSite(groupId, {
         id: siteId,
         name,
@@ -33,7 +41,7 @@
       });
       onClose();
     } catch (e: any) {
-      appState.showToast(e.message, 'error');
+      appState.showToast(e.message || 'Invalid URL', 'error');
     }
   }
 

@@ -20,12 +20,11 @@ export function sortable<T>(node: HTMLElement, params: SortableParams<T>) {
       group: params.group,
       animation: 250,
       
-      forceFallback: true, 
-      fallbackOnBody: true,
+      forceFallback: false, 
+      fallbackOnBody: false,
       
       dragClass: 'cursor-grabbing', 
       ghostClass: 'opacity-40',
-      fallbackClass: 'opacity-100',
       
       scroll: true, 
       bubbleScroll: true,
