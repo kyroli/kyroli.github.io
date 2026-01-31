@@ -10,19 +10,33 @@
 
   const FLIP_DURATION = 300;
 
+  // 拖拽状态
   let draggingType = $state<'group' | 'site' | null>(null);
   let draggingId = $state<string | null>(null);
   let draggingGroupId = $state<string | null>(null);
 
+  // 【修复2】分组拖拽专用锁：只有按住手柄时，这个锁才会打开
+  let isGroupHandleActive = false;
+
+  // --- 分组拖拽逻辑 ---
+
   function handleGroupDragStart(e: DragEvent, id: string) {
+    // 【关键修复】如果不是通过手柄触发的，直接禁止拖拽
+    if (!isGroupHandleActive) {
+      e.preventDefault();
+      return;
+    }
+
     draggingType = 'group';
     draggingId = id;
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
+      // 可以在这里设置 setDragImage 优化拖拽样式，默认使用浏览器截图
     }
   }
 
   function handleGroupDragEnter(targetGroupId: string) {
+    // 只有在拖分组，且不是自己时才处理
     if (draggingType !== 'group' || draggingId === targetGroupId || !draggingId) return;
 
     const groups = dataState.groups;
@@ -30,18 +44,14 @@
     const toIndex = groups.findIndex(g => g.id === targetGroupId);
 
     if (fromIndex !== -1 && toIndex !== -1) {
+      // 交换数据，animate:flip 负责动画
       const item = groups[fromIndex];
       groups.splice(fromIndex, 1);
       groups.splice(toIndex, 0, item);
     }
   }
 
-  function handleDragEnd() {
-    draggingType = null;
-    draggingId = null;
-    draggingGroupId = null;
-    dataState.markDirty();
-  }
+  // --- 网站卡片拖拽逻辑 ---
 
   function handleSiteDragStart(e: DragEvent, siteId: string, groupId: string) {
     draggingType = 'site';
@@ -50,12 +60,16 @@
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
     }
+    // 阻止冒泡，防止触发外层的分组拖拽
     e.stopPropagation();
   }
 
   function handleSiteDragEnter(targetSiteId: string, targetGroupId: string) {
+    // 1. 基本校验
     if (draggingType !== 'site' || !draggingId || !draggingGroupId) return;
     if (draggingId === targetSiteId) return;
+
+    // 2. 仅支持同组排序
     if (draggingGroupId !== targetGroupId) return;
 
     const groupIndex = dataState.groups.findIndex(g => g.id === targetGroupId);
@@ -66,13 +80,25 @@
     const toIndex = sites.findIndex(s => s.id === targetSiteId);
 
     if (fromIndex !== -1 && toIndex !== -1) {
+      // 交换数据
       const item = sites[fromIndex];
       sites.splice(fromIndex, 1);
       sites.splice(toIndex, 0, item);
     }
   }
 
+  // --- 通用结束/清理逻辑 ---
+
+  function handleDragEnd() {
+    draggingType = null;
+    draggingId = null;
+    draggingGroupId = null;
+    isGroupHandleActive = false; // 确保重置手柄状态
+    dataState.markDirty();
+  }
+
   function handleDragOver(e: DragEvent) {
+    // 必须阻止默认行为才能允许 drop
     e.preventDefault();
     if (e.dataTransfer) {
         e.dataTransfer.dropEffect = 'move';
@@ -88,13 +114,15 @@
   }
 </script>
 
+<svelte:window onmouseup={() => isGroupHandleActive = false} />
+
 <div class="w-full flex flex-col gap-6 pt-6 pb-20">
   
   {#each dataState.groups as group (group.id)}
     <div 
         class="group-item flex flex-col bg-surface/30 rounded-2xl border border-transparent transition-colors duration-200 pb-2
                {appState.isEditMode ? 'border-border/40 hover:border-primary/20' : ''}
-               {draggingType === 'group' && draggingId === group.id ? 'opacity-50 scale-[0.98]' : ''}"
+               {draggingType === 'group' && draggingId === group.id ? 'opacity-40 scale-[0.98]' : ''}"
         animate:flip={{ duration: FLIP_DURATION }}
         
         draggable={appState.isEditMode}
@@ -111,7 +139,7 @@
         {#if appState.isEditMode}
            <div 
              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
-             onmousedown={() => {}}
+             onmousedown={() => isGroupHandleActive = true}
              role="button"
              tabindex="0"
            >
@@ -151,7 +179,7 @@
                 ondragenter={() => handleSiteDragEnter(item.id, group.id)}
                 ondragend={handleDragEnd}
                 
-                style="opacity: {draggingType === 'site' && draggingId === item.id ? '0' : '1'}"
+                style="opacity: {draggingType === 'site' && draggingId === item.id ? '0.4' : '1'}; transition: opacity 0.2s;"
             >
                 <SiteCard site={item} groupId={group.id} />
                 
