@@ -79,12 +79,7 @@
     <div 
         class="group-item flex flex-col gap-4 transition-all duration-300 relative"
         animate:flip={{ duration: FLIP_DURATION }}
-        use:dropTarget={{ 
-            type: 'group', 
-            id: group.id, 
-            groupId: null,
-            onDrop: handleDrop
-        }}
+        use:dropTarget={{ type: 'group', id: group.id, groupId: null, onDrop: handleDrop }}
     >
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
         <div 
@@ -111,25 +106,18 @@
 
       <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start">
           {#each group.sites as item (item.id)}
-             {#if item.isPlaceholder}
-                <div class="relative h-full" animate:flip={{ duration: FLIP_DURATION }}>
-                    <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 opacity-100 box-border"></div>
-                </div>
-             {:else}
-                <div 
-                  class="relative h-full transition-all duration-200 select-none z-10 {item.isHidden ? 'absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none' : ''}"
-                  animate:flip={{ duration: FLIP_DURATION }}
-                  use:draggable={{ type: 'site', id: item.id, groupId: group.id }}
-                  use:dropTarget={{ 
-                      type: 'site', 
-                      id: item.id, 
-                      groupId: group.id,
-                      onDrop: handleDrop
-                  }}
-                >
-                   <SiteCard site={item} groupId={group.id} />
-                </div>
-             {/if}
+             <div 
+               class="relative h-full {item.isPlaceholder ? 'pointer-events-none' : 'transition-all duration-200 select-none z-10'} {item.isHidden ? 'absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none' : ''}"
+               animate:flip={{ duration: FLIP_DURATION }}
+               use:draggable={{ type: 'site', id: item.id, groupId: group.id }}
+               use:dropTarget={{ type: 'site', id: item.id, groupId: group.id, onDrop: handleDrop }}
+             >
+                 {#if item.isPlaceholder}
+                     <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 opacity-100 box-border"></div>
+                 {:else}
+                     <SiteCard site={item} groupId={group.id} />
+                 {/if}
+             </div>
           {/each}
 
           {#if appState.isEditMode}
