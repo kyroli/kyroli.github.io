@@ -11,28 +11,39 @@
 
   const FLIP_DURATION = 300;
 
-  // 1. 分组交互逻辑 (已升级支持接收卡片)
-  function handleGroupDrop(source: any, targetId: string) {
+  // --- 分组逻辑 ---
+  function handleGroupHover(source: any, targetId: string) {
     if (source.type === 'group') {
-        // 分组换分组
         manager.swapGroups(source.id, targetId);
-    } else if (source.type === 'site') {
-        // 卡片拖到了分组背景上 -> 移动卡片到该分组
-        // 只有当目标分组不是当前分组时才移动，防止在组内轻微移动时跳到底部
-        if (source.groupId !== targetId) {
-             manager.moveSite(source.id, null, targetId);
-        }
     }
   }
 
+  function handleGroupDrop(source: any, targetId: string) {
+    // 跨组移动：拖到分组标题/背景上 -> 移动到该组末尾
+    if (source.type === 'site' && source.groupId !== targetId) {
+        manager.moveSite(source.id, null, targetId);
+    }
+  }
+
+  // --- 卡片逻辑 ---
+  function handleSiteHover(source: any, targetId: string, targetGroupId: string) {
+    // 同组排序：实时生效 (丝滑动画)
+    if (source.type === 'site' && source.groupId === targetGroupId) {
+        manager.moveSite(source.id, targetId, targetGroupId);
+    }
+    // 跨组：Hover时不移动，防止DOM销毁导致拖拽断裂
+  }
+
   function handleSiteDrop(source: any, targetId: string, targetGroupId: string) {
-    if (source.type === 'site') {
+    // 跨组排序：松手生效
+    if (source.type === 'site' && source.groupId !== targetGroupId) {
         manager.moveSite(source.id, targetId, targetGroupId);
     }
   }
 
+  // --- 区域逻辑 ---
   function handleZoneDrop(source: any, targetGroupId: string) {
-    if (source.type === 'site') {
+     if (source.type === 'site') {
         manager.moveSite(source.id, null, targetGroupId);
     }
   }
@@ -51,13 +62,15 @@
     <div 
         class="group-item flex flex-col gap-4 transition-all duration-300 rounded-2xl border bg-surface/30 p-2
                {appState.isEditMode ? 'border-border/60' : 'border-transparent'}
+               {dndState.isDragging && dndState.type === 'site' && dndState.groupId !== group.id ? 'ring-2 ring-primary/40 bg-primary/5' : ''}
                {dndState.id === group.id ? 'opacity-20' : ''}"
         animate:flip={{ duration: FLIP_DURATION }}
         
         use:dropTarget={{ 
             type: 'group', 
             id: group.id, 
-            onHover: (s) => handleGroupDrop(s, group.id) 
+            onHover: (s) => handleGroupHover(s, group.id),
+            onDrop: (s) => handleGroupDrop(s, group.id)
         }}
     >
       <div class="flex items-center h-9 cursor-default px-1">
@@ -94,7 +107,8 @@
                     type: 'site', 
                     id: item.id, 
                     groupId: group.id,
-                    onHover: (s) => handleSiteDrop(s, item.id, group.id)
+                    onHover: (s) => handleSiteHover(s, item.id, group.id),
+                    onDrop: (s) => handleSiteDrop(s, item.id, group.id)
                 }}
             >
                 <div class="h-full transform transition-transform">
@@ -112,7 +126,8 @@
                 use:dropTarget={{ 
                     type: 'zone', 
                     groupId: group.id, 
-                    onHover: (s) => handleZoneDrop(s, group.id)
+                    onHover: () => {}, // Zone 不需要 hover 交换
+                    onDrop: (s) => handleZoneDrop(s, group.id)
                 }}
             >
                 <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />

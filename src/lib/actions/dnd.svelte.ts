@@ -1,14 +1,11 @@
 import { appState } from '../core/app.svelte';
 
 // ----------------------------------------------------------------------
-// Zero-Dependency Native DnD Engine for Svelte 5
-// 纯原生、零依赖、面向未来的拖拽引擎
+// Zero-Dependency Native DnD Engine for Svelte 5 (Enhanced)
 // ----------------------------------------------------------------------
 
-// 全局状态：当前正在拖拽的物体
 let draggingItem = $state<{ type: 'group' | 'site', id: string, groupId?: string } | null>(null);
 
-// 导出状态供 UI 使用
 export const dndState = {
     get isDragging() { return !!draggingItem; },
     get type() { return draggingItem?.type; },
@@ -16,7 +13,6 @@ export const dndState = {
     get groupId() { return draggingItem?.groupId; }
 };
 
-// 节流函数
 function throttle(func: Function, limit: number) {
   let inThrottle: boolean;
   return function(this: any, ...args: any[]) {
@@ -28,7 +24,6 @@ function throttle(func: Function, limit: number) {
   }
 }
 
-// Action: 让元素变得“可拖拽” (Draggable)
 export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id: string, groupId?: string }) {
     
     $effect(() => {
@@ -48,23 +43,40 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
         if (e.dataTransfer) {
             e.dataTransfer.effectAllowed = 'move';
             
-            // 计算鼠标偏移量，防止跳变
             const rect = node.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
+            // 此时元素还是原样（不透明），浏览器会截取这个状态作为拖拽图
             e.dataTransfer.setDragImage(node, x, y);
         }
         
-        // 视觉优化：提高不透明度 (opacity-50)，不再那么透明了
+        // 延时添加样式，只改变留在原地的元素，不影响鼠标上的拖拽图
         requestAnimationFrame(() => {
-            node.classList.add('opacity-50', 'grayscale', 'scale-95');
+            // 设计：让原地变成一个“虚线占位符”，看着更漂亮
+            node.classList.add(
+                'opacity-100', // 保持不透明，因为我们要显示边框
+                'grayscale',   //以此区分
+                'border-2', 
+                'border-dashed', 
+                'border-primary/50', 
+                'bg-surface/50',
+                '[&>*]:opacity-20' // 让内部内容变淡，只突出边框
+            );
         });
     }
 
     function onDragEnd() {
         draggingItem = null;
-        node.classList.remove('opacity-50', 'grayscale', 'scale-95');
+        node.classList.remove(
+            'opacity-100', 
+            'grayscale', 
+            'border-2', 
+            'border-dashed', 
+            'border-primary/50', 
+            'bg-surface/50',
+            '[&>*]:opacity-20'
+        );
     }
 
     node.addEventListener('dragstart', onDragStart);
@@ -79,12 +91,12 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
     };
 }
 
-// Action: 让元素变成“放置区” (DropTarget)
 export function dropTarget(node: HTMLElement, params: { 
     type: 'group' | 'site' | 'zone', 
     id?: string, 
     groupId?: string,
-    onHover: (source: any) => void 
+    onHover: (source: any) => void,
+    onDrop?: (source: any) => void  // 新增：支持 Drop 回调
 }) {
     const checkHover = throttle(params.onHover, 100);
 
@@ -93,22 +105,30 @@ export function dropTarget(node: HTMLElement, params: {
         e.stopPropagation();
 
         if (!draggingItem) return;
-
-        // 规则 1: 分组只能换分组 (防止把分组拖进卡片里)
         if (draggingItem.type === 'group' && params.type !== 'group') return;
-        
-        // 规则 2 (已删除): 允许卡片拖到分组背景上，这样就能跨组移动了！
-        
-        // 规则 3: 自己不能换自己
         if (draggingItem.id === params.id) return;
 
         checkHover(draggingItem);
     }
 
+    // 新增：处理松手时的逻辑
+    function onDrop(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (draggingItem && params.onDrop) {
+            params.onDrop(draggingItem);
+        }
+    }
+
     node.addEventListener('dragover', onDragOver);
+    node.addEventListener('drop', onDrop);
 
     return {
         update(newParams: any) { params = newParams; },
-        destroy() { node.removeEventListener('dragover', onDragOver); }
+        destroy() { 
+            node.removeEventListener('dragover', onDragOver); 
+            node.removeEventListener('drop', onDrop); 
+        }
     };
 }
