@@ -107,12 +107,10 @@
             </Button>
           </div>
         {:else}
-          <div class="flex gap-2 animate-fade items-center">
+          <div class="flex gap-3 animate-fade items-center">
             
             <ThemeSwitch />
             
-            <div class="w-px h-4 bg-border mx-1"></div>
-
             <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
               <Pencil class="w-5 h-5" />
             </Button>
