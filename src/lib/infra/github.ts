@@ -1,5 +1,11 @@
 import type { GithubConfig, NavData, RemoteFile } from '../types';
 
+export const GITHUB_ERRORS = {
+  TOKEN_INVALID: 'TOKEN_INVALID',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT'
+} as const;
+
 const API_BASE = 'https://api.github.com/repos';
 
 export class GithubClient {
@@ -17,9 +23,9 @@ export class GithubClient {
     const url = `${API_BASE}/${this.config.owner}/${this.config.repo}${endpoint}`;
     const res = await fetch(url, { ...options, headers: this.headers });
 
-    if (res.status === 401) throw new Error('TOKEN_INVALID');
-    if (res.status === 404) throw new Error('NOT_FOUND');
-    if (res.status === 409) throw new Error('CONFLICT');
+    if (res.status === 401) throw new Error(GITHUB_ERRORS.TOKEN_INVALID);
+    if (res.status === 404) throw new Error(GITHUB_ERRORS.NOT_FOUND);
+    if (res.status === 409) throw new Error(GITHUB_ERRORS.CONFLICT);
     if (!res.ok) throw new Error(`HTTP_ERROR_${res.status}`);
 
     return res.json() as Promise<T>;
@@ -29,7 +35,7 @@ export class GithubClient {
     try {
       return await this.request<RemoteFile>(`/contents/${path}`);
     } catch (e: any) {
-      if (e.message === 'NOT_FOUND') return null;
+      if (e.message === GITHUB_ERRORS.NOT_FOUND) return null;
       throw e;
     }
   }

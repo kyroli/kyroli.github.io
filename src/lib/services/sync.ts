@@ -1,4 +1,4 @@
-import { GithubClient } from '../infra/github';
+import { GithubClient, GITHUB_ERRORS } from '../infra/github';
 import { dataState } from '../core/data.svelte';
 import { appState } from '../core/app.svelte';
 import { MESSAGES } from '../i18n';
@@ -68,7 +68,7 @@ class SyncService {
     } catch (e: any) {
       console.error('Push failed:', e);
       
-      if (e.message === 'CONFLICT') {
+      if (e.message === GITHUB_ERRORS.CONFLICT) {
         dataState.updateSyncState('conflict');
         appState.showToast(MESSAGES.TOAST.SYNC_CONFLICT, 'error');
         await this.init(); 
@@ -122,9 +122,9 @@ class SyncService {
   }
 
   private formatError(e: any): string {
-    if (e.message === 'TOKEN_INVALID') return MESSAGES.ERRORS.TOKEN_INVALID;
-    if (e.message === 'NOT_FOUND') return MESSAGES.ERRORS.REPO_NOT_FOUND;
-    if (e.message === 'CONFLICT') return MESSAGES.ERRORS.CONFLICT;
+    if (e.message === GITHUB_ERRORS.TOKEN_INVALID) return MESSAGES.ERRORS.TOKEN_INVALID;
+    if (e.message === GITHUB_ERRORS.NOT_FOUND) return MESSAGES.ERRORS.REPO_NOT_FOUND;
+    if (e.message === GITHUB_ERRORS.CONFLICT) return MESSAGES.ERRORS.CONFLICT;
     return MESSAGES.ERRORS.UNKNOWN;
   }
 }
