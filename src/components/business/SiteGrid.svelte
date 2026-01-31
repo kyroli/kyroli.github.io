@@ -10,101 +10,62 @@
   
   const flipDurationMs = 200;
 
-  // 1. 分组拖拽锁定状态
-  let canDragGroup = $state(false);
-
-  // 辅助：生成一个固定的加号按钮数据对象
-  function getAddBtn(groupId: string) {
-    return { 
-      id: `__btn_${groupId}`, 
-      isAddBtn: true, 
-      name: '', 
-      url: '', 
-      icon: '' 
-    };
-  }
-
-  // 2. 分组拖拽处理
   function handleGroupDnd(e: CustomEvent<DndEvent<any>>) {
     const { items: newItems, info } = e.detail;
-    dataState.groups = newItems; // 分组可以直接更新
+    dataState.groups = newItems;
     
-    if (info.source === SOURCES.POINTER && (info.trigger === TRIGGERS.DROPPED || info.trigger === TRIGGERS.DRAG_STOPPED)) {
+    if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
       dataState.markDirty();
-      canDragGroup = false; // 拖拽结束，立即上锁
     }
   }
 
-  // 3. 网站卡片拖拽处理（核心修复逻辑）
-  function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: mixedItems, info } = e.detail;
+  function ensureButtonAtEnd(items: any[], groupId: string) {
+    const sites = items.filter((i: any) => !i.isAddBtn);
+    const btn = items.find((i: any) => i.isAddBtn) || { 
+      id: `__btn_${groupId}`, 
+      isAddBtn: true, 
+      name: '', url: '', icon: '' 
+    };
     
-    // 【关键逻辑：数据清洗】
-    // 无论拖拽库把元素排成什么样，我们手动执行一次“归位”操作：
-    // 1. 过滤掉所有的加号按钮（防止意外产生多个或位置错误）
-    const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
-    
-    // 2. 如果是编辑模式，强制在最后追加一个加号按钮
-    // 这样对于 dndzone 来说，items 列表永远是 [Site, Site, ..., Button]
-    // 这种“欺骗”会让库以为按钮一直在最后，从而实现固定效果
-    const displayItems = appState.isEditMode 
-        ? [...realSites, getAddBtn(groupId)]
-        : realSites;
+    return [...sites, btn];
+  }
 
-    // 3. 更新视图
-    // 注意：我们必须更新 group.sites 为包含按钮的列表，否则 dndzone 会因为 DOM 和数据不匹配而抖动
-    // 但在保存数据时，我们会过滤掉这个按钮
+  function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
+    const { items: newItems, info } = e.detail;
+    
+    const sortedItems = appState.isEditMode 
+        ? ensureButtonAtEnd(newItems, groupId)
+        : newItems.filter((i: any) => !i.isAddBtn);
+
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
     if (groupIndex > -1) {
-        dataState.groups[groupIndex].sites = displayItems;
+        dataState.groups[groupIndex].sites = sortedItems;
     }
 
-    // 4. 只有在真正“放下”时，才标记数据脏状态
     if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-        // 保存时，我们需要把内存里的“加号按钮”清理干净，只保留纯净数据
-        // 注意：这里不需要手动清理 group.sites，因为 manager 保存或 sync 同步时
-        // 应该基于 realSites (如果不放心，可以在这里再做一次清理并回写，但通常只需标记脏状态)
-        
-        // 为了安全起见，我们把纯净数据写回去一次，防止加号按钮被误保存进 LocalStorage
-        // 但为了 UI 不抖动，这一步要非常小心。
-        // 更好的策略是：dataState.groups 在内存里可以包含按钮（UI层），
-        // 但在 persistence 层（storage.ts）序列化时过滤。
-        // 鉴于目前架构，我们保持 items 含按钮，但在 sync.push 时过滤（或者依赖后端清洗）。
-        
-        // 补丁：实际上 dataState.groups 是全局状态，直接含按钮会污染数据。
-        // 所以我们采取“分离策略”：
-        // 这里的 dataState.groups[index].sites 只是为了驱动 UI。
-        // 真正的“保存动作”发生时（sync.push），我们需要确保不含按钮。
-        // (注：下方的 handleFinalize 会负责最终清洗)
         dataState.markDirty();
     }
   }
-  
-  // 辅助：当拖拽结束时，确保数据源里没有脏数据（按钮）
-  function handleSiteFinalize(groupId: string, e: CustomEvent<DndEvent<any>>) {
-      const { items: mixedItems } = e.detail;
-      const realSites = mixedItems.filter((item: any) => !item.isAddBtn);
-      
-      const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
-      if (groupIndex > -1) {
-          // 最终落地：只保存真实数据！
-          // 这样 dataState 里的数据永远是干净的
-          dataState.groups[groupIndex].sites = realSites;
-          dataState.markDirty();
-      }
+
+  function handleDeleteGroup(groupName: string, groupId: string) {
+    appState.openConfirm({
+      msg: `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`,
+      onConfirm: () => manager.deleteGroup(groupId),
+      isDestructive: true
+    });
   }
 
+  function stopPropagation(e: Event) {
+    e.stopPropagation();
+  }
 </script>
-
-<svelte:window onmouseup={() => canDragGroup = false} />
 
 <div 
   class="w-full flex flex-col gap-6 pt-6 pb-20"
   use:dndzone={{
     items: dataState.groups, 
     flipDurationMs,
-    // 分组拖拽开关：仅当手柄被按下时有效
-    dragDisabled: !appState.isEditMode || !canDragGroup, 
+    dragDisabled: !appState.isEditMode, 
     type: 'group',
     dropTargetStyle: { outline: 'none', border: 'none' }
   }}
@@ -114,20 +75,26 @@
   
   {#each dataState.groups as group (group.id)}
     {@const displaySites = appState.isEditMode 
-        ? [...group.sites.filter((s: any) => !s.isAddBtn), getAddBtn(group.id)] 
-        : group.sites
+        ? ensureButtonAtEnd(group.sites, group.id)
+        : group.sites.filter((s: any) => !s.isAddBtn)
     }
 
     <div 
         class="group-item flex flex-col bg-surface/30 rounded-2xl border border-transparent transition-colors duration-200 pb-2
                {appState.isEditMode ? 'border-border/40 hover:border-primary/20' : ''}"
+        role="group"
     >
-      <div class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px]">
+      <div 
+        class="flex items-center px-4 py-3 border-b border-border/40 min-h-[50px]"
+        onmousedown={stopPropagation}
+        ontouchstart={stopPropagation}
+        role="presentation"
+      >
         {#if appState.isEditMode}
            <div 
              class="cursor-grab active:cursor-grabbing p-2 mr-3 rounded-lg hover:bg-surface text-text-dim hover:text-primary transition-colors touch-none"
-             onmousedown={() => canDragGroup = true}
-             ontouchstart={() => canDragGroup = true}
+             onmousedown={(e) => { 
+             }}
              role="button"
              tabindex="0"
            >
@@ -152,15 +119,18 @@
 
       <div 
         class="{UI_CONSTANTS.GRID_LAYOUT} p-4 min-h-[20px]"
+        onmousedown={stopPropagation}
+        ontouchstart={stopPropagation}
+        role="list"
         use:dndzone={{
-            items: displaySites, // 传入包含按钮的列表
+            items: displaySites,
             flipDurationMs,
             dragDisabled: !appState.isEditMode,
             type: 'site',
-            dropTargetStyle: {} // 移除虚线
+            dropTargetStyle: {} 
         }}
         onconsider={(e) => handleSiteDnd(group.id, e)}
-        onfinalize={(e) => handleSiteFinalize(group.id, e)}
+        onfinalize={(e) => handleSiteDnd(group.id, e)}
       >
           {#each displaySites as item (item.id)}
             {#if (item as any).isAddBtn}
@@ -169,9 +139,8 @@
                     tabindex="0"
                     class="h-full min-h-[72px]" 
                     data-id={item.id}
-                    onmousedown={(e) => e.stopPropagation()} 
-                    ontouchstart={(e) => e.stopPropagation()}
-                    style="order: 9999;" 
+                    onmousedown={stopPropagation}
+                    ontouchstart={stopPropagation}
                 >
                     <button 
                         onclick={() => appState.openSiteModal(group.id)} 
