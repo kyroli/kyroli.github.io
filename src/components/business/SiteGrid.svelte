@@ -11,9 +11,17 @@
 
   const FLIP_DURATION = 300;
 
+  // 1. 分组交互逻辑 (已升级支持接收卡片)
   function handleGroupDrop(source: any, targetId: string) {
     if (source.type === 'group') {
+        // 分组换分组
         manager.swapGroups(source.id, targetId);
+    } else if (source.type === 'site') {
+        // 卡片拖到了分组背景上 -> 移动卡片到该分组
+        // 只有当目标分组不是当前分组时才移动，防止在组内轻微移动时跳到底部
+        if (source.groupId !== targetId) {
+             manager.moveSite(source.id, null, targetId);
+        }
     }
   }
 

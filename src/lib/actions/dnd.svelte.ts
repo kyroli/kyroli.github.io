@@ -1,7 +1,14 @@
 import { appState } from '../core/app.svelte';
 
+// ----------------------------------------------------------------------
+// Zero-Dependency Native DnD Engine for Svelte 5
+// 纯原生、零依赖、面向未来的拖拽引擎
+// ----------------------------------------------------------------------
+
+// 全局状态：当前正在拖拽的物体
 let draggingItem = $state<{ type: 'group' | 'site', id: string, groupId?: string } | null>(null);
 
+// 导出状态供 UI 使用
 export const dndState = {
     get isDragging() { return !!draggingItem; },
     get type() { return draggingItem?.type; },
@@ -9,6 +16,7 @@ export const dndState = {
     get groupId() { return draggingItem?.groupId; }
 };
 
+// 节流函数
 function throttle(func: Function, limit: number) {
   let inThrottle: boolean;
   return function(this: any, ...args: any[]) {
@@ -20,6 +28,7 @@ function throttle(func: Function, limit: number) {
   }
 }
 
+// Action: 让元素变得“可拖拽” (Draggable)
 export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id: string, groupId?: string }) {
     
     $effect(() => {
@@ -39,6 +48,7 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
         if (e.dataTransfer) {
             e.dataTransfer.effectAllowed = 'move';
             
+            // 计算鼠标偏移量，防止跳变
             const rect = node.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -46,14 +56,15 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
             e.dataTransfer.setDragImage(node, x, y);
         }
         
+        // 视觉优化：提高不透明度 (opacity-50)，不再那么透明了
         requestAnimationFrame(() => {
-            node.classList.add('opacity-30', 'grayscale', 'scale-95');
+            node.classList.add('opacity-50', 'grayscale', 'scale-95');
         });
     }
 
     function onDragEnd() {
         draggingItem = null;
-        node.classList.remove('opacity-30', 'grayscale', 'scale-95');
+        node.classList.remove('opacity-50', 'grayscale', 'scale-95');
     }
 
     node.addEventListener('dragstart', onDragStart);
@@ -68,6 +79,7 @@ export function draggable(node: HTMLElement, data: { type: 'group' | 'site', id:
     };
 }
 
+// Action: 让元素变成“放置区” (DropTarget)
 export function dropTarget(node: HTMLElement, params: { 
     type: 'group' | 'site' | 'zone', 
     id?: string, 
@@ -82,10 +94,12 @@ export function dropTarget(node: HTMLElement, params: {
 
         if (!draggingItem) return;
 
+        // 规则 1: 分组只能换分组 (防止把分组拖进卡片里)
         if (draggingItem.type === 'group' && params.type !== 'group') return;
         
-        if (draggingItem.type === 'site' && params.type === 'group') return;
-
+        // 规则 2 (已删除): 允许卡片拖到分组背景上，这样就能跨组移动了！
+        
+        // 规则 3: 自己不能换自己
         if (draggingItem.id === params.id) return;
 
         checkHover(draggingItem);
