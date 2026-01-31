@@ -20,15 +20,17 @@
   }
 
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
-    const { items: newSites, info } = e.detail;
+    const { items: newDisplayItems, info } = e.detail;
+    
+    const realSites = newDisplayItems.filter((item: any) => !item.isAddBtn);
     
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
-    if (groupIndex === -1) return;
+    if (groupIndex > -1) {
+        dataState.groups[groupIndex].sites = realSites;
 
-    dataState.groups[groupIndex].sites = newSites;
-
-    if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
-      dataState.markDirty();
+        if (info.source === SOURCES.POINTER && info.trigger === TRIGGERS.DROPPED) {
+            dataState.markDirty();
+        }
     }
   }
 
@@ -38,6 +40,10 @@
       onConfirm: () => manager.deleteGroup(groupId),
       isDestructive: true
     });
+  }
+
+  function stopPropagation(e: Event) {
+    e.stopPropagation();
   }
 </script>
 
@@ -55,6 +61,11 @@
 >
   
   {#each dataState.groups as group (group.id)}
+    {@const displaySites = appState.isEditMode 
+        ? [...group.sites, { id: `__btn_${group.id}`, isAddBtn: true, name: '', url: '', icon: '' }] 
+        : group.sites
+    }
+
     <div 
         class="group-item flex flex-col gap-4 transition-colors duration-200 rounded-xl"
         role="group"
@@ -68,10 +79,22 @@
           </div>
         {/if}
         
-        <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none flex-1 truncate uppercase">{group.name}</h2>
+        <div 
+            class="flex-1 flex items-center min-w-0"
+            onmousedown={stopPropagation} 
+            ontouchstart={stopPropagation}
+            role="presentation"
+        >
+            <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate uppercase">{group.name}</h2>
+        </div>
 
         {#if appState.isEditMode}
-           <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity animate-fade">
+           <div 
+             class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity animate-fade"
+             onmousedown={stopPropagation}
+             ontouchstart={stopPropagation}
+             role="presentation"
+           >
              <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                <Pencil class="w-4 h-4" />
             </button>
@@ -84,9 +107,11 @@
       </div>
 
       <div 
-        class={`${UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[60px] p-2 rounded-lg transition-colors`}
+        class={`${UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px] p-2 rounded-lg transition-colors`}
+        onmousedown={stopPropagation}
+        ontouchstart={stopPropagation}
         use:dndzone={{
-            items: group.sites,
+            items: displaySites,
             flipDurationMs,
             dragDisabled: !appState.isEditMode,
             type: 'site',
@@ -95,26 +120,26 @@
         onconsider={(e) => handleSiteDnd(group.id, e)}
         onfinalize={(e) => handleSiteDnd(group.id, e)}
       >
-          {#each group.sites as site (site.id)}
-            <div role="listitem">
-                <SiteCard {site} groupId={group.id} />
-            </div>
+          {#each displaySites as item (item.id)}
+            {#if (item as any).isAddBtn}
+                <div role="button" tabindex="0">
+                    <button 
+                        onclick={() => appState.openSiteModal(group.id)} 
+                        class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer bg-surface/30 group active:scale-[0.98]`}
+                        title={MESSAGES.UI.NEW_SITE}
+                    >
+                       <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
+                           <Plus class="w-4 h-4" />
+                      </div>
+                    </button>
+                </div>
+            {:else}
+                <div role="listitem">
+                    <SiteCard site={item} groupId={group.id} />
+                </div>
+            {/if}
           {/each}
       </div>
-
-      {#if appState.isEditMode}
-        <div class="px-2 pb-2">
-            <button 
-                onclick={() => appState.openSiteModal(group.id)} 
-                class={`flex flex-col gap-2 items-center justify-center rounded-xl border border-dashed border-border/60 text-text-dim/40 hover:text-primary hover:border-primary/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} w-full cursor-pointer bg-surface/10 hover:bg-surface/50 group active:scale-[0.99]`}
-                title={MESSAGES.UI.NEW_SITE}
-            >
-               <div class="w-8 h-8 rounded-full bg-surface/50 border border-border/50 flex items-center justify-center group-hover:scale-110 transition-transform group-hover:border-primary/30 group-hover:text-primary">
-                   <Plus class="w-4 h-4" />
-              </div>
-            </button>
-        </div>
-      {/if}
     </div>
   {/each}
 
