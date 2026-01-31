@@ -21,9 +21,7 @@
 
   function handleSiteDnd(groupId: string, e: CustomEvent<DndEvent<any>>) {
     const { items: newDisplayItems, info } = e.detail;
-    
     const realSites = newDisplayItems.filter((item: any) => !item.isAddBtn);
-    
     const groupIndex = dataState.groups.findIndex(g => g.id === groupId);
     if (groupIndex > -1) {
         dataState.groups[groupIndex].sites = realSites;
@@ -54,7 +52,7 @@
     flipDurationMs,
     dragDisabled: !appState.isEditMode, 
     type: 'group',
-    dropTargetStyle: {}
+    dropTargetStyle: { outline: 'none', border: 'none' }
   }}
   onconsider={handleGroupDnd}
   onfinalize={handleGroupDnd}
@@ -70,40 +68,36 @@
         class="group-item flex flex-col gap-4 transition-colors duration-200 rounded-xl"
         role="group"
     >
-      <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40">
+      <div class="flex items-center pb-3 px-1 h-10 mt-3 border-b border-border/40">
+        
         {#if appState.isEditMode}
            <div 
-             class="cursor-grab active:cursor-grabbing p-1.5 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50"
+             class="cursor-grab active:cursor-grabbing p-1.5 mr-3 rounded-lg border border-border/60 hover:border-primary/50 text-text-dim hover:text-primary transition-colors touch-none bg-surface/50 shrink-0"
            >
              <GripHorizontal class="w-4 h-4" />
           </div>
         {/if}
         
         <div 
-            class="flex-1 flex items-center min-w-0"
+            class="flex-1 flex items-center min-w-0 h-full"
             onmousedown={stopPropagation} 
             ontouchstart={stopPropagation}
             role="presentation"
         >
-            <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate uppercase">{group.name}</h2>
+            <h2 class="font-bold text-[11px] tracking-[0.15em] text-text-dim/60 select-none truncate uppercase flex-1">{group.name}</h2>
+
+            {#if appState.isEditMode}
+               <div class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity animate-fade shrink-0">
+                 <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
+                   <Pencil class="w-4 h-4" />
+                </button>
+
+                 <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
+                   <Trash2 class="w-4 h-4" />
+                 </button>
+               </div>
+            {/if}
         </div>
-
-        {#if appState.isEditMode}
-           <div 
-             class="flex gap-1 opacity-60 hover:opacity-100 transition-opacity animate-fade"
-             onmousedown={stopPropagation}
-             ontouchstart={stopPropagation}
-             role="presentation"
-           >
-             <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
-               <Pencil class="w-4 h-4" />
-            </button>
-
-             <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
-               <Trash2 class="w-4 h-4" />
-             </button>
-           </div>
-        {/if}
       </div>
 
       <div 
