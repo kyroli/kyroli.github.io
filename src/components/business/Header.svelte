@@ -16,7 +16,6 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
 
   function handleSearch() {
@@ -77,37 +76,41 @@
       <div class="flex items-center gap-2 h-10">
         {#if appState.isEditMode}
           <div class="flex gap-2 animate-fade">
-            <Button variant="ghost" onclick={appState.toggleEditMode} class="w-10 h-10 text-text-dim p-0" title={MESSAGES.UI.TIP_EXIT_EDIT}>
+            <Button variant="ghost" size="icon" onclick={appState.toggleEditMode} class="text-text-dim" title={MESSAGES.UI.TIP_EXIT_EDIT}>
               <X class="w-5 h-5" />
             </Button>
 
-            <Button variant="primary" onclick={handleSync} class="h-10 px-4 min-w-[100px]" title={MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing}>
+            <Button 
+              variant="primary" 
+              size="icon" 
+              onclick={handleSync} 
+              title={isSyncing ? MESSAGES.UI.SYNCING : MESSAGES.UI.SAVE_AND_SYNC} 
+              disabled={!dataState.isDirty || isSyncing}
+            >
               {#if isSyncing}
-                <Loader2 class="w-4 h-4 animate-spin mr-2" />
-                <span>{MESSAGES.UI.SYNCING}</span>
+                <Loader2 class="w-5 h-5 animate-spin" />
               {:else}
-                <span class="mr-2">{MESSAGES.UI.SAVE}</span>
-                <Save class="w-4 h-4" />
+                <Save class="w-5 h-5" />
               {/if}
             </Button>
 
-            <Button variant="danger" onclick={handleReset} class="h-10 w-10 p-0" title={MESSAGES.UI.RESET}>
-              <RotateCcw class="w-4 h-4" />
+            <Button variant="danger" size="icon" onclick={handleReset} title={MESSAGES.UI.RESET}>
+              <RotateCcw class="w-5 h-5" />
             </Button>
           </div>
         {:else}
           <div class="flex gap-3 animate-fade items-center">
             <ThemeSwitch />
             
-            <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
+            <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT}>
               <Pencil class="w-5 h-5" />
             </Button>
 
             <div class="relative group">
               <Button 
                 variant="outline" 
+                size="icon"
                 onclick={appState.openConfig} 
-                class="w-10 h-10 p-0"
               >
                  <Settings class={`w-5 h-5 ${!dataState.hasToken ? 'text-text-dim' : ''}`} />
               </Button>
