@@ -10,7 +10,7 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
   const FLIP_DURATION = 300;
-  
+
   const visualGroups = $derived.by(() => {
     let groups = dataState.groups.map(g => ({ 
         ...g, 
@@ -102,7 +102,7 @@
     >
         {#if group.isPlaceholder}
             <div 
-                class="w-full rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 animate-pulse"
+                class="w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 animate-pulse"
                 style="height: {dndState.draggedHeight}px"
             ></div>
         {:else}
@@ -118,7 +118,7 @@
                     </div>
                     
                     <div class="flex-1 flex items-center min-w-0 h-full">
-                        <h2 class="font-bold text-xs tracking-[0.15em] text-text-dim/80 select-none truncate flex-1 uppercase">{group.name}</h2>
+                        <h2 class="text-[11px] font-medium tracking-[0.1em] text-text-dim/80 select-none truncate flex-1 uppercase">{group.name}</h2>
                         <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                             <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
                                 <Pencil class="w-4 h-4" />
@@ -131,7 +131,7 @@
                 </div>
 
                 <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
-                     {#each group.sites as item (item.id)}
+                    {#each group.sites as item (item.id)}
                         <div 
                         class="relative h-full transition-all duration-200 z-10"
                         animate:flip={{ duration: FLIP_DURATION }}
@@ -153,7 +153,7 @@
                             class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                             title={MESSAGES.UI.NEW_SITE}
                         >
-                            <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                           <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
                     {/if}
                 </div>
@@ -163,7 +163,7 @@
   {/each}
 
   {#if appState.isEditMode}
-   <button onclick={() => appState.openGroupModal()} class="w-full py-6 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-3 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
+   <button onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>

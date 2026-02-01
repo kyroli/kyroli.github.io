@@ -22,7 +22,7 @@
 
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
-      ? 'cursor-move border-primary/40 shadow-lg scale-[1.02] z-10 bg-surface' 
+      ? 'cursor-move border-primary shadow-lg -translate-y-1 z-10 bg-surface' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.98]'
   }`);
 
@@ -58,7 +58,7 @@
     
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5">
       <span class="text-[15px] font-medium text-text truncate tracking-tight leading-snug">{site.name}</span>
-      <span class="text-[11px] text-text-dim/60 truncate font-mono tracking-wider uppercase">{displayHostname}</span>
+      <span class="text-[11px] font-medium text-text-dim/60 truncate tracking-[0.1em] uppercase">{displayHostname}</span>
     </div>
 
     {#if appState.isEditMode}

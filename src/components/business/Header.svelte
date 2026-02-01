@@ -16,6 +16,7 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
+
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
 
   function handleSearch() {
@@ -55,10 +56,10 @@
       target="_blank" 
       class={`flex items-center gap-3 transition-opacity active:scale-95 group ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
     >
-      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm group-hover:rotate-6 transition-transform">N</div>
+      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-solid group-hover:rotate-6 transition-transform">N</div>
       <div class="flex flex-col">
         <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
-        <span class="text-[10px] font-mono text-text-dim/60 tracking-widest uppercase">{MESSAGES.UI.SUBTITLE}</span>
+        <span class="text-[11px] font-medium tracking-[0.1em] text-text-dim/60 uppercase">{MESSAGES.UI.SUBTITLE}</span>
       </div>
     </a>
     
@@ -66,7 +67,7 @@
       <Input 
         bind:value={search}
         onkeydown={e => e.key === 'Enter' && handleSearch()}
-        class="px-11 py-3 text-base shadow-sm bg-surface text-text placeholder:text-text-dim/40"
+        class="px-11 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40"
         placeholder={MESSAGES.UI.SEARCH_PLACEHOLDER}
       />
       <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
@@ -76,11 +77,11 @@
       <div class="flex items-center gap-2 h-10">
         {#if appState.isEditMode}
           <div class="flex gap-2 animate-fade">
-            <Button variant="ghost" onclick={appState.toggleEditMode} class="w-10 h-10 !rounded-xl !p-0 text-text-dim" title={MESSAGES.UI.TIP_EXIT_EDIT}>
+            <Button variant="ghost" onclick={appState.toggleEditMode} class="w-10 h-10 text-text-dim p-0" title={MESSAGES.UI.TIP_EXIT_EDIT}>
               <X class="w-5 h-5" />
             </Button>
 
-            <Button variant="primary" onclick={handleSync} class="h-10 px-4 !rounded-xl min-w-[100px]" title={MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing}>
+            <Button variant="primary" onclick={handleSync} class="h-10 px-4 min-w-[100px]" title={MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing}>
               {#if isSyncing}
                 <Loader2 class="w-4 h-4 animate-spin mr-2" />
                 <span>{MESSAGES.UI.SYNCING}</span>
@@ -90,7 +91,7 @@
               {/if}
             </Button>
 
-            <Button variant="danger" onclick={handleReset} class="h-10 w-10 !rounded-xl !p-0" title={MESSAGES.UI.RESET}>
+            <Button variant="danger" onclick={handleReset} class="h-10 w-10 p-0" title={MESSAGES.UI.RESET}>
               <RotateCcw class="w-4 h-4" />
             </Button>
           </div>
@@ -98,15 +99,15 @@
           <div class="flex gap-3 animate-fade items-center">
             <ThemeSwitch />
             
-            <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 !rounded-xl !p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
+            <Button variant="outline" onclick={handleEditClick} class="w-10 h-10 p-0" title={MESSAGES.UI.TIP_ENTER_EDIT}>
               <Pencil class="w-5 h-5" />
             </Button>
 
             <div class="relative group">
-               <Button 
+              <Button 
                 variant="outline" 
                 onclick={appState.openConfig} 
-                class="w-10 h-10 !rounded-xl !p-0"
+                class="w-10 h-10 p-0"
               >
                  <Settings class={`w-5 h-5 ${!dataState.hasToken ? 'text-text-dim' : ''}`} />
               </Button>
