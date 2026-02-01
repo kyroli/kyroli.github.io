@@ -4,7 +4,7 @@
   import { appState } from '$lib/core/app.svelte';
   import { manager } from '$lib/services/manager';
   import { MESSAGES } from '$lib/i18n';
-  import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
+  import { GripVertical, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
@@ -92,7 +92,7 @@
   }
 </script>
 
-<div class="w-full flex flex-col gap-5 pt-6 pb-0">
+<div class="w-full flex flex-col gap-8 pt-6 pb-0">
   {#each visualGroups as group (group.id)}
     <div 
         animate:flip={{ duration: FLIP_DURATION }}
@@ -106,25 +106,31 @@
             ></div>
         {:else}
             <div class="group-item flex flex-col gap-4 relative">
-                <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
-                    <div 
-                        class="w-8 h-8 flex items-center justify-center rounded-xl border border-border/60 bg-surface/50 text-text-dim transition-all touch-none shrink-0 -ml-1
-                        {appState.isEditMode ? 'opacity-100 cursor-move hover:border-primary/50 hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'}"
-                        use:draggable={{ type: 'group', id: group.id, groupId: null }}
-                        title={MESSAGES.UI.TIP_DRAG_SORT}
-                    >
-                        <GripHorizontal class="w-5 h-5" />
-                    </div>
+                <div class="flex items-center gap-3 pb-2 h-9 border-b border-border/40 select-none group/header">
                     
-                    <div class="flex-1 flex items-center min-w-0 h-full">
-                        <h2 class="text-sm font-bold tracking-wide text-text-dim select-none truncate flex-1 uppercase">{group.name}</h2>
-                        <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                            <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
-                                <Pencil class="w-4 h-4" />
-                            </button>
-                            <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
-                                <Trash2 class="w-4 h-4" />
-                            </button>
+                    <h2 class="text-sm font-bold tracking-wide text-text-dim truncate uppercase">{group.name}</h2>
+                    
+                    <div class={`flex items-center gap-1 transition-all duration-200 ${
+                        appState.isEditMode 
+                            ? 'opacity-100 translate-x-0' 
+                            : 'opacity-0 -translate-x-2 pointer-events-none'
+                    }`}>
+                        <button onclick={() => appState.openGroupModal(group.id)} class="text-text-dim hover:text-primary hover:bg-surface p-1 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
+                            <Pencil class="w-3.5 h-3.5" />
+                        </button>
+                        
+                        <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text-dim hover:text-danger hover:bg-surface p-1 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
+                            <Trash2 class="w-3.5 h-3.5" />
+                        </button>
+
+                        <div class="w-px h-3 bg-border mx-1"></div>
+
+                        <div 
+                            class="cursor-move text-text-dim hover:text-primary active:scale-95 transition-transform touch-none p-1"
+                            use:draggable={{ type: 'group', id: group.id, groupId: null }}
+                            title={MESSAGES.UI.TIP_DRAG_SORT}
+                        >
+                            <GripVertical class="w-4 h-4" />
                         </div>
                     </div>
                 </div>

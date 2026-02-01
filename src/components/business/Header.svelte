@@ -49,33 +49,36 @@
 </script>
 
 <div class="w-full mt-8 mb-8 relative">
-  <header class="w-full flex flex-col md:flex-row justify-between items-center gap-5">
-    <a 
-      href={logoHref} 
-      target="_blank" 
-      class={`flex items-center gap-3 transition-opacity active:scale-95 group ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
-    >
-      <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-solid group-hover:rotate-6 transition-transform">N</div>
-      <div class="flex flex-col">
-        <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
-        <span class="text-[11px] font-medium tracking-[0.1em] text-text-dim/60 uppercase">{MESSAGES.UI.SUBTITLE}</span>
-      </div>
-    </a>
+  <header class="w-full grid grid-cols-[1fr_auto_1fr] items-center gap-4">
     
-    <div class="relative w-full md:w-[480px]">
+    <div class="justify-self-start flex min-w-0">
+      <a 
+        href={logoHref} 
+        target="_blank" 
+        class={`flex items-center gap-3 transition-opacity active:scale-95 group ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
+      >
+        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-solid group-hover:rotate-6 transition-transform">N</div>
+        <div class="flex flex-col hidden sm:flex">
+          <h1 class="font-bold text-xl tracking-tight select-none text-text leading-none">NAV-ZERO</h1>
+          <span class="text-[11px] font-medium tracking-[0.1em] text-text-dim/60 uppercase">{MESSAGES.UI.SUBTITLE}</span>
+        </div>
+      </a>
+    </div>
+    
+    <div class="relative w-full w-[480px] max-w-full justify-self-center">
       <Input 
         bind:value={search}
         onkeydown={e => e.key === 'Enter' && handleSearch()}
-        class="px-11 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40"
+        class="px-11 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
         placeholder={MESSAGES.UI.SEARCH_PLACEHOLDER}
       />
       <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
     </div>
 
-    <div class="flex flex-col items-end md:w-44 flex-none">
-      <div class="flex items-center justify-end gap-2 h-10 w-full">
+    <div class="justify-self-end flex items-center justify-end">
+      <div class="flex items-center gap-2 h-10">
         {#if appState.isEditMode}
-          <div class="flex gap-2 animate-fade justify-end w-full">
+          <div class="flex gap-2 animate-fade">
             <Button variant="ghost" size="icon" onclick={appState.toggleEditMode} class="text-text-dim" title={MESSAGES.UI.TIP_EXIT_EDIT}>
               <X class="w-5 h-5" />
             </Button>
@@ -99,7 +102,7 @@
             </Button>
           </div>
         {:else}
-          <div class="flex gap-3 animate-fade items-center justify-end w-full">
+          <div class="flex gap-3 animate-fade items-center">
             <ThemeSwitch />
             
             <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT}>
