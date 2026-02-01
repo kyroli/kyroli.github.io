@@ -33,11 +33,11 @@ class DndEngine {
     #pointerId: number | null = null;
     
     // 物理引擎内部状态
-    #activeClosestId: string | null = null; // 当前聚焦的物理实体ID
-    #insertAfterState = false; // 排序意图锁：true=后半段(After), false=前半段(Before)
-    #grabOffsetY = 0; // 抓取点相对于物体中心的Y轴偏移量 (质心投影核心参数)
+    #activeClosestId: string | null = null;
+    #insertAfterState = false;
+    #grabOffsetY = 0; // 质心投影偏移量
 
-    // 布局快照系统
+    // 布局快照系统 (内存化地图)
     #siteSnapshots = new Map<string, RectSnapshot[]>();
     #groupSnapshots: RectSnapshot[] = [];
     
@@ -51,8 +51,8 @@ class DndEngine {
     readonly MAX_SCROLL_SPEED = 20; 
     
     // 死区配置
-    readonly HYSTERESIS_PIXEL = 6; // 分组排序的绝对像素死区
-    readonly HYSTERESIS_RATIO_LOWER = 0.45; // 站点排序的比例死区
+    readonly HYSTERESIS_PIXEL = 6; 
+    readonly HYSTERESIS_RATIO_LOWER = 0.45;
     readonly HYSTERESIS_RATIO_UPPER = 0.55;
 
     onDropCallback: ((payload: any) => void) | null = null;
@@ -104,10 +104,10 @@ class DndEngine {
 
         this.#scrollParent = this.#findScrollParent(this.#dragNode);
 
+        // 1. 构建全局物理快照 (算力纯化准备)
         this.#buildSnapshots();
 
         let visualSource = this.#dragNode;
-        // 如果是分组拖拽，通常抓手只是Header的一部分，需要定位到整个分组容器
         if (this.type === 'group') {
              visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
         }
@@ -115,16 +115,12 @@ class DndEngine {
         const rect = visualSource.getBoundingClientRect();
         this.draggedHeight = rect.height;
 
-        // --- 质心投影核心：计算抓取点偏移 ---
-        // 计算当前物体的绝对物理中心
+        // 2. 质心投影计算
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        
-        // 记录鼠标此刻相对于中心的偏移 (向量: Center -> Mouse)
-        // 之后每一帧：ProjectedCenter = Mouse - Offset
         this.#grabOffsetY = e.clientY - centerY;
-        // ----------------------------------
 
+        // 3. 创建幻影 (Z轴升维 + 低不透明度)
         this.#createGhost(visualSource);
         
         this.#detectCollision(e.clientX, e.clientY);
@@ -134,11 +130,11 @@ class DndEngine {
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
 
-        if (this.type === 'group') {
-            const groups = Array.from(document.querySelectorAll('[data-dnd-group-id]'));
-            this.#groupSnapshots = groups.map(el => this.#getElementSnapshot(el as HTMLElement, 'data-dnd-group-id'));
-        }
+        // 无论拖拽什么，先建立所有 Group 的快照，用于碰撞检测
+        const groups = Array.from(document.querySelectorAll('[data-dnd-group-id]'));
+        this.#groupSnapshots = groups.map(el => this.#getElementSnapshot(el as HTMLElement, 'data-dnd-group-id'));
         
+        // 如果是 Site 拖拽，且有源 Group，预加载源 Group 的 Sites
         if (this.type === 'site' && this.sourceGroupId) {
             this.#captureGroupSnapshot(this.sourceGroupId);
         }
@@ -165,14 +161,30 @@ class DndEngine {
         };
     }
 
+    // 纯数学碰撞检测 (Pure Computational Collision)
     #detectCollision(mouseX: number, mouseY: number) {
-        const elements = document.elementsFromPoint(mouseX, mouseY);
-        const groupEl = elements.find(el => el.closest('[data-dnd-group-id]'))?.closest('[data-dnd-group-id]') as HTMLElement;
-
         if (this.type === 'site') {
-            if (groupEl) {
-                const currentGroupId = groupEl.dataset.dndGroupId!;
+            // 优化点：不再使用 document.elementsFromPoint
+            // 直接遍历内存中的 Group 快照，判断鼠标落在哪个 Group 内
+            let targetGroupSnapshot: RectSnapshot | null = null;
+            
+            for (const snap of this.#groupSnapshots) {
+                if (
+                    mouseX >= snap.rect.left && 
+                    mouseX <= snap.rect.right && 
+                    mouseY >= snap.rect.top && 
+                    mouseY <= snap.rect.bottom
+                ) {
+                    targetGroupSnapshot = snap;
+                    break;
+                }
+            }
+
+            if (targetGroupSnapshot) {
+                const currentGroupId = targetGroupSnapshot.id;
                 this.hoverGroupId = currentGroupId;
+                
+                // 懒加载目标 Group 的 Sites 快照
                 this.#captureGroupSnapshot(currentGroupId);
                 
                 const candidates = this.#siteSnapshots.get(currentGroupId) || [];
@@ -181,6 +193,7 @@ class DndEngine {
                     return;
                 }
 
+                // 寻找最近的 Site 卡片
                 let closest: RectSnapshot | null = null;
                 let minDist = Infinity;
 
@@ -199,7 +212,6 @@ class DndEngine {
                     const relX = mouseX - closest.rect.left;
                     const ratio = relX / closest.rect.width; 
 
-                    // 站点依然使用基于比例的死区，因为网格布局中宽度是固定的
                     this.#updateHysteresisState(closest.id, ratio, 'site');
 
                     if (this.#insertAfterState) {
@@ -211,6 +223,7 @@ class DndEngine {
             }
         } 
         else if (this.type === 'group') {
+             // Group 排序：直接在 #groupSnapshots 中找最近的 Y 轴邻居
              const candidates = this.#groupSnapshots;
              let closest: RectSnapshot | null = null;
              let minDist = Infinity;
@@ -227,14 +240,10 @@ class DndEngine {
              if (closest) {
                  const afterTargetId = this.#findNextDistinctId(candidates, closest);
 
-                 // --- 质心投影判定 ---
-                 // 1. 计算被拖拽物体此刻的“投影中心”
+                 // 质心投影判定 (Projected Center)
                  const projectedCenterY = mouseY - this.#grabOffsetY;
-                 
-                 // 2. 计算与目标中心的物理距离 (正值表示我比目标低/After，负值表示我比目标高/Before)
                  const diff = projectedCenterY - closest.centerY;
 
-                 // 3. 更新物理闩锁 (传入绝对距离 diff)
                  this.#updateHysteresisState(closest.id, diff, 'group');
                  
                  if (this.#insertAfterState) {
@@ -246,7 +255,6 @@ class DndEngine {
         }
     }
 
-    // 辅助：向后寻找第一个非自身的元素ID
     #findNextDistinctId(candidates: RectSnapshot[], current: RectSnapshot): string | null {
         const idx = candidates.indexOf(current);
         let pointer = idx + 1;
@@ -260,33 +268,25 @@ class DndEngine {
         return null;
     }
 
-    // 高维闩锁：根据类型分发判定逻辑
     #updateHysteresisState(targetId: string, value: number, type: 'group' | 'site') {
-        // 如果物理聚焦对象发生变化，重置状态
         if (targetId !== this.#activeClosestId) {
             this.#activeClosestId = targetId;
             
             if (type === 'group') {
-                // 分组：基于绝对距离的初始判断
                 this.#insertAfterState = value > 0;
             } else {
-                // 站点：基于比例的初始判断
                 this.#insertAfterState = value > 0.5;
             }
             return;
         }
 
-        // 死区保护（施密特触发器）
         if (type === 'group') {
-            // Group: 使用绝对像素死区 (value 为 projectedCenterY - targetCenterY)
             if (value > this.HYSTERESIS_PIXEL) {
                 this.#insertAfterState = true;
             } else if (value < -this.HYSTERESIS_PIXEL) {
                 this.#insertAfterState = false;
             }
-            // 在 -HYSTERESIS_PIXEL ~ +HYSTERESIS_PIXEL 之间，保持原状态
         } else {
-            // Site: 使用比例死区 (value 为 ratio)
             if (value > this.HYSTERESIS_RATIO_UPPER) {
                 this.#insertAfterState = true;
             } else if (value < this.HYSTERESIS_RATIO_LOWER) {
@@ -362,7 +362,7 @@ class DndEngine {
         if (!this.#ghostEl) return;
         const x = e.clientX - this.#startX;
         const y = e.clientY - this.#startY;
-        this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(0.95)`; // 保持 Scale
     }
 
     #onUp = (e: PointerEvent) => {
@@ -401,7 +401,6 @@ class DndEngine {
         this.#scrollParent = null;
         this.draggedHeight = 0; 
         
-        // 重置物理闩锁状态
         this.#activeClosestId = null;
         this.#insertAfterState = false;
         this.#grabOffsetY = 0;
@@ -430,10 +429,14 @@ class DndEngine {
         style.height = `${rect.height}px`;
         style.zIndex = '9999';
         style.pointerEvents = 'none'; 
-        style.opacity = '0.9';
-        style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)';
+        
+        // --- 视觉优化核心：Z轴升维与低不透明度 ---
+        style.opacity = '0.8';
+        style.transform = 'translate3d(0,0,0) scale(0.95)'; // Z轴升维感
+        style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)'; // 保持阴影增加悬浮感
+        // ------------------------------------
+
         style.transition = 'none';
-        style.transform = 'translate3d(0,0,0)';
         this.#ghostEl.classList.remove('opacity-0', 'pointer-events-none');
         document.body.appendChild(this.#ghostEl);
     }
