@@ -10,7 +10,6 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
   const FLIP_DURATION = 300;
-
   const visualGroups = $derived.by(() => {
     let groups = dataState.groups.map(g => ({ 
         ...g, 
@@ -140,7 +139,7 @@
                             {#if item.isPlaceholder}
                                 <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 box-border animate-pulse"></div>
                             {:else}
-                                <div use:draggable={{ type: 'site', id: item.id, groupId: group.id }} class="h-full">
+                                <div use:draggable={{ type: 'site', id: item.id, groupId: group.id }} class="h-full rounded-xl">
                                     <SiteCard site={item} groupId={group.id} />
                                 </div>
                             {/if}
@@ -153,7 +152,7 @@
                             class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                             title={MESSAGES.UI.NEW_SITE}
                         >
-                           <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
                     {/if}
                 </div>
