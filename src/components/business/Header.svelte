@@ -72,10 +72,10 @@
       <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
     </div>
 
-    <div class="flex flex-col items-end">
-      <div class="flex items-center gap-2 h-10">
+    <div class="flex flex-col items-end md:w-44 flex-none">
+      <div class="flex items-center justify-end gap-2 h-10 w-full">
         {#if appState.isEditMode}
-          <div class="flex gap-2 animate-fade">
+          <div class="flex gap-2 animate-fade justify-end w-full">
             <Button variant="ghost" size="icon" onclick={appState.toggleEditMode} class="text-text-dim" title={MESSAGES.UI.TIP_EXIT_EDIT}>
               <X class="w-5 h-5" />
             </Button>
@@ -99,7 +99,7 @@
             </Button>
           </div>
         {:else}
-          <div class="flex gap-3 animate-fade items-center">
+          <div class="flex gap-3 animate-fade items-center justify-end w-full">
             <ThemeSwitch />
             
             <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT}>
