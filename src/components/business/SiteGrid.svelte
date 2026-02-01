@@ -7,77 +7,88 @@
   import { GripHorizontal, Pencil, Trash2, Plus } from 'lucide-svelte';
   import SiteCard from './SiteCard.svelte';
   import { flip } from 'svelte/animate';
-  import { draggable, dropTarget, dndState } from '$lib/actions/dnd.svelte';
+  import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
-  const FLIP_DURATION = 200;
+  const FLIP_DURATION = 250;
 
+  // 核心逻辑：根据拖拽状态计算视觉上的列表（包含占位符和避让逻辑）
   const visualGroups = $derived.by(() => {
-    // 1. 深拷贝数据
-    let groups = dataState.groups.map(g => ({ ...g, sites: [...g.sites], isPlaceholder: false }));
+    // 1. 深拷贝原始数据，避免污染
+    let groups = dataState.groups.map(g => ({ 
+        ...g, 
+        sites: [...g.sites],
+        isPlaceholder: false,
+        isActive: false // 标记是否是被拖拽的分组
+    }));
 
-    // 只有当 UI 状态确认进入拖拽模式后，才开始计算避让动画
-    // 这避免了 dragstart 瞬间的布局跳动
     if (!dndState.isDragging) return groups;
 
-    // 2. 分组排序预览
-    if (dndState.type === 'group' && dndState.hoverId) {
-        const srcIdx = groups.findIndex(g => g.id === dndState.id);
-        const tgtIdx = groups.findIndex(g => g.id === dndState.hoverId);
-        
-        if (srcIdx !== -1 && tgtIdx !== -1 && srcIdx !== tgtIdx) {
-             const [g] = groups.splice(srcIdx, 1);
-             const newTgtIdx = groups.findIndex(g => g.id === dndState.hoverId); 
-             groups.splice(newTgtIdx, 0, g);
+    // --- 分组排序预览 ---
+    if (dndState.type === 'group') {
+        const srcIdx = groups.findIndex(g => g.id === dndState.draggedId);
+        // 标记源分组（用于隐藏原身）
+        if (srcIdx !== -1) groups[srcIdx].isActive = true;
+
+        if (dndState.hoverId && dndState.hoverId !== dndState.draggedId) {
+             const tgtIdx = groups.findIndex(g => g.id === dndState.hoverId);
+             if (srcIdx !== -1 && tgtIdx !== -1) {
+                 const [g] = groups.splice(srcIdx, 1);
+                 // 重新插入到目标位置
+                 groups.splice(tgtIdx, 0, g);
+             }
         }
     }
 
-    // 3. 卡片排序预览
-    return groups.map(g => {
-        let sites = g.sites.map(s => ({ ...s, isPlaceholder: false, isHidden: false }));
-
-        if (dndState.type === 'site') {
-            // A. 隐藏源卡片 (模拟被提起)
-            if (g.id === dndState.sourceGroupId) {
-                const idx = sites.findIndex(s => s.id === dndState.id);
-                if (idx !== -1) {
-                    // 这里的 isHidden 会导致 opacity-0。
-                    // 因为 dndState.isDragging 也就是这里的触发条件被延时了，
-                    // 所以浏览器有充足时间先截取到 opacity-1 的快照。
-                    sites[idx].isHidden = true;
-                }
-            }
-
-            // B. 插入占位符
-            if (g.id === dndState.hoverGroupId) {
-                const placeholder = { 
-                    id: 'placeholder-site', 
-                    name: '', url: '', icon: '', 
-                    isPlaceholder: true, 
-                    isHidden: false 
-                };
-                
-                let insertIndex = sites.length;
-                if (dndState.hoverId) {
-                    const hoverIndex = sites.findIndex(s => s.id === dndState.hoverId);
-                    if (hoverIndex !== -1) insertIndex = hoverIndex;
-                }
-                
-                sites.splice(insertIndex, 0, placeholder);
+    // --- 网站卡片排序预览 ---
+    if (dndState.type === 'site') {
+        // 先移除源卡片
+        let sourceSite = null;
+        for (const g of groups) {
+            const idx = g.sites.findIndex(s => s.id === dndState.draggedId);
+            if (idx !== -1) {
+                [sourceSite] = g.sites.splice(idx, 1);
+                break;
             }
         }
-        return { ...g, sites };
-    });
+
+        // 再插入占位符
+        if (sourceSite) {
+            // 构造占位符对象
+            const placeholder = { ...sourceSite, isPlaceholder: true };
+            
+            // 找到目标分组
+            const targetGroup = groups.find(g => g.id === dndState.hoverGroupId);
+            
+            if (targetGroup) {
+                let insertIndex = targetGroup.sites.length; // 默认末尾
+                
+                if (dndState.hoverId) {
+                    const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
+                    if (hoverIdx !== -1) insertIndex = hoverIdx;
+                }
+                
+                targetGroup.sites.splice(insertIndex, 0, placeholder);
+            }
+        }
+    }
+
+    return groups;
   });
 
-  function handleDrop(source, targetGroupId, targetId) {
-    if (source.type === 'site') {
-        manager.moveSite(source.id, targetId, targetGroupId);
-    } else if (source.type === 'group') {
-        manager.moveGroup(source.id, targetId);
-    }
-  }
+  // 注册回调：处理真实的逻辑变更
+  dndState.setOnDrop((payload: any) => {
+      const { type, srcId, targetGroupId, targetId } = payload;
+      
+      if (type === 'site') {
+          manager.moveSite(srcId, targetId, targetGroupId);
+      } else if (type === 'group') {
+          if (targetId && targetId !== srcId) {
+              manager.moveGroup(srcId, targetId);
+          }
+      }
+  });
 
-  function handleDeleteGroup(groupName, groupId) {
+  function handleDeleteGroup(groupName: string, groupId: string) {
     appState.openConfirm({
       msg: `${MESSAGES.CONFIRM.DELETE_GROUP_PREFIX}${groupName}${MESSAGES.CONFIRM.DELETE_GROUP_SUFFIX}`,
       onConfirm: () => manager.deleteGroup(groupId),
@@ -91,12 +102,13 @@
     <div 
         class="group-item flex flex-col gap-4 transition-all duration-300 relative"
         animate:flip={{ duration: FLIP_DURATION }}
-        use:dropTarget={{ type: 'group', id: group.id, groupId: null, onDrop: handleDrop }}
+        data-dnd-group-id={group.id}
     >
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
         <div 
            class="p-1.5 rounded-lg text-text-dim transition-all touch-none shrink-0 -ml-1.5
-               {appState.isEditMode ? 'opacity-100 cursor-grab hover:bg-surface hover:text-primary active:cursor-grabbing' : 'opacity-0 pointer-events-none'}"
+               {appState.isEditMode ? 'opacity-100 hover:bg-surface hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'} 
+               {group.isActive ? 'opacity-0' : ''}"
            use:draggable={{ type: 'group', id: group.id, groupId: null }}
         >
            <GripHorizontal class="w-5 h-5" />
@@ -110,24 +122,25 @@
                    <Pencil class="w-4 h-4" />
                 </button>
                  <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
-                     <Trash2 class="w-4 h-4" />
+                    <Trash2 class="w-4 h-4" />
                  </button>
             </div>
         </div>
       </div>
 
-      <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start">
+      <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
           {#each group.sites as item (item.id)}
              <div 
-               class="relative h-full {item.isPlaceholder ? 'pointer-events-none' : 'transition-all duration-200 select-none z-10'} {item.isHidden ? 'absolute w-0 h-0 overflow-hidden opacity-0 pointer-events-none' : ''}"
+               class="relative h-full transition-all duration-200 z-10"
                animate:flip={{ duration: FLIP_DURATION }}
-               use:draggable={{ type: 'site', id: item.id, groupId: group.id }}
-               use:dropTarget={{ type: 'site', id: item.id, groupId: group.id, onDrop: handleDrop }}
+               data-dnd-site-id={item.id}
              >
                  {#if item.isPlaceholder}
-                     <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 opacity-100 box-border"></div>
+                     <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border animate-pulse"></div>
                  {:else}
-                     <SiteCard site={item} groupId={group.id} />
+                     <div use:draggable={{ type: 'site', id: item.id, groupId: group.id }} class="h-full">
+                        <SiteCard site={item} groupId={group.id} />
+                     </div>
                  {/if}
              </div>
           {/each}
@@ -137,12 +150,6 @@
                 onclick={() => appState.openSiteModal(group.id)} 
                 class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-dashed border-border text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                 title={MESSAGES.UI.NEW_SITE}
-                use:dropTarget={{ 
-                    type: 'site', 
-                    id: null, 
-                    groupId: group.id, 
-                    onDrop: handleDrop
-                }}
             >
                 <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>

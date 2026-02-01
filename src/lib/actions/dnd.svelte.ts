@@ -1,184 +1,241 @@
 import { appState } from '../core/app.svelte';
 
-class DndState {
-    // 内部状态，立即更新
-    _internalDragging = false;
-    
-    // UI 状态，延迟更新（为了让浏览器有时间生成快照）
+class DndEngine {
+    // 核心状态
     isDragging = $state(false);
+    type = $state<'group' | 'site' | null>(null);
     
-    draggedItem = $state<any>(null);
+    // 源数据
+    draggedId = $state<string | null>(null);
+    sourceGroupId = $state<string | null>(null);
+    
+    // 交互投影（目标）
     hoverGroupId = $state<string | null>(null);
-    hoverId = $state<string | null>(null);
+    hoverId = $state<string | null>(null); // null 代表追加到末尾
     
+    // 内部状态
+    #startX = 0;
+    #startY = 0;
+    #isDown = false;
+    #ghostEl: HTMLElement | null = null;
+    #dragNode: HTMLElement | null = null;
+    #pointerId: number | null = null;
+    
+    // 配置
+    readonly THRESHOLD = 5; // 移动超过 5px 才视为拖拽，防止误触点击
+
     constructor() {}
 
-    start(item: any) {
-        this._internalDragging = true;
-        this.draggedItem = item;
-        
-        // 关键修复：延迟通知 UI 隐藏元素，确保浏览器先完成 setDragImage 快照截取
-        requestAnimationFrame(() => {
-            if (this._internalDragging) {
-                this.isDragging = true;
+    // 初始化交互（绑定于 onpointerdown）
+    init(e: PointerEvent, type: 'group' | 'site', id: string, groupId: string | null, node: HTMLElement) {
+        if (!appState.isEditMode || !e.isPrimary || e.button !== 0) return;
+
+        this.#isDown = true;
+        this.#startX = e.clientX;
+        this.#startY = e.clientY;
+        this.#dragNode = node;
+        this.#pointerId = e.pointerId;
+
+        // 临时存储参数，等真正触发拖拽时使用
+        this.type = type;
+        this.draggedId = id;
+        this.sourceGroupId = groupId;
+
+        // 绑定全局监听
+        window.addEventListener('pointermove', this.#onMove, { passive: false });
+        window.addEventListener('pointerup', this.#onUp);
+        window.addEventListener('pointercancel', this.#onUp);
+    }
+
+    #onMove = (e: PointerEvent) => {
+        if (!this.#isDown) return;
+
+        if (!this.isDragging) {
+            // 阈值检测
+            const dx = e.clientX - this.#startX;
+            const dy = e.clientY - this.#startY;
+            if (Math.hypot(dx, dy) > this.THRESHold) {
+                this.#startDrag(e);
             }
-        });
+        } else {
+            // 拖拽中
+            e.preventDefault(); // 阻止滚动
+            this.#updateGhost(e);
+            this.#detectCollision(e);
+        }
     }
 
-    updateHover(groupId: string | null, itemId: string | null) {
-        this.hoverGroupId = groupId;
-        this.hoverId = itemId;
+    #startDrag(e: PointerEvent) {
+        if (!this.#dragNode) return;
+
+        this.isDragging = true;
+        
+        // 捕获指针，确保后续事件（即使移出屏幕）都发给该元素
+        try {
+            this.#dragNode.setPointerCapture(e.pointerId);
+        } catch (err) {
+            // 忽略某些极端情况下的捕获失败
+        }
+
+        // 创建幽灵元素
+        let visualSource = this.#dragNode;
+        // 如果是分组手柄，我们需要克隆整个分组容器
+        if (this.type === 'group') {
+             visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
+        }
+        this.#createGhost(visualSource, e.clientX, e.clientY);
     }
 
-    reset() {
-        this._internalDragging = false;
+    #updateGhost(e: PointerEvent) {
+        if (!this.#ghostEl) return;
+        // 直接修改 DOM 避免重绘开销
+        const x = e.clientX - this.#startX;
+        const y = e.clientY - this.#startY;
+        this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
+
+    #detectCollision(e: PointerEvent) {
+        // 穿透幽灵层检测下方元素
+        const elements = document.elementsFromPoint(e.clientX, e.clientY);
+        
+        // 查找最近的上下文
+        const groupEl = elements.find(el => el.closest('[data-dnd-group-id]'))?.closest('[data-dnd-group-id]') as HTMLElement;
+        const siteEl = elements.find(el => el.closest('[data-dnd-site-id]'))?.closest('[data-dnd-site-id]') as HTMLElement;
+
+        if (this.type === 'site') {
+            if (groupEl) {
+                this.hoverGroupId = groupEl.dataset.dndGroupId!;
+
+                if (siteEl) {
+                    const targetId = siteEl.dataset.dndSiteId!;
+                    if (targetId !== this.draggedId) {
+                        this.hoverId = targetId;
+                    }
+                } else {
+                    // 在分组内但不在卡片上，视为追加
+                    this.hoverId = null; 
+                }
+            }
+        } else if (this.type === 'group') {
+             if (groupEl) {
+                 const targetGid = groupEl.dataset.dndGroupId!;
+                 if (targetGid !== this.draggedId) {
+                     this.hoverId = targetGid; // 复用 hoverId 存储目标 Group ID
+                 }
+             }
+        }
+    }
+
+    #onUp = (e: PointerEvent) => {
+        if (this.isDragging) {
+            // 触发回调
+            if (this.onDropCallback) {
+                this.onDropCallback({
+                    type: this.type,
+                    srcId: this.draggedId,
+                    srcGroupId: this.sourceGroupId,
+                    targetGroupId: this.hoverGroupId,
+                    targetId: this.hoverId
+                });
+            }
+            // 释放捕获
+            if (this.#dragNode && this.#pointerId) {
+                try {
+                   this.#dragNode.releasePointerCapture(this.#pointerId);
+                } catch(err) {}
+            }
+        }
+
+        this.#reset();
+    }
+
+    #reset() {
+        this.#isDown = false;
         this.isDragging = false;
-        this.draggedItem = null;
+        this.type = null;
+        this.draggedId = null;
+        this.sourceGroupId = null;
         this.hoverGroupId = null;
         this.hoverId = null;
+        this.#dragNode = null;
+        this.#pointerId = null;
+
+        if (this.#ghostEl) {
+            this.#ghostEl.remove();
+            this.#ghostEl = null;
+        }
+
+        window.removeEventListener('pointermove', this.#onMove);
+        window.removeEventListener('pointerup', this.#onUp);
+        window.removeEventListener('pointercancel', this.#onUp);
     }
 
-    get type() { return this.draggedItem?.type; }
-    get id() { return this.draggedItem?.id; }
-    get sourceGroupId() { return this.draggedItem?.groupId; }
-}
-
-export const dndState = new DndState();
-
-function throttle(func: Function, limit: number) {
-  let inThrottle: boolean;
-  return function(this: any, ...args: any[]) {
-    if (!inThrottle) {
-      func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+    #createGhost(src: HTMLElement, clientX: number, clientY: number) {
+        const rect = src.getBoundingClientRect();
+        this.#ghostEl = src.cloneNode(true) as HTMLElement;
+        
+        // 修正初始坐标，让幽灵元素完美重叠在原元素上
+        // 然后通过 translate3d 移动
+        // 这里我们设置 fixed 定位，top/left 为初始位置
+        const style = this.#ghostEl.style;
+        style.position = 'fixed';
+        style.top = `${rect.top}px`;
+        style.left = `${rect.left}px`;
+        style.width = `${rect.width}px`;
+        style.height = `${rect.height}px`;
+        style.zIndex = '9999';
+        style.pointerEvents = 'none'; // 关键：让事件穿透幽灵
+        style.opacity = '0.9';
+        style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)';
+        style.transition = 'none';
+        
+        // 重置可能的变换
+        style.transform = 'translate3d(0,0,0)';
+        
+        // 修正起始点，保证移动时的 delta 计算正确
+        // 这里的逻辑是：ghost 的基准点是 rect.top/left
+        // 鼠标按下时位置是 clientX/Y
+        // 移动后的 transform = (currX - startX, currY - startY)
+        // 视觉上非常稳
+        
+        this.#ghostEl.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.appendChild(this.#ghostEl);
     }
-  }
-}
 
-export function draggable(node: HTMLElement, data: any) {
+    // 外部注入的回调
+    onDropCallback: Function | null = null;
     
-    $effect(() => {
-        node.draggable = appState.isEditMode;
-        node.style.cursor = appState.isEditMode ? (data.type === 'group' ? 'grab' : 'move') : '';
-        node.style.userSelect = appState.isEditMode ? 'none' : '';
-    });
-
-    function onDragStart(e: DragEvent) {
-        if (!appState.isEditMode) {
-            e.preventDefault();
-            return;
-        }
-        
-        e.stopPropagation();
-        dndState.start(data);
-        
-        if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'move';
-            
-            // 关键修复：如果是分组，我们要克隆的是整个分组容器，而不是当前的把手(node)
-            let targetEl = node;
-            if (data.type === 'group') {
-                const groupContainer = node.closest('.group-item') as HTMLElement;
-                if (groupContainer) targetEl = groupContainer;
-            }
-
-            const rect = targetEl.getBoundingClientRect();
-            
-            // 深度克隆目标元素
-            const clone = targetEl.cloneNode(true) as HTMLElement;
-            
-            // 样式清洗与强制增强
-            clone.style.position = 'absolute';
-            // 必须先显式设置宽高，否则可能坍缩
-            clone.style.width = `${rect.width}px`;
-            clone.style.height = `${rect.height}px`;
-            // 放置在当前元素完全重合的位置，避免视觉跳动
-            clone.style.top = `${rect.top + window.scrollY}px`;
-            clone.style.left = `${rect.left + window.scrollX}px`;
-            
-            // 强制不透明，解决“提起来看不清”的问题
-            clone.style.opacity = '1';
-            clone.style.zIndex = '9999';
-            clone.style.pointerEvents = 'none';
-            // 强制背景色，防止原有的半透明背景导致重影
-            clone.style.backgroundColor = 'var(--bg)'; 
-            clone.style.borderRadius = '16px'; // 保持圆角
-            
-            // 移除可能导致透明度变化的类
-            clone.classList.remove('opacity-0', 'transition-all', 'duration-300');
-            // 添加阴影增强拖拽质感
-            clone.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
-            clone.style.border = '2px solid rgba(var(--primary) / 0.5)';
-
-            document.body.appendChild(clone);
-            
-            // 计算鼠标相对于元素的偏移量
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
-
-            e.dataTransfer.setDragImage(clone, offsetX, offsetY);
-            
-            // 在下一帧移除克隆体，并手动设置原元素样式（双重保险）
-            requestAnimationFrame(() => {
-                document.body.removeChild(clone);
-                // 这里不需要手动设置 opacity-0，因为 dndState.isDragging 变为 true 后
-                // SiteGrid 会通过 isHidden 属性自动处理隐藏，且因为有延时，不会影响快照
-            });
-        }
+    setOnDrop(fn: Function) {
+        this.onDropCallback = fn;
     }
-
-    function onDragEnd() {
-        dndState.reset();
-    }
-
-    node.addEventListener('dragstart', onDragStart);
-    node.addEventListener('dragend', onDragEnd);
-
-    return {
-        update(newData: any) { data = newData; },
-        destroy() {
-            node.removeEventListener('dragstart', onDragStart);
-            node.removeEventListener('dragend', onDragEnd);
-        }
-    };
 }
 
-export function dropTarget(node: HTMLElement, params: any) {
-    const checkHover = throttle(() => {
-        // 只有当 isDragging (UI状态) 为 true 时才响应 hover，防止误触
-        if (!dndState.isDragging) return;
-        
-        if (dndState.type === 'site') {
-            dndState.updateHover(params.groupId, params.id);
-        } else if (dndState.type === 'group' && params.type === 'group') {
-            dndState.updateHover(null, params.id);
-        }
-    }, 50);
+export const dndState = new DndEngine();
 
-    function onDragOver(e: DragEvent) {
-        e.preventDefault(); 
-        e.stopPropagation();
-        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-        checkHover();
+// Svelte Action
+export function draggable(node: HTMLElement, params: { type: 'group' | 'site', id: string, groupId: string | null }) {
+    
+    function onDown(e: PointerEvent) {
+        dndState.init(e, params.type, params.id, params.groupId, node);
     }
 
-    function onDrop(e: DragEvent) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (dndState.isDragging && params.onDrop) {
-            params.onDrop(dndState.draggedItem, params.groupId, params.id);
+    $effect(() => {
+        if (appState.isEditMode) {
+            node.style.cursor = params.type === 'group' ? 'grab' : 'move';
+            // 关键：在编辑模式下禁用默认触摸动作（如滚动），保证拖拽不被打断
+            // 但因为我们有了阈值判定，用户如果在非拖拽区域（如背景）滑动依然可以滚动
+            // 在卡片上滑动则视为拖拽意图
+            node.style.touchAction = 'none'; 
+            node.addEventListener('pointerdown', onDown);
+        } else {
+            node.style.cursor = '';
+            node.style.touchAction = '';
+            node.removeEventListener('pointerdown', onDown);
         }
-    }
-
-    node.addEventListener('dragover', onDragOver);
-    node.addEventListener('drop', onDrop);
+    });
 
     return {
         update(newParams: any) { params = newParams; },
-        destroy() { 
-            node.removeEventListener('dragover', onDragOver); 
-            node.removeEventListener('drop', onDrop); 
-        }
+        destroy() { node.removeEventListener('pointerdown', onDown); }
     };
 }
