@@ -1,6 +1,6 @@
 import { appState } from '../core/app.svelte';
 
-// 快照数据结构：冻结拖拽开始时的布局状态
+// 快照数据结构
 interface RectSnapshot {
     id: string;
     rect: DOMRect;
@@ -17,7 +17,7 @@ class DndEngine {
     draggedId = $state<string | null>(null);
     sourceGroupId = $state<string | null>(null);
     
-    // 视觉样式状态 (新增)
+    // 视觉样式状态
     draggedHeight = $state(0); 
 
     // 交互投影（目标）
@@ -40,9 +40,14 @@ class DndEngine {
     #scrollRafId: number | null = null;
     #scrollParent: HTMLElement | Window | null = null;
     
+    // 物理参数配置
     readonly THRESHOLD = 5;  
     readonly SCROLL_ZONE = 60; 
     readonly MAX_SCROLL_SPEED = 20; 
+
+    // 🟢 新增：死区配置 (45% - 55%)
+    readonly HYSTERESIS_LOWER = 0.45;
+    readonly HYSTERESIS_UPPER = 0.55;
 
     onDropCallback: ((payload: any) => void) | null = null;
 
@@ -93,7 +98,6 @@ class DndEngine {
 
         this.#scrollParent = this.#findScrollParent(this.#dragNode);
 
-        // 建立快照
         this.#buildSnapshots();
 
         let visualSource = this.#dragNode;
@@ -101,8 +105,6 @@ class DndEngine {
              visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
         }
         
-        // --- 核心修复：捕获真实高度 ---
-        // 在生成 Ghost 之前，先记录下元素的高度，用于 UI 层渲染等高的占位符
         const rect = visualSource.getBoundingClientRect();
         this.draggedHeight = rect.height;
 
@@ -175,17 +177,36 @@ class DndEngine {
                 }
 
                 if (closest) {
+                    // 计算潜在的“插入后”目标 ID
+                    let afterTargetId: string | null = null;
+                    const idx = candidates.indexOf(closest);
+                    if (idx !== -1 && idx < candidates.length - 1) {
+                        const nextItem = candidates[idx + 1];
+                        // 如果下一个是拖拽源本身，那真正的下一个依然是它自己（逻辑位置）
+                        afterTargetId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
+                    }
+                    // else: afterTargetId = null (代表末尾)
+
+                    // 🟢 核心修改：迟滞逻辑 (Hysteresis)
                     const relX = mouseX - closest.rect.left;
-                    const insertAfter = relX > (closest.rect.width / 2);
+                    const ratio = relX / closest.rect.width; // 0.0 ~ 1.0
+
+                    let insertAfter = false;
+
+                    if (ratio > this.HYSTERESIS_UPPER) {
+                        // 明确进入右侧 -> 插入到后
+                        insertAfter = true;
+                    } else if (ratio < this.HYSTERESIS_LOWER) {
+                        // 明确进入左侧 -> 插入到前
+                        insertAfter = false;
+                    } else {
+                        // 处于 45%~55% 冷静区：维持当前状态
+                        // 如果当前 hoverId 等于“插入后”的目标 ID，则认为当前状态是“后”，保持它
+                        insertAfter = (this.hoverId === afterTargetId);
+                    }
 
                     if (insertAfter) {
-                        const idx = candidates.indexOf(closest);
-                        if (idx !== -1 && idx < candidates.length - 1) {
-                             const nextItem = candidates[idx + 1];
-                             this.hoverId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
-                        } else {
-                            this.hoverId = null; 
-                        }
+                        this.hoverId = afterTargetId;
                     } else {
                         this.hoverId = closest.id;
                     }
@@ -207,16 +228,31 @@ class DndEngine {
              }
 
              if (closest) {
-                 const insertAfter = mouseY > closest.centerY;
+                 // 计算潜在的“插入后”目标
+                 let afterTargetId: string | null = null;
+                 const idx = candidates.indexOf(closest);
+                 if (idx !== -1 && idx < candidates.length - 1) {
+                     const nextItem = candidates[idx + 1];
+                     afterTargetId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
+                 }
+
+                 // 🟢 核心修改：垂直方向的迟滞逻辑
+                 const relY = mouseY - closest.rect.top;
+                 const ratio = relY / closest.rect.height;
+
+                 let insertAfter = false;
+
+                 if (ratio > this.HYSTERESIS_UPPER) {
+                     insertAfter = true;
+                 } else if (ratio < this.HYSTERESIS_LOWER) {
+                     insertAfter = false;
+                 } else {
+                     // 冷静区：维持原判
+                     insertAfter = (this.hoverId === afterTargetId);
+                 }
                  
                  if (insertAfter) {
-                     const idx = candidates.indexOf(closest);
-                     if (idx !== -1 && idx < candidates.length - 1) {
-                         const nextItem = candidates[idx + 1];
-                         this.hoverId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
-                     } else {
-                         this.hoverId = null;
-                     }
+                     this.hoverId = afterTargetId;
                  } else {
                      this.hoverId = closest.id;
                  }
@@ -328,7 +364,7 @@ class DndEngine {
         this.#dragNode = null;
         this.#pointerId = null;
         this.#scrollParent = null;
-        this.draggedHeight = 0; // Reset height
+        this.draggedHeight = 0; 
         
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
