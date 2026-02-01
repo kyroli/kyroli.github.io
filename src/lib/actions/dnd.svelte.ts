@@ -44,8 +44,6 @@ class DndEngine {
     readonly THRESHOLD = 5;  
     readonly SCROLL_ZONE = 60; 
     readonly MAX_SCROLL_SPEED = 20; 
-
-    // 🟢 新增：死区配置 (45% - 55%)
     readonly HYSTERESIS_LOWER = 0.45;
     readonly HYSTERESIS_UPPER = 0.55;
 
@@ -177,31 +175,32 @@ class DndEngine {
                 }
 
                 if (closest) {
-                    // 计算潜在的“插入后”目标 ID
+                    // 🟢 修复：智能查找 afterTargetId，跳过 draggedId
                     let afterTargetId: string | null = null;
                     const idx = candidates.indexOf(closest);
-                    if (idx !== -1 && idx < candidates.length - 1) {
-                        const nextItem = candidates[idx + 1];
-                        // 如果下一个是拖拽源本身，那真正的下一个依然是它自己（逻辑位置）
-                        afterTargetId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
+                    
+                    // 向后寻找第一个不是自己的元素
+                    let pointer = idx + 1;
+                    while (pointer < candidates.length) {
+                        const candidate = candidates[pointer];
+                        if (candidate.id !== this.draggedId) {
+                            afterTargetId = candidate.id;
+                            break;
+                        }
+                        pointer++;
                     }
-                    // else: afterTargetId = null (代表末尾)
+                    // 如果循环结束还没找到，说明后面全是自己（不可能）或已到末尾 -> null
 
-                    // 🟢 核心修改：迟滞逻辑 (Hysteresis)
                     const relX = mouseX - closest.rect.left;
-                    const ratio = relX / closest.rect.width; // 0.0 ~ 1.0
+                    const ratio = relX / closest.rect.width; 
 
                     let insertAfter = false;
 
                     if (ratio > this.HYSTERESIS_UPPER) {
-                        // 明确进入右侧 -> 插入到后
                         insertAfter = true;
                     } else if (ratio < this.HYSTERESIS_LOWER) {
-                        // 明确进入左侧 -> 插入到前
                         insertAfter = false;
                     } else {
-                        // 处于 45%~55% 冷静区：维持当前状态
-                        // 如果当前 hoverId 等于“插入后”的目标 ID，则认为当前状态是“后”，保持它
                         insertAfter = (this.hoverId === afterTargetId);
                     }
 
@@ -228,15 +227,20 @@ class DndEngine {
              }
 
              if (closest) {
-                 // 计算潜在的“插入后”目标
+                 // 🟢 修复：Group 也要跳过 draggedId
                  let afterTargetId: string | null = null;
                  const idx = candidates.indexOf(closest);
-                 if (idx !== -1 && idx < candidates.length - 1) {
-                     const nextItem = candidates[idx + 1];
-                     afterTargetId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
+                 
+                 let pointer = idx + 1;
+                 while (pointer < candidates.length) {
+                     const candidate = candidates[pointer];
+                     if (candidate.id !== this.draggedId) {
+                         afterTargetId = candidate.id;
+                         break;
+                     }
+                     pointer++;
                  }
 
-                 // 🟢 核心修改：垂直方向的迟滞逻辑
                  const relY = mouseY - closest.rect.top;
                  const ratio = relY / closest.rect.height;
 
@@ -247,7 +251,6 @@ class DndEngine {
                  } else if (ratio < this.HYSTERESIS_LOWER) {
                      insertAfter = false;
                  } else {
-                     // 冷静区：维持原判
                      insertAfter = (this.hoverId === afterTargetId);
                  }
                  

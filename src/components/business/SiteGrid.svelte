@@ -13,7 +13,6 @@
 
   // 核心逻辑：根据拖拽状态计算视觉上的列表（包含占位符和避让逻辑）
   const visualGroups = $derived.by(() => {
-    // 1. 初始化视图数据
     let groups = dataState.groups.map(g => ({ 
         ...g, 
         sites: [...g.sites],
@@ -34,16 +33,12 @@
         }
 
         if (sourceGroup) {
-             let insertIdx = srcIdx; // 默认回填原位
+             let insertIdx = srcIdx; 
 
              if (dndState.hoverId) {
-                 if (dndState.hoverId === dndState.draggedId) {
-                     insertIdx = srcIdx;
-                 } else {
-                     const foundIdx = groups.findIndex(g => g.id === dndState.hoverId);
-                     if (foundIdx !== -1) {
-                         insertIdx = foundIdx;
-                     }
+                 const foundIdx = groups.findIndex(g => g.id === dndState.hoverId);
+                 if (foundIdx !== -1) {
+                     insertIdx = foundIdx;
                  }
              } else {
                  insertIdx = groups.length;
@@ -73,13 +68,8 @@
                 let insertIndex = targetGroup.sites.length; 
                 
                 if (dndState.hoverId) {
-                    if (dndState.hoverId === dndState.draggedId) {
-                        const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
-                        if (hoverIdx !== -1) insertIndex = hoverIdx;
-                    } else {
-                        const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
-                        if (hoverIdx !== -1) insertIndex = hoverIdx;
-                    }
+                    const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
+                    if (hoverIdx !== -1) insertIndex = hoverIdx;
                 }
                 
                 targetGroup.sites.splice(insertIndex, 0, placeholder);
