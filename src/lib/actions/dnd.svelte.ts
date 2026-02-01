@@ -21,13 +21,17 @@ class DndEngine {
     #dragNode: HTMLElement | null = null;
     #pointerId: number | null = null;
     
-    // 配置
-    readonly THRESHOLD = 5; // 移动超过 5px 才视为拖拽，防止误触点击
+    // 配置 [修复] 变量名一致性
+    readonly THRESHOLD = 5; 
+
+    // 外部注入的回调
+    onDropCallback: ((payload: any) => void) | null = null;
 
     constructor() {}
 
     // 初始化交互（绑定于 onpointerdown）
     init(e: PointerEvent, type: 'group' | 'site', id: string, groupId: string | null, node: HTMLElement) {
+        // 仅在编辑模式且使用左键(button 0)时响应
         if (!appState.isEditMode || !e.isPrimary || e.button !== 0) return;
 
         this.#isDown = true;
@@ -54,7 +58,9 @@ class DndEngine {
             // 阈值检测
             const dx = e.clientX - this.#startX;
             const dy = e.clientY - this.#startY;
-            if (Math.hypot(dx, dy) > this.THRESHold) {
+            
+            // [修复] 修正了这里的拼写错误 THRESHold -> THRESHOLD
+            if (Math.hypot(dx, dy) > this.THRESHOLD) {
                 this.#startDrag(e);
             }
         } else {
@@ -81,9 +87,10 @@ class DndEngine {
         let visualSource = this.#dragNode;
         // 如果是分组手柄，我们需要克隆整个分组容器
         if (this.type === 'group') {
+             // 向上寻找最近的 group-item，如果找不到则回退到自身
              visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
         }
-        this.#createGhost(visualSource, e.clientX, e.clientY);
+        this.#createGhost(visualSource);
     }
 
     #updateGhost(e: PointerEvent) {
@@ -108,6 +115,7 @@ class DndEngine {
 
                 if (siteEl) {
                     const targetId = siteEl.dataset.dndSiteId!;
+                    // 只有当目标不是自己时才触发交换预览
                     if (targetId !== this.draggedId) {
                         this.hoverId = targetId;
                     }
@@ -120,7 +128,7 @@ class DndEngine {
              if (groupEl) {
                  const targetGid = groupEl.dataset.dndGroupId!;
                  if (targetGid !== this.draggedId) {
-                     this.hoverId = targetGid; // 复用 hoverId 存储目标 Group ID
+                     this.hoverId = targetGid; 
                  }
              }
         }
@@ -170,13 +178,10 @@ class DndEngine {
         window.removeEventListener('pointercancel', this.#onUp);
     }
 
-    #createGhost(src: HTMLElement, clientX: number, clientY: number) {
+    #createGhost(src: HTMLElement) {
         const rect = src.getBoundingClientRect();
         this.#ghostEl = src.cloneNode(true) as HTMLElement;
         
-        // 修正初始坐标，让幽灵元素完美重叠在原元素上
-        // 然后通过 translate3d 移动
-        // 这里我们设置 fixed 定位，top/left 为初始位置
         const style = this.#ghostEl.style;
         style.position = 'fixed';
         style.top = `${rect.top}px`;
@@ -188,24 +193,15 @@ class DndEngine {
         style.opacity = '0.9';
         style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)';
         style.transition = 'none';
-        
-        // 重置可能的变换
         style.transform = 'translate3d(0,0,0)';
         
-        // 修正起始点，保证移动时的 delta 计算正确
-        // 这里的逻辑是：ghost 的基准点是 rect.top/left
-        // 鼠标按下时位置是 clientX/Y
-        // 移动后的 transform = (currX - startX, currY - startY)
-        // 视觉上非常稳
-        
+        // 清理可能影响布局的类
         this.#ghostEl.classList.remove('opacity-0', 'pointer-events-none');
+        
         document.body.appendChild(this.#ghostEl);
     }
-
-    // 外部注入的回调
-    onDropCallback: Function | null = null;
     
-    setOnDrop(fn: Function) {
+    setOnDrop(fn: (payload: any) => void) {
         this.onDropCallback = fn;
     }
 }
@@ -223,8 +219,6 @@ export function draggable(node: HTMLElement, params: { type: 'group' | 'site', i
         if (appState.isEditMode) {
             node.style.cursor = params.type === 'group' ? 'grab' : 'move';
             // 关键：在编辑模式下禁用默认触摸动作（如滚动），保证拖拽不被打断
-            // 但因为我们有了阈值判定，用户如果在非拖拽区域（如背景）滑动依然可以滚动
-            // 在卡片上滑动则视为拖拽意图
             node.style.touchAction = 'none'; 
             node.addEventListener('pointerdown', onDown);
         } else {

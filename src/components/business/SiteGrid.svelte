@@ -31,6 +31,7 @@
 
         if (dndState.hoverId && dndState.hoverId !== dndState.draggedId) {
              const tgtIdx = groups.findIndex(g => g.id === dndState.hoverId);
+             // Svelte 5 derived 反应很快，这里要确保索引有效
              if (srcIdx !== -1 && tgtIdx !== -1) {
                  const [g] = groups.splice(srcIdx, 1);
                  // 重新插入到目标位置
