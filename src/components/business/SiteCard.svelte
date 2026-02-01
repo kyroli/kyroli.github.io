@@ -10,15 +10,19 @@
   let { site, groupId } = $props<{ site: Site, groupId: string }>();
 
   const displayHostname = $derived.by(() => {
-    const u = new URL(site.url.startsWith('http') ? site.url : `https://${site.url}`);
-    return u.hostname.replace('www.', '');
+    try {
+        const u = new URL(site.url.startsWith('http') ? site.url : `https://${site.url}`);
+        return u.hostname.replace(/^www\./, '');
+    } catch {
+        return site.url;
+    }
   });
 
   const safeHref = $derived(!appState.isEditMode && /^https?:\/\//i.test(site.url) ? site.url : undefined);
 
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
-      ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
+      ? 'cursor-move border-primary/40 shadow-lg scale-[1.02] z-10 bg-surface' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.98]'
   }`);
 
@@ -42,7 +46,7 @@
 
 <div class="site-card relative h-full" data-id={site.id}>
   <CardBase href={safeHref} onclick={handleClick} class={cardClass}>
-    <div class="shrink-0 w-10 h-10 rounded-[10px] bg-icon-bg flex items-center justify-center overflow-hidden border border-black/5 dark:border-white/5 transition-transform duration-200 group-hover:scale-105 font-bold text-lg p-2">
+    <div class="shrink-0 w-10 h-10 rounded-xl bg-icon-bg flex items-center justify-center overflow-hidden border border-border transition-transform duration-200 group-hover:scale-105 p-2">
       <img 
         src={getIcon(site.url, site.icon)} 
         class="w-full h-full object-contain pointer-events-none" 
@@ -54,11 +58,11 @@
     
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5">
       <span class="text-[15px] font-medium text-text truncate tracking-tight leading-snug">{site.name}</span>
-      <span class="text-[11px] text-text-dim/50 truncate font-mono tracking-wider uppercase">{displayHostname}</span>
+      <span class="text-[11px] text-text-dim/60 truncate font-mono tracking-wider uppercase">{displayHostname}</span>
     </div>
 
     {#if appState.isEditMode}
-      <button class="absolute -top-2 -right-2 w-6 h-6 bg-danger text-white rounded-full flex items-center justify-center shadow-md cursor-pointer hover:scale-110 transition-transform z-20" 
+      <button class="absolute -top-2 -right-2 w-6 h-6 bg-danger text-white rounded-full flex items-center justify-center shadow-md cursor-pointer hover:scale-110 transition-transform z-20 border border-white dark:border-zinc-900" 
         onclick={handleDelete} title={MESSAGES.UI.DELETE}>
         <X class="w-3 h-3" stroke-width={3} />
       </button>

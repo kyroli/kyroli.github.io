@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  
   let { 
     children, 
     class: className = '',
@@ -14,8 +13,7 @@
   }>();
 
   const role = $derived(onclick ? "button" : undefined);
-  const baseStyles = "block bg-surface border border-border rounded-xl shadow-sm transition-transform transition-colors duration-200 select-none will-change-transform";
-  const hoverStyles = "hover:border-primary/50 hover:bg-bg hover:shadow-md";
+  const baseStyles = "block bg-surface border border-border rounded-xl transition-all duration-200 will-change-transform";
 </script>
 
 {#if href}
@@ -24,7 +22,7 @@
     {onclick} 
     target="_blank" 
     rel="noopener noreferrer" 
-    class="{baseStyles} {hoverStyles} {className}"
+    class="{baseStyles} {className}"
   >
     {@render children()}
   </a>

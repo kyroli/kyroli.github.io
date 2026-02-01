@@ -10,7 +10,7 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
   const FLIP_DURATION = 300;
-
+  
   const visualGroups = $derived.by(() => {
     let groups = dataState.groups.map(g => ({ 
         ...g, 
@@ -102,14 +102,14 @@
     >
         {#if group.isPlaceholder}
             <div 
-                class="w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 animate-pulse"
+                class="w-full rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 animate-pulse"
                 style="height: {dndState.draggedHeight}px"
             ></div>
         {:else}
             <div class="group-item flex flex-col gap-4 relative">
                 <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
                     <div 
-                        class="p-1.5 rounded-lg border border-border/60 bg-surface/50 text-text-dim transition-all touch-none shrink-0 -ml-1.5
+                        class="w-8 h-8 flex items-center justify-center rounded-xl border border-border/60 bg-surface/50 text-text-dim transition-all touch-none shrink-0 -ml-1
                         {appState.isEditMode ? 'opacity-100 cursor-move hover:border-primary/50 hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'}"
                         use:draggable={{ type: 'group', id: group.id, groupId: null }}
                         title={MESSAGES.UI.TIP_DRAG_SORT}
@@ -138,7 +138,7 @@
                         data-dnd-site-id={item.id}
                         >
                             {#if item.isPlaceholder}
-                                <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border animate-pulse"></div>
+                                <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 box-border animate-pulse"></div>
                             {:else}
                                 <div use:draggable={{ type: 'site', id: item.id, groupId: group.id }} class="h-full">
                                     <SiteCard site={item} groupId={group.id} />
@@ -150,20 +150,20 @@
                     {#if appState.isEditMode}
                         <button 
                             onclick={() => appState.openSiteModal(group.id)} 
-                            class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border border-dashed border-border text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
+                            class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                             title={MESSAGES.UI.NEW_SITE}
                         >
-                             <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
                     {/if}
                 </div>
             </div>
-         {/if}
+        {/if}
     </div>
   {/each}
 
   {#if appState.isEditMode}
-   <button onclick={() => appState.openGroupModal()} class="w-full py-6 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-3 text-text-dim/50 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
+   <button onclick={() => appState.openGroupModal()} class="w-full py-6 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-3 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>
