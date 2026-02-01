@@ -1,6 +1,6 @@
 import { appState } from '../core/app.svelte';
 
-// 类型定义
+// 快照数据结构：冻结拖拽开始时的布局状态
 interface RectSnapshot {
     id: string;
     rect: DOMRect;
@@ -39,10 +39,12 @@ class DndEngine {
     #scrollRafId: number | null = null;
     #scrollParent: HTMLElement | Window | null = null;
     
-    readonly THRESHOLD = 5; 
-    readonly SCROLL_ZONE = 60;
-    readonly MAX_SCROLL_SPEED = 20;
+    // 物理参数配置
+    readonly THRESHOLD = 5;  // 防抖阈值 (px)
+    readonly SCROLL_ZONE = 60; // 滚动触发边缘区域 (px)
+    readonly MAX_SCROLL_SPEED = 20; // 最大滚动速度
 
+    // 回调
     onDropCallback: ((payload: any) => void) | null = null;
 
     constructor() {}
@@ -93,7 +95,7 @@ class DndEngine {
 
         this.#scrollParent = this.#findScrollParent(this.#dragNode);
 
-        // --- 核心变化：建立初始快照 ---
+        // --- 核心：建立初始世界快照 ---
         // 拖拽开始时，世界是静止的。记录这一刻的所有位置。
         this.#buildSnapshots();
 
@@ -107,7 +109,7 @@ class DndEngine {
         this.#detectCollision(e.clientX, e.clientY);
     }
 
-    // 构建快照：只在拖拽开始或进入新区域时调用，而不是每帧调用
+    // 构建快照：只在拖拽开始或进入新区域时调用
     #buildSnapshots() {
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
@@ -126,14 +128,12 @@ class DndEngine {
 
     // 懒加载捕获特定分组的快照
     #captureGroupSnapshot(groupId: string) {
-        if (this.#siteSnapshots.has(groupId)) return; // 已有快照则跳过
+        if (this.#siteSnapshots.has(groupId)) return;
 
         const groupEl = document.querySelector(`[data-dnd-group-id="${groupId}"]`);
         if (!groupEl) return;
 
         const sites = Array.from(groupEl.querySelectorAll('[data-dnd-site-id]'));
-        // 过滤掉正在被拖拽的元素自身的占位符（如果有的话），只保留稳定的参照物
-        // 但其实保留也无妨，只要计算逻辑正确
         const snapshots = sites.map(el => this.#getElementSnapshot(el as HTMLElement, 'data-dnd-site-id'));
         this.#siteSnapshots.set(groupId, snapshots);
     }
@@ -148,7 +148,7 @@ class DndEngine {
         };
     }
 
-    // --- 碰撞检测 (基于快照) ---
+    // --- 碰撞检测 (基于快照 + 意图分区) ---
     #detectCollision(mouseX: number, mouseY: number) {
         // 1. 确定当前所在的宏观区域（分组）
         // 这里依然需要实时 DOM，因为我们需要知道鼠标现在飘到了哪个分组头上
@@ -160,26 +160,21 @@ class DndEngine {
                 const currentGroupId = groupEl.dataset.dndGroupId!;
                 this.hoverGroupId = currentGroupId;
 
-                // 关键：确保我们有这个分组的静态布局快照
-                // 如果这是我们第一次进入这个分组，立即抓取它现在的样子作为参考系
+                // 懒加载快照：如果是第一次进入这个分组，抓取它现在的静态布局
                 this.#captureGroupSnapshot(currentGroupId);
                 
-                // 获取快照数据进行计算，而不是查询实时 DOM
                 const candidates = this.#siteSnapshots.get(currentGroupId) || [];
-                
                 if (candidates.length === 0) {
                     this.hoverId = null;
                     return;
                 }
 
-                // --- 几何投影逻辑 ---
+                // 2. 几何最近邻查找
                 let closest: RectSnapshot | null = null;
                 let minDist = Infinity;
 
                 for (const snap of candidates) {
-                    // 忽略拖拽元素自身（防止自我干扰）
-                    if (snap.id === this.draggedId) continue;
-
+                    if (snap.id === this.draggedId) continue; // 忽略自身
                     const dist = (mouseX - snap.centerX) ** 2 + (mouseY - snap.centerY) ** 2;
                     if (dist < minDist) {
                         minDist = dist;
@@ -187,27 +182,17 @@ class DndEngine {
                     }
                 }
 
+                // 3. 意图判断 (Intent Zones)
                 if (closest) {
-                    // 意图判断：基于静态快照的 Rect 进行判断
-                    // 规则：右侧或下方 -> 插入到后面
+                    // 如果鼠标在目标卡片中心点的右侧，则判定意图为“插入到后面”
                     const relX = mouseX - closest.rect.left;
-                    
-                    // 简单的 Grid 逻辑优化：
-                    // 如果是 Grid 布局，鼠标在卡片中心点右侧，则判定为 After
                     const insertAfter = relX > (closest.rect.width / 2);
 
                     if (insertAfter) {
-                        // 找到 closest 在快照中的索引
                         const idx = candidates.indexOf(closest);
-                        // 尝试找下一个兄弟
                         if (idx !== -1 && idx < candidates.length - 1) {
                              const nextItem = candidates[idx + 1];
-                             // 如果下一个就是我自己，那其实目标就是我自己（保持原位）
-                             if (nextItem.id === this.draggedId) {
-                                 this.hoverId = this.draggedId;
-                             } else {
-                                 this.hoverId = nextItem.id;
-                             }
+                             this.hoverId = nextItem.id === this.draggedId ? this.draggedId : nextItem.id;
                         } else {
                             this.hoverId = null; // 末尾
                         }
@@ -299,12 +284,7 @@ class DndEngine {
                 } else {
                     (this.#scrollParent as HTMLElement).scrollTop += speedY;
                 }
-                // 递归调用以保持滚动，注意这里虽然快照是静态的，但滚动会导致整体偏移
-                // 所以我们必须重新检测碰撞，但碰撞逻辑里用的是 clientY (视口坐标)
-                // 快照里的 rect 是视口坐标吗？是的，getBoundingClientRect 是视口坐标。
-                // 致命问题：滚动会导致元素相对于视口移动，快照会失效！
-                // 修复：滚动时必须更新快照，或者在比对时加上滚动偏移量。
-                // 鉴于性能，最简单的做法是：发生自动滚动时，强制刷新一次快照。
+                // 滚动导致页面布局相对于视口发生偏移，必须清空快照强制重算
                 this.#rebuildSnapshotsOnScroll(); 
                 
                 this.#handleAutoScroll(pointerX, pointerY);
@@ -313,12 +293,10 @@ class DndEngine {
         }
     }
     
-    // 滚动时快速修正快照（简化版：清空当前分组快照，下次检测时自动重新获取）
     #rebuildSnapshotsOnScroll() {
         if (this.hoverGroupId) {
             this.#siteSnapshots.delete(this.hoverGroupId);
         }
-        // 分组快照也清空
         this.#groupSnapshots = [];
         if (this.type === 'group') this.#buildSnapshots();
     }
@@ -365,7 +343,6 @@ class DndEngine {
         this.#pointerId = null;
         this.#scrollParent = null;
         
-        // 清理快照
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
 
