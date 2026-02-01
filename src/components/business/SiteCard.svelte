@@ -18,9 +18,10 @@
   const safeHref = $derived(!appState.isEditMode && /^https?:\/\//i.test(site.url) ? site.url : undefined);
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
-      ? 'cursor-move border-border/60 bg-surface border-dashed' 
+      ? 'cursor-move border-border/60 bg-surface border-dashed select-none hover:border-primary hover:border-solid hover:shadow-sm hover:bg-surface/50' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.98]'
   }`);
+
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
