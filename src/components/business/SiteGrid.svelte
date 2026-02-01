@@ -30,34 +30,24 @@
         let sourceGroup = null;
         if (srcIdx !== -1) {
             sourceGroup = groups[srcIdx];
-            // 物理移除源分组
             groups.splice(srcIdx, 1);
         }
 
         if (sourceGroup) {
-             // --- 关键修复开始 ---
-             // 计算正确的插入位置
-             let insertIdx = srcIdx; // 默认回填原位 (安全兜底，防止乱跳)
+             let insertIdx = srcIdx; // 默认回填原位
 
              if (dndState.hoverId) {
                  if (dndState.hoverId === dndState.draggedId) {
-                     // 如果目标是自己，说明应保持在原位
                      insertIdx = srcIdx;
                  } else {
-                     // 在剩余列表中查找目标位置
                      const foundIdx = groups.findIndex(g => g.id === dndState.hoverId);
                      if (foundIdx !== -1) {
                          insertIdx = foundIdx;
                      }
-                     // 如果找不到(foundIdx === -1)，维持 srcIdx 不变
                  }
              } else {
-                 // hoverId 为 null 代表追加到末尾 (仅当引擎明确判定为末尾时)
-                 // 注意：刚开始拖拽的一瞬间，如果引擎还没来得及计算 collision，hoverId 可能也是 null
-                 // 但由于我们在 startDrag 立即调用了 detectCollision，所以这里 null 可信地代表 "末尾"
                  insertIdx = groups.length;
              }
-             // --- 关键修复结束 ---
 
              // 插入占位符
              groups.splice(insertIdx, 0, { ...sourceGroup, isPlaceholder: true });
@@ -84,13 +74,6 @@
                 
                 if (dndState.hoverId) {
                     if (dndState.hoverId === dndState.draggedId) {
-                        // 同样的逻辑，如果是卡片拖拽且目标是自己，位置由之前的逻辑决定
-                        // 但因为这里是 grid 且先移除了，findIndex 会是 -1
-                        // 不过卡片通常不需要像 Group 那么严格的"回填"，
-                        // 只要 hoverGroupId 没变，且 hoverId 没变，保持原位即可。
-                        // 这里我们依赖 findIndex，如果找不到则追加，这在卡片逻辑里通常表现尚可，
-                        // 但为了完美，也可以加上类似判断，不过 Group 的问题更明显。
-                        // 鉴于卡片逻辑较复杂(涉及跨组)，暂保持原样，如有问题再修。
                         const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
                         if (hoverIdx !== -1) insertIndex = hoverIdx;
                     } else {
@@ -136,7 +119,10 @@
         class="w-full transition-all duration-300"
     >
         {#if group.isPlaceholder}
-            <div class="w-full h-[180px] rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 animate-pulse"></div>
+            <div 
+                class="w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 animate-pulse"
+                style="height: {dndState.draggedHeight}px"
+            ></div>
         {:else}
             <div class="group-item flex flex-col gap-4 relative">
                 <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
