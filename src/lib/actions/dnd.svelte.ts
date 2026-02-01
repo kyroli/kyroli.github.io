@@ -32,6 +32,11 @@ class DndEngine {
     #dragNode: HTMLElement | null = null;
     #pointerId: number | null = null;
     
+    // 物理引擎内部状态
+    #activeClosestId: string | null = null; // 当前聚焦的物理实体ID
+    #insertAfterState = false; // 排序意图锁：true=后半段(After), false=前半段(Before)
+    #grabOffsetY = 0; // 抓取点相对于物体中心的Y轴偏移量 (质心投影核心参数)
+
     // 布局快照系统
     #siteSnapshots = new Map<string, RectSnapshot[]>();
     #groupSnapshots: RectSnapshot[] = [];
@@ -44,8 +49,11 @@ class DndEngine {
     readonly THRESHOLD = 5;  
     readonly SCROLL_ZONE = 60; 
     readonly MAX_SCROLL_SPEED = 20; 
-    readonly HYSTERESIS_LOWER = 0.45;
-    readonly HYSTERESIS_UPPER = 0.55;
+    
+    // 死区配置
+    readonly HYSTERESIS_PIXEL = 6; // 分组排序的绝对像素死区
+    readonly HYSTERESIS_RATIO_LOWER = 0.45; // 站点排序的比例死区
+    readonly HYSTERESIS_RATIO_UPPER = 0.55;
 
     onDropCallback: ((payload: any) => void) | null = null;
 
@@ -99,12 +107,23 @@ class DndEngine {
         this.#buildSnapshots();
 
         let visualSource = this.#dragNode;
+        // 如果是分组拖拽，通常抓手只是Header的一部分，需要定位到整个分组容器
         if (this.type === 'group') {
              visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
         }
         
         const rect = visualSource.getBoundingClientRect();
         this.draggedHeight = rect.height;
+
+        // --- 质心投影核心：计算抓取点偏移 ---
+        // 计算当前物体的绝对物理中心
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // 记录鼠标此刻相对于中心的偏移 (向量: Center -> Mouse)
+        // 之后每一帧：ProjectedCenter = Mouse - Offset
+        this.#grabOffsetY = e.clientY - centerY;
+        // ----------------------------------
 
         this.#createGhost(visualSource);
         
@@ -175,36 +194,15 @@ class DndEngine {
                 }
 
                 if (closest) {
-                    // 🟢 修复：智能查找 afterTargetId，跳过 draggedId
-                    let afterTargetId: string | null = null;
-                    const idx = candidates.indexOf(closest);
-                    
-                    // 向后寻找第一个不是自己的元素
-                    let pointer = idx + 1;
-                    while (pointer < candidates.length) {
-                        const candidate = candidates[pointer];
-                        if (candidate.id !== this.draggedId) {
-                            afterTargetId = candidate.id;
-                            break;
-                        }
-                        pointer++;
-                    }
-                    // 如果循环结束还没找到，说明后面全是自己（不可能）或已到末尾 -> null
+                    const afterTargetId = this.#findNextDistinctId(candidates, closest);
 
                     const relX = mouseX - closest.rect.left;
                     const ratio = relX / closest.rect.width; 
 
-                    let insertAfter = false;
+                    // 站点依然使用基于比例的死区，因为网格布局中宽度是固定的
+                    this.#updateHysteresisState(closest.id, ratio, 'site');
 
-                    if (ratio > this.HYSTERESIS_UPPER) {
-                        insertAfter = true;
-                    } else if (ratio < this.HYSTERESIS_LOWER) {
-                        insertAfter = false;
-                    } else {
-                        insertAfter = (this.hoverId === afterTargetId);
-                    }
-
-                    if (insertAfter) {
+                    if (this.#insertAfterState) {
                         this.hoverId = afterTargetId;
                     } else {
                         this.hoverId = closest.id;
@@ -227,39 +225,73 @@ class DndEngine {
              }
 
              if (closest) {
-                 // 🟢 修复：Group 也要跳过 draggedId
-                 let afterTargetId: string | null = null;
-                 const idx = candidates.indexOf(closest);
+                 const afterTargetId = this.#findNextDistinctId(candidates, closest);
+
+                 // --- 质心投影判定 ---
+                 // 1. 计算被拖拽物体此刻的“投影中心”
+                 const projectedCenterY = mouseY - this.#grabOffsetY;
                  
-                 let pointer = idx + 1;
-                 while (pointer < candidates.length) {
-                     const candidate = candidates[pointer];
-                     if (candidate.id !== this.draggedId) {
-                         afterTargetId = candidate.id;
-                         break;
-                     }
-                     pointer++;
-                 }
+                 // 2. 计算与目标中心的物理距离 (正值表示我比目标低/After，负值表示我比目标高/Before)
+                 const diff = projectedCenterY - closest.centerY;
 
-                 const relY = mouseY - closest.rect.top;
-                 const ratio = relY / closest.rect.height;
-
-                 let insertAfter = false;
-
-                 if (ratio > this.HYSTERESIS_UPPER) {
-                     insertAfter = true;
-                 } else if (ratio < this.HYSTERESIS_LOWER) {
-                     insertAfter = false;
-                 } else {
-                     insertAfter = (this.hoverId === afterTargetId);
-                 }
+                 // 3. 更新物理闩锁 (传入绝对距离 diff)
+                 this.#updateHysteresisState(closest.id, diff, 'group');
                  
-                 if (insertAfter) {
+                 if (this.#insertAfterState) {
                      this.hoverId = afterTargetId;
                  } else {
                      this.hoverId = closest.id;
                  }
              }
+        }
+    }
+
+    // 辅助：向后寻找第一个非自身的元素ID
+    #findNextDistinctId(candidates: RectSnapshot[], current: RectSnapshot): string | null {
+        const idx = candidates.indexOf(current);
+        let pointer = idx + 1;
+        while (pointer < candidates.length) {
+            const candidate = candidates[pointer];
+            if (candidate.id !== this.draggedId) {
+                return candidate.id;
+            }
+            pointer++;
+        }
+        return null;
+    }
+
+    // 高维闩锁：根据类型分发判定逻辑
+    #updateHysteresisState(targetId: string, value: number, type: 'group' | 'site') {
+        // 如果物理聚焦对象发生变化，重置状态
+        if (targetId !== this.#activeClosestId) {
+            this.#activeClosestId = targetId;
+            
+            if (type === 'group') {
+                // 分组：基于绝对距离的初始判断
+                this.#insertAfterState = value > 0;
+            } else {
+                // 站点：基于比例的初始判断
+                this.#insertAfterState = value > 0.5;
+            }
+            return;
+        }
+
+        // 死区保护（施密特触发器）
+        if (type === 'group') {
+            // Group: 使用绝对像素死区 (value 为 projectedCenterY - targetCenterY)
+            if (value > this.HYSTERESIS_PIXEL) {
+                this.#insertAfterState = true;
+            } else if (value < -this.HYSTERESIS_PIXEL) {
+                this.#insertAfterState = false;
+            }
+            // 在 -HYSTERESIS_PIXEL ~ +HYSTERESIS_PIXEL 之间，保持原状态
+        } else {
+            // Site: 使用比例死区 (value 为 ratio)
+            if (value > this.HYSTERESIS_RATIO_UPPER) {
+                this.#insertAfterState = true;
+            } else if (value < this.HYSTERESIS_RATIO_LOWER) {
+                this.#insertAfterState = false;
+            }
         }
     }
 
@@ -368,6 +400,11 @@ class DndEngine {
         this.#pointerId = null;
         this.#scrollParent = null;
         this.draggedHeight = 0; 
+        
+        // 重置物理闩锁状态
+        this.#activeClosestId = null;
+        this.#insertAfterState = false;
+        this.#grabOffsetY = 0;
         
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
