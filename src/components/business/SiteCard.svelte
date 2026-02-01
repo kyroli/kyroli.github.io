@@ -8,17 +8,18 @@
   import CardBase from './CardBase.svelte';
 
   let { site, groupId } = $props<{ site: Site, groupId: string }>();
-  
+
   const displayHostname = $derived.by(() => {
     const u = new URL(site.url.startsWith('http') ? site.url : `https://${site.url}`);
     return u.hostname.replace('www.', '');
   });
 
   const safeHref = $derived(!appState.isEditMode && /^https?:\/\//i.test(site.url) ? site.url : undefined);
+
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
       ? 'cursor-move border-primary/20 shadow-lg scale-[1.02] z-10' 
-      : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.99]'
+      : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.98]'
   }`);
 
   function handleDelete(e: MouseEvent) {

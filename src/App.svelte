@@ -16,14 +16,15 @@
 
   dataState.init();
   appState.init();
+
   onMount(() => {
     sync.init();
   });
 
   const toastClass = $derived(
     appState.toast?.type === 'error' 
-      ? 'bg-danger/90 border-danger text-white' 
-      : 'bg-surface/90 border-border text-text'
+      ? 'bg-danger border-danger text-white shadow-lg' 
+      : 'bg-surface border-border text-text shadow-xl'
   );
 </script>
 
@@ -37,8 +38,6 @@
           <div class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim animate-fade">
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
-       
-        
         {/if}
   
         <SiteGrid />
@@ -49,8 +48,6 @@
             <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
           </div>
       {:else}
-        
-  
         <LoadingSkeleton />
       {/if}
     </main>
@@ -73,8 +70,6 @@
       groupId={appState.editingGroupId}
       onClose={appState.closeModal}
     />
- 
-  
   {/if}
 
   {#if appState.activeModal === 'confirm' && appState.confirmPayload}
@@ -86,7 +81,6 @@
         <div class="flex gap-3">
           <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
           <Button 
-      
             variant={appState.confirmPayload.isDestructive ? 'danger' : 'primary'} 
             onclick={() => { 
               appState.confirmPayload?.onConfirm();
@@ -103,8 +97,7 @@
 
   {#if appState.toast}
     <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] animate-fade w-full max-w-sm px-4 pointer-events-none">
-      <div class={`px-6 py-4 rounded-xl shadow-2xl text-sm font-bold tracking-tight text-center transition-all backdrop-blur-md 
-border-2 ${toastClass}`}>
+      <div class={`px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border ${toastClass}`}>
         {appState.toast.msg}
       </div>
     </div>

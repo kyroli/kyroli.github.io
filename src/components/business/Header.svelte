@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X, Save, RotateCcw, Pencil, Settings, CloudUpload, Loader2 } from 'lucide-svelte';
+  import { Search, X, Save, RotateCcw, Pencil, Settings, Loader2 } from 'lucide-svelte';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
@@ -16,7 +16,6 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-  
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
 
   function handleSearch() {
@@ -67,7 +66,7 @@
       <Input 
         bind:value={search}
         onkeydown={e => e.key === 'Enter' && handleSearch()}
-        class="px-11 py-3 text-base shadow-sm bg-surface/50 backdrop-blur-sm"
+        class="px-11 py-3 text-base shadow-sm bg-surface text-text placeholder:text-text-dim/40"
         placeholder={MESSAGES.UI.SEARCH_PLACEHOLDER}
       />
       <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
@@ -104,7 +103,7 @@
             </Button>
 
             <div class="relative group">
-              <Button 
+               <Button 
                 variant="outline" 
                 onclick={appState.openConfig} 
                 class="w-10 h-10 !rounded-xl !p-0"

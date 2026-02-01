@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  
   let { children, onClose, title } = $props<{ 
     children: Snippet;
     onClose: () => void;
@@ -15,7 +14,6 @@
       return () => dialog.close();
     }
   });
-
   function handleBackdropClick(e: MouseEvent) {
     if (e.target === dialog) {
       dialog.close();
@@ -23,16 +21,15 @@
   }
 
   const dialogClass = `
-    bg-surface/90 backdrop-blur-xl text-text 
+    bg-surface text-text 
     rounded-2xl w-full max-w-sm p-8 m-auto
-    border border-border/80 
+    border border-border 
     shadow-2xl shadow-black/20 
     outline-none
     animate-fade
-    backdrop:bg-black/40 backdrop:backdrop-blur-[2px] backdrop:transition-opacity
+    backdrop:bg-black/40 backdrop:transition-opacity
     max-h-[90vh] overflow-y-auto
   `;
-
   const titleClass = "text-xl font-bold tracking-tight text-text m-0";
 </script>
 
