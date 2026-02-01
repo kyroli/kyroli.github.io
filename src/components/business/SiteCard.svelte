@@ -6,9 +6,7 @@
   import type { Site } from '$lib/types';
   import { X } from 'lucide-svelte';
   import CardBase from './CardBase.svelte';
-
   let { site, groupId } = $props<{ site: Site, groupId: string }>();
-
   const displayHostname = $derived.by(() => {
     try {
         const u = new URL(site.url.startsWith('http') ? site.url : `https://${site.url}`);
@@ -17,15 +15,12 @@
         return site.url;
     }
   });
-
   const safeHref = $derived(!appState.isEditMode && /^https?:\/\//i.test(site.url) ? site.url : undefined);
-
   const cardClass = $derived(`group relative transition-all duration-300 border ${
     appState.isEditMode 
-      ? 'cursor-move border-primary shadow-lg -translate-y-1 z-10 bg-surface' 
+      ? 'cursor-move border-border/60 bg-surface border-dashed' 
       : 'border-transparent hover:border-border hover:shadow-solid active:scale-[0.98]'
   }`);
-
   function handleDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
@@ -55,7 +50,7 @@
         alt={site.name} 
       />
     </div>
-    
+   
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-0.5">
       <span class="text-[15px] font-medium text-text truncate tracking-tight leading-snug">{site.name}</span>
       <span class="text-[11px] font-medium text-text-dim/60 truncate tracking-[0.1em] uppercase">{displayHostname}</span>
@@ -66,6 +61,7 @@
         onclick={handleDelete} title={MESSAGES.UI.DELETE}>
         <X class="w-3 h-3" stroke-width={3} />
       </button>
+  
     {/if}
   </CardBase>
 </div>
