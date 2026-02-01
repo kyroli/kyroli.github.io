@@ -10,8 +10,7 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
   const FLIP_DURATION = 300;
-
-  // 核心逻辑：根据拖拽状态计算视觉上的列表（包含占位符和避让逻辑）
+  // 根据拖拽状态计算视觉上的列表（包含占位符和避让逻辑）
   const visualGroups = $derived.by(() => {
     let groups = dataState.groups.map(g => ({ 
         ...g, 
@@ -65,8 +64,7 @@
             const targetGroup = groups.find(g => g.id === dndState.hoverGroupId);
             
             if (targetGroup) {
-                let insertIndex = targetGroup.sites.length; 
-                
+                let insertIndex = targetGroup.sites.length;
                 if (dndState.hoverId) {
                     const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
                     if (hoverIdx !== -1) insertIndex = hoverIdx;
@@ -116,12 +114,14 @@
         {:else}
             <div class="group-item flex flex-col gap-4 relative">
                 <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
+                    
                     <div 
-                    class="p-1.5 rounded-lg text-text-dim transition-all touch-none shrink-0 -ml-1.5
-                        {appState.isEditMode ? 'opacity-100 hover:bg-surface hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'}"
-                    use:draggable={{ type: 'group', id: group.id, groupId: null }}
+                        class="p-1.5 rounded-lg border border-border/60 bg-surface/50 text-text-dim transition-all touch-none shrink-0 -ml-1.5
+                        {appState.isEditMode ? 'opacity-100 cursor-move hover:border-primary/50 hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'}"
+                        use:draggable={{ type: 'group', id: group.id, groupId: null }}
+                        title={MESSAGES.UI.TIP_DRAG_SORT}
                     >
-                    <GripHorizontal class="w-5 h-5" />
+                        <GripHorizontal class="w-5 h-5" />
                     </div>
                     
                     <div class="flex-1 flex items-center min-w-0 h-full">
@@ -129,7 +129,7 @@
                         
                         <div class={`flex gap-1 transition-opacity animate-fade shrink-0 ml-2 ${appState.isEditMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                             <button onclick={() => appState.openGroupModal(group.id)} class="text-text hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_RENAME_GROUP}>
-                            <Pencil class="w-4 h-4" />
+                                <Pencil class="w-4 h-4" />
                             </button>
                             <button onclick={() => handleDeleteGroup(group.name, group.id)} class="text-text hover:text-danger hover:bg-danger/10 p-1.5 rounded-md transition-colors cursor-pointer" title={MESSAGES.UI.TIP_DELETE_GROUP}>
                                 <Trash2 class="w-4 h-4" />
@@ -153,7 +153,7 @@
                                 </div>
                             {/if}
                         </div>
-                    {/each}
+                     {/each}
 
                     {#if appState.isEditMode}
                         <button 
@@ -166,7 +166,7 @@
                     {/if}
                 </div>
             </div>
-        {/if}
+         {/if}
     </div>
   {/each}
 
