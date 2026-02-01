@@ -37,7 +37,7 @@ class DndEngine {
     #insertAfterState = false;
     #grabOffsetY = 0; // 质心投影偏移量
 
-    // 布局快照系统 (内存化地图)
+    // 布局快照系统
     #siteSnapshots = new Map<string, RectSnapshot[]>();
     #groupSnapshots: RectSnapshot[] = [];
     
@@ -104,7 +104,6 @@ class DndEngine {
 
         this.#scrollParent = this.#findScrollParent(this.#dragNode);
 
-        // 1. 构建全局物理快照 (算力纯化准备)
         this.#buildSnapshots();
 
         let visualSource = this.#dragNode;
@@ -115,12 +114,10 @@ class DndEngine {
         const rect = visualSource.getBoundingClientRect();
         this.draggedHeight = rect.height;
 
-        // 2. 质心投影计算
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
         this.#grabOffsetY = e.clientY - centerY;
 
-        // 3. 创建幻影 (Z轴升维 + 低不透明度)
         this.#createGhost(visualSource);
         
         this.#detectCollision(e.clientX, e.clientY);
@@ -130,11 +127,9 @@ class DndEngine {
         this.#siteSnapshots.clear();
         this.#groupSnapshots = [];
 
-        // 无论拖拽什么，先建立所有 Group 的快照，用于碰撞检测
         const groups = Array.from(document.querySelectorAll('[data-dnd-group-id]'));
         this.#groupSnapshots = groups.map(el => this.#getElementSnapshot(el as HTMLElement, 'data-dnd-group-id'));
         
-        // 如果是 Site 拖拽，且有源 Group，预加载源 Group 的 Sites
         if (this.type === 'site' && this.sourceGroupId) {
             this.#captureGroupSnapshot(this.sourceGroupId);
         }
@@ -161,11 +156,8 @@ class DndEngine {
         };
     }
 
-    // 纯数学碰撞检测 (Pure Computational Collision)
     #detectCollision(mouseX: number, mouseY: number) {
         if (this.type === 'site') {
-            // 优化点：不再使用 document.elementsFromPoint
-            // 直接遍历内存中的 Group 快照，判断鼠标落在哪个 Group 内
             let targetGroupSnapshot: RectSnapshot | null = null;
             
             for (const snap of this.#groupSnapshots) {
@@ -184,7 +176,6 @@ class DndEngine {
                 const currentGroupId = targetGroupSnapshot.id;
                 this.hoverGroupId = currentGroupId;
                 
-                // 懒加载目标 Group 的 Sites 快照
                 this.#captureGroupSnapshot(currentGroupId);
                 
                 const candidates = this.#siteSnapshots.get(currentGroupId) || [];
@@ -193,7 +184,6 @@ class DndEngine {
                     return;
                 }
 
-                // 寻找最近的 Site 卡片
                 let closest: RectSnapshot | null = null;
                 let minDist = Infinity;
 
@@ -223,7 +213,6 @@ class DndEngine {
             }
         } 
         else if (this.type === 'group') {
-             // Group 排序：直接在 #groupSnapshots 中找最近的 Y 轴邻居
              const candidates = this.#groupSnapshots;
              let closest: RectSnapshot | null = null;
              let minDist = Infinity;
@@ -240,7 +229,6 @@ class DndEngine {
              if (closest) {
                  const afterTargetId = this.#findNextDistinctId(candidates, closest);
 
-                 // 质心投影判定 (Projected Center)
                  const projectedCenterY = mouseY - this.#grabOffsetY;
                  const diff = projectedCenterY - closest.centerY;
 
@@ -362,7 +350,8 @@ class DndEngine {
         if (!this.#ghostEl) return;
         const x = e.clientX - this.#startX;
         const y = e.clientY - this.#startY;
-        this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(0.95)`; // 保持 Scale
+        // 视觉更新：保持 1.02 的放大比例，体现"拿在手上"的感觉
+        this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.02)`;
     }
 
     #onUp = (e: PointerEvent) => {
@@ -430,11 +419,11 @@ class DndEngine {
         style.zIndex = '9999';
         style.pointerEvents = 'none'; 
         
-        // --- 视觉优化核心：Z轴升维与低不透明度 ---
-        style.opacity = '0.8';
-        style.transform = 'translate3d(0,0,0) scale(0.95)'; // Z轴升维感
-        style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)'; // 保持阴影增加悬浮感
-        // ------------------------------------
+        // --- 视觉优化核心：硬质卡片体验 ---
+        style.opacity = '1'; // 100% 不透明，体现硬质感
+        style.transform = 'translate3d(0,0,0) scale(1.02)'; // 轻微放大，模拟"拿起"后离眼睛更近
+        style.boxShadow = '0 30px 60px -12px rgb(0 0 0 / 0.35)'; // 深邃的阴影，体现悬空高度
+        // --------------------------------
 
         style.transition = 'none';
         this.#ghostEl.classList.remove('opacity-0', 'pointer-events-none');
