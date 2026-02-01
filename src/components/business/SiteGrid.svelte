@@ -9,16 +9,16 @@
   import { flip } from 'svelte/animate';
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
-  const FLIP_DURATION = 250;
+  const FLIP_DURATION = 300; // 稍微增加动画时间，让避让更清晰
 
   // 核心逻辑：根据拖拽状态计算视觉上的列表（包含占位符和避让逻辑）
   const visualGroups = $derived.by(() => {
-    // 1. 深拷贝原始数据，避免污染
+    // 1. 深拷贝原始数据
     let groups = dataState.groups.map(g => ({ 
         ...g, 
         sites: [...g.sites],
         isPlaceholder: false,
-        isActive: false // 标记是否是被拖拽的分组
+        isActive: false // 标记是否是被拖拽的源元素
     }));
 
     if (!dndState.isDragging) return groups;
@@ -26,17 +26,31 @@
     // --- 分组排序预览 ---
     if (dndState.type === 'group') {
         const srcIdx = groups.findIndex(g => g.id === dndState.draggedId);
-        // 标记源分组（用于隐藏原身）
-        if (srcIdx !== -1) groups[srcIdx].isActive = true;
+        
+        // 1. 找到源并将其移除（模拟提起）
+        let sourceGroup = null;
+        if (srcIdx !== -1) {
+            sourceGroup = groups[srcIdx];
+            // 标记源位置为 active，UI层可以决定是否隐藏它
+            // 但为了实现平滑避让，我们通常直接从数组中移除它，然后在鼠标位置插入一个“克隆”
+            // 这里的策略是：从列表中物理移除源，然后在 Hover 位置插入占位符
+            groups.splice(srcIdx, 1);
+        }
 
-        if (dndState.hoverId && dndState.hoverId !== dndState.draggedId) {
-             const tgtIdx = groups.findIndex(g => g.id === dndState.hoverId);
-             // Svelte 5 derived 反应很快，这里要确保索引有效
-             if (srcIdx !== -1 && tgtIdx !== -1) {
-                 const [g] = groups.splice(srcIdx, 1);
-                 // 重新插入到目标位置
-                 groups.splice(tgtIdx, 0, g);
-             }
+        // 2. 在目标位置插入占位符
+        if (dndState.hoverId && sourceGroup) {
+             let insertIdx = groups.findIndex(g => g.id === dndState.hoverId);
+             
+             // 如果 hoverId 是自己（虽然移除后不应该搜到），或未找到，则放回原处或末尾
+             if (insertIdx === -1) insertIdx = groups.length;
+
+             // 插入一个视觉上的占位符（其实就是源数据，只是位置变了）
+             // 这里的 isActive 可以用来给它加一个虚线边框样式，或者保持原样
+             // 保持原样效果最好，看起来就是分组在移动
+             groups.splice(insertIdx, 0, { ...sourceGroup, isActive: true });
+        } else if (sourceGroup) {
+            // 如果没有 hoverId（比如拖到空白处），放回原位防止消失
+            groups.splice(srcIdx, 0, { ...sourceGroup, isActive: true });
         }
     }
 
@@ -54,14 +68,11 @@
 
         // 再插入占位符
         if (sourceSite) {
-            // 构造占位符对象
             const placeholder = { ...sourceSite, isPlaceholder: true };
-            
-            // 找到目标分组
             const targetGroup = groups.find(g => g.id === dndState.hoverGroupId);
             
             if (targetGroup) {
-                let insertIndex = targetGroup.sites.length; // 默认末尾
+                let insertIndex = targetGroup.sites.length; 
                 
                 if (dndState.hoverId) {
                     const hoverIdx = targetGroup.sites.findIndex(s => s.id === dndState.hoverId);
@@ -83,6 +94,8 @@
       if (type === 'site') {
           manager.moveSite(srcId, targetId, targetGroupId);
       } else if (type === 'group') {
+          // 分组排序这里，targetId 是我们插入位置的“后一个”元素的ID
+          // 也就是 Insert Before 语义
           if (targetId && targetId !== srcId) {
               manager.moveGroup(srcId, targetId);
           }
@@ -101,15 +114,14 @@
 <div class="w-full flex flex-col gap-5 pt-6 pb-0">
   {#each visualGroups as group (group.id)}
     <div 
-        class="group-item flex flex-col gap-4 transition-all duration-300 relative"
+        class={`group-item flex flex-col gap-4 transition-all duration-300 relative ${group.isActive && dndState.type === 'group' ? 'opacity-30 scale-[0.98]' : ''}`}
         animate:flip={{ duration: FLIP_DURATION }}
         data-dnd-group-id={group.id}
     >
       <div class="flex items-center gap-3 pb-3 px-1 h-10 mt-3 border-b border-border/40 select-none">
         <div 
            class="p-1.5 rounded-lg text-text-dim transition-all touch-none shrink-0 -ml-1.5
-               {appState.isEditMode ? 'opacity-100 hover:bg-surface hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'} 
-               {group.isActive ? 'opacity-0' : ''}"
+               {appState.isEditMode ? 'opacity-100 hover:bg-surface hover:text-primary active:scale-95' : 'opacity-0 pointer-events-none'}"
            use:draggable={{ type: 'group', id: group.id, groupId: null }}
         >
            <GripHorizontal class="w-5 h-5" />

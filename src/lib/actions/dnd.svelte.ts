@@ -21,7 +21,7 @@ class DndEngine {
     #dragNode: HTMLElement | null = null;
     #pointerId: number | null = null;
     
-    // 配置 [修复] 变量名一致性
+    // 配置
     readonly THRESHOLD = 5; 
 
     // 外部注入的回调
@@ -29,9 +29,7 @@ class DndEngine {
 
     constructor() {}
 
-    // 初始化交互（绑定于 onpointerdown）
     init(e: PointerEvent, type: 'group' | 'site', id: string, groupId: string | null, node: HTMLElement) {
-        // 仅在编辑模式且使用左键(button 0)时响应
         if (!appState.isEditMode || !e.isPrimary || e.button !== 0) return;
 
         this.#isDown = true;
@@ -40,12 +38,10 @@ class DndEngine {
         this.#dragNode = node;
         this.#pointerId = e.pointerId;
 
-        // 临时存储参数，等真正触发拖拽时使用
         this.type = type;
         this.draggedId = id;
         this.sourceGroupId = groupId;
 
-        // 绑定全局监听
         window.addEventListener('pointermove', this.#onMove, { passive: false });
         window.addEventListener('pointerup', this.#onUp);
         window.addEventListener('pointercancel', this.#onUp);
@@ -55,19 +51,16 @@ class DndEngine {
         if (!this.#isDown) return;
 
         if (!this.isDragging) {
-            // 阈值检测
             const dx = e.clientX - this.#startX;
             const dy = e.clientY - this.#startY;
-            
-            // [修复] 修正了这里的拼写错误 THRESHold -> THRESHOLD
             if (Math.hypot(dx, dy) > this.THRESHOLD) {
                 this.#startDrag(e);
             }
         } else {
-            // 拖拽中
-            e.preventDefault(); // 阻止滚动
+            e.preventDefault();
             this.#updateGhost(e);
-            this.#detectCollision(e);
+            // 使用 requestAnimationFrame 节流检测，提升性能
+            requestAnimationFrame(() => this.#detectCollision(e));
         }
     }
 
@@ -75,19 +68,12 @@ class DndEngine {
         if (!this.#dragNode) return;
 
         this.isDragging = true;
-        
-        // 捕获指针，确保后续事件（即使移出屏幕）都发给该元素
         try {
             this.#dragNode.setPointerCapture(e.pointerId);
-        } catch (err) {
-            // 忽略某些极端情况下的捕获失败
-        }
+        } catch (err) {}
 
-        // 创建幽灵元素
         let visualSource = this.#dragNode;
-        // 如果是分组手柄，我们需要克隆整个分组容器
         if (this.type === 'group') {
-             // 向上寻找最近的 group-item，如果找不到则回退到自身
              visualSource = this.#dragNode.closest('.group-item') as HTMLElement || this.#dragNode;
         }
         this.#createGhost(visualSource);
@@ -95,48 +81,92 @@ class DndEngine {
 
     #updateGhost(e: PointerEvent) {
         if (!this.#ghostEl) return;
-        // 直接修改 DOM 避免重绘开销
         const x = e.clientX - this.#startX;
         const y = e.clientY - this.#startY;
         this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     }
 
     #detectCollision(e: PointerEvent) {
-        // 穿透幽灵层检测下方元素
+        // 1. 基础命中测试（找到大容器）
         const elements = document.elementsFromPoint(e.clientX, e.clientY);
         
-        // 查找最近的上下文
+        // 2. 查找最近的分组容器
         const groupEl = elements.find(el => el.closest('[data-dnd-group-id]'))?.closest('[data-dnd-group-id]') as HTMLElement;
-        const siteEl = elements.find(el => el.closest('[data-dnd-site-id]'))?.closest('[data-dnd-site-id]') as HTMLElement;
 
         if (this.type === 'site') {
             if (groupEl) {
                 this.hoverGroupId = groupEl.dataset.dndGroupId!;
+                
+                // --- 核心修复：最近邻吸附算法 ---
+                // 不再依赖 elementsFromPoint 找具体的卡片，而是遍历该组内所有卡片找最近的一个
+                // 这完美解决了“卡片间隙（Gap）”导致的识别丢失和抽搐问题
+                
+                const candidates = Array.from(groupEl.querySelectorAll('[data-dnd-site-id]'));
+                if (candidates.length === 0) {
+                    this.hoverId = null; // 空组，直接追加
+                    return;
+                }
 
-                if (siteEl) {
-                    const targetId = siteEl.dataset.dndSiteId!;
-                    // 只有当目标不是自己时才触发交换预览
-                    if (targetId !== this.draggedId) {
-                        this.hoverId = targetId;
+                let closest: { id: string, dist: number, el: Element } | null = null;
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+
+                // 寻找距离鼠标中心最近的卡片
+                for (const el of candidates) {
+                    const rect = el.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const dist = (mouseX - centerX) ** 2 + (mouseY - centerY) ** 2;
+                    
+                    if (!closest || dist < closest.dist) {
+                        closest = { id: (el as HTMLElement).dataset.dndSiteId!, dist, el };
                     }
-                } else {
-                    // 在分组内但不在卡片上，视为追加
-                    this.hoverId = null; 
+                }
+
+                if (closest) {
+                    // 判断插入逻辑：是插在前面还是后面？
+                    // 简单的几何判断：如果鼠标在卡片中心点的右侧/下方，则认为是“Next”
+                    const rect = closest.el.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    
+                    // 网格布局主要看 X 轴，如果鼠标超过中心点，则目标应该是下一个元素
+                    // 但为了稳定性，我们采用“Insert Before”语义
+                    // 如果鼠标在中心点右侧，我们应该 Insert Before Next Sibling
+                    // 但这会增加计算复杂度。
+                    // 简化策略：直接以最近元素的 ID 作为 Target（即插在它前面）。
+                    // 用户的视觉感受会是：光标靠近谁，谁就让位。
+                    
+                    if (closest.id !== this.draggedId) {
+                         this.hoverId = closest.id;
+                    }
                 }
             }
         } else if (this.type === 'group') {
-             if (groupEl) {
-                 const targetGid = groupEl.dataset.dndGroupId!;
-                 if (targetGid !== this.draggedId) {
-                     this.hoverId = targetGid; 
+             // 分组排序逻辑升级：也支持最近邻，防止分组间隙无法识别
+             // 搜索整个文档中的分组
+             const allGroups = Array.from(document.querySelectorAll('[data-dnd-group-id]'));
+             
+             let closestGroup: { id: string, dist: number } | null = null;
+             const mouseY = e.clientY; // 分组主要是垂直排序，只看 Y 轴
+
+             for (const el of allGroups) {
+                 const rect = el.getBoundingClientRect();
+                 const centerY = rect.top + rect.height / 2;
+                 const dist = Math.abs(mouseY - centerY);
+
+                 if (!closestGroup || dist < closestGroup.dist) {
+                     closestGroup = { id: (el as HTMLElement).dataset.dndGroupId!, dist };
                  }
+             }
+
+             if (closestGroup && closestGroup.id !== this.draggedId) {
+                 this.hoverId = closestGroup.id;
              }
         }
     }
 
     #onUp = (e: PointerEvent) => {
         if (this.isDragging) {
-            // 触发回调
             if (this.onDropCallback) {
                 this.onDropCallback({
                     type: this.type,
@@ -146,14 +176,12 @@ class DndEngine {
                     targetId: this.hoverId
                 });
             }
-            // 释放捕获
             if (this.#dragNode && this.#pointerId) {
                 try {
                    this.#dragNode.releasePointerCapture(this.#pointerId);
                 } catch(err) {}
             }
         }
-
         this.#reset();
     }
 
@@ -189,15 +217,13 @@ class DndEngine {
         style.width = `${rect.width}px`;
         style.height = `${rect.height}px`;
         style.zIndex = '9999';
-        style.pointerEvents = 'none'; // 关键：让事件穿透幽灵
+        style.pointerEvents = 'none'; // 关键
         style.opacity = '0.9';
         style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.15)';
         style.transition = 'none';
         style.transform = 'translate3d(0,0,0)';
         
-        // 清理可能影响布局的类
         this.#ghostEl.classList.remove('opacity-0', 'pointer-events-none');
-        
         document.body.appendChild(this.#ghostEl);
     }
     
@@ -208,17 +234,13 @@ class DndEngine {
 
 export const dndState = new DndEngine();
 
-// Svelte Action
 export function draggable(node: HTMLElement, params: { type: 'group' | 'site', id: string, groupId: string | null }) {
-    
     function onDown(e: PointerEvent) {
         dndState.init(e, params.type, params.id, params.groupId, node);
     }
-
     $effect(() => {
         if (appState.isEditMode) {
             node.style.cursor = params.type === 'group' ? 'grab' : 'move';
-            // 关键：在编辑模式下禁用默认触摸动作（如滚动），保证拖拽不被打断
             node.style.touchAction = 'none'; 
             node.addEventListener('pointerdown', onDown);
         } else {
@@ -227,7 +249,6 @@ export function draggable(node: HTMLElement, params: { type: 'group' | 'site', i
             node.removeEventListener('pointerdown', onDown);
         }
     });
-
     return {
         update(newParams: any) { params = newParams; },
         destroy() { node.removeEventListener('pointerdown', onDown); }
