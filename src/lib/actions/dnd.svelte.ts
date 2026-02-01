@@ -350,7 +350,6 @@ class DndEngine {
         if (!this.#ghostEl) return;
         const x = e.clientX - this.#startX;
         const y = e.clientY - this.#startY;
-        // 视觉更新：保持 1.02 的放大比例，体现"拿在手上"的感觉
         this.#ghostEl.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.02)`;
     }
 
@@ -419,10 +418,9 @@ class DndEngine {
         style.zIndex = '9999';
         style.pointerEvents = 'none'; 
         
-        // --- 视觉优化核心：硬质卡片体验 ---
-        style.opacity = '1'; // 100% 不透明，体现硬质感
-        style.transform = 'translate3d(0,0,0) scale(1.02)'; // 轻微放大，模拟"拿起"后离眼睛更近
-        style.boxShadow = '0 30px 60px -12px rgb(0 0 0 / 0.35)'; // 深邃的阴影，体现悬空高度
+        style.opacity = '1';
+        style.transform = 'translate3d(0,0,0) scale(1.02)';
+        style.boxShadow = '0 30px 60px -12px rgb(0 0 0 / 0.35)';
         // --------------------------------
 
         style.transition = 'none';
