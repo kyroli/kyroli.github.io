@@ -17,37 +17,51 @@
 
 @layer base {
   :root {
-    --primary: oklch(62% 0.22 25);
-    --bg: oklch(97% 0 0);
-    --surface: oklch(100% 0 0); 
-    --border: oklch(92% 0 0);
-    --text: oklch(20% 0 0);
-    --text-dim: oklch(55% 0 0);
-    --icon-bg: oklch(96% 0.01 260);
-    --danger: oklch(50% 0.2 25);
+    --primary: oklch(65% 0.2 30);
+    --bg: oklch(96.7% 0.001 286.4); 
+    --surface: oklch(100% 0 0);
+    --border: oklch(92% 0.004 286.3);
+    --text: oklch(21% 0.006 285.9);
+    --text-dim: oklch(55.2% 0.016 285.9);
+    --icon-bg: oklch(98.5% 0 0);
+    --danger: oklch(57.7% 0.245 27.3);
   }
 
   :root.dark {
-    --primary: oklch(65% 0.2 30);
-    --bg: oklch(12% 0 0);
-    --surface: oklch(16% 0 0);
-    --border: oklch(30% 0 0);
-    --text: oklch(96% 0 0);
-    --text-dim: oklch(70% 0 0);
-    --icon-bg: oklch(20% 0 0);
-    --danger: oklch(60% 0.2 25);
+    --primary: oklch(72% 0.2 30);
+    --bg: oklch(14.1% 0.005 285.8);
+    --surface: oklch(18.3% 0.004 286);
+    --border: oklch(100% 0 0 / 0.15);
+    --text: oklch(98.5% 0 0);
+    --text-dim: oklch(70.5% 0.015 286.1);
+    --icon-bg: oklch(27.4% 0.006 286);
+    --danger: oklch(63.7% 0.237 25.3);
   }
 
   body {
     background-color: var(--bg);
     color: var(--text);
+    -webkit-font-smoothing: antialiased;
     transition: color 0.2s, background-color 0.2s, border-color 0.2s;
     position: relative;
   }
 
-  :focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  * {
+    outline: none !important;
   }
 }
 
@@ -58,18 +72,4 @@
 
 .animate-fade {
   animation: fade 0.2s ease-out;
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-::view-transition-new(root) {
-  z-index: 9999;
-}
-
-::view-transition-old(root) {
-  z-index: 1;
 }
