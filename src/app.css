@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-icon-bg: var(--icon-bg);
+  --color-danger: var(--danger);
+  --shadow-solid: var(--shadow-solid);
+
+  --font-sans: "Segoe UI", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+  
+  --tracking-tighter: -0.04em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.08em;
+  --tracking-widest: 0.15em;
+}
+
+@layer app.physics {
+  :root {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size-adjust: from-font;
+  }
+
+  * {
+    user-select: inherit;
+    -webkit-user-select: inherit;
+    outline: none !important;
+  }
+
+  input {
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
+  }
+}
+
+@layer base {
+  :root {
+    --primary: oklch(65% 0.2 30);
+    --bg: oklch(96.7% 0.001 286.4); 
+    --surface: oklch(100% 0 0);
+    --border: oklch(92% 0.004 286.3);
+    --text: oklch(21% 0.006 285.9);
+    --text-dim: oklch(55.2% 0.016 285.9);
+    --icon-bg: oklch(98.5% 0 0);
+    --danger: oklch(57.7% 0.245 27.3);
+    
+    --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  :root.dark {
+    --primary: oklch(55% 0.2 30);
+    --bg: oklch(14.1% 0.005 285.8);
+    --surface: oklch(18.3% 0.004 286);
+    --border: oklch(100% 0 0 / 0.15);
+    --text: oklch(98.5% 0 0);
+    --text-dim: oklch(70.5% 0.015 286.1);
+    --icon-bg: oklch(27.4% 0.006 286);
+    --danger: oklch(63.7% 0.237 25.3);
+    
+    --shadow-solid: 
+      0 1px 2px 0 rgba(0, 0, 0, 0.05),
+      0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03; 
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  :root.dark body::before {
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade {
+  animation: fade 0.2s ease-out;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
