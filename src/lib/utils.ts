@@ -28,6 +28,11 @@ export const getIcon = (url: string, custom?: string): string => {
     return assets[custom.toLowerCase()];
   }
   
-  const domain = new URL(url).hostname;
-  return `https://icons.bitwarden.net/${domain}/icon.png`;
+  try {
+    const domain = new URL(url).hostname;
+    const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;
+    return `https://wsrv.nl/?url=${originalUrl}&w=128&h=128&output=webp&q=85&il`;
+  } catch (e) {
+    return '/src/assets/globe.svg';
+  }
 };
