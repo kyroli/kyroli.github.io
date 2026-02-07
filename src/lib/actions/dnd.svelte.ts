@@ -453,7 +453,6 @@ export function draggable(node: HTMLElement, params: { type: 'group' | 'site', i
         if (appState.isEditMode) {
             node.style.cursor = params.type === 'group' ? 'grab' : 'move';
             node.style.userSelect = 'none';
-            node.style.touchAction = 'none'; 
 
             node.addEventListener('pointerdown', onDown);
             node.addEventListener('click', onClick, { capture: true });
