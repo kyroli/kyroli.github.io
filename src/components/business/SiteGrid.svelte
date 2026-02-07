@@ -11,7 +11,6 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
 
   const FLIP_DURATION = 300;
-
   const visualGroups = $derived.by(() => {
     let groups = dataState.groups.map(g => ({ 
         ...g, 
@@ -51,6 +50,7 @@
                 let insertIndex = dndState.hoverIndex ?? targetGroup.sites.length;
                 if (insertIndex < 0) insertIndex = 0;
                 if (insertIndex > targetGroup.sites.length) insertIndex = targetGroup.sites.length;
+                
                 const placeholder = { ...sourceSite, isPlaceholder: true };
                 targetGroup.sites.splice(insertIndex, 0, placeholder);
             }
@@ -126,11 +126,11 @@
                         appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
                     }`}>
                         <div 
-                            class="cursor-grab text-text-dim hover:text-primary active:scale-95 transition-all touch-none p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
+                            class="cursor-grab text-text-dim hover:text-primary active:scale-95 transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
                             use:draggable={{ type: 'group', id: group.id, groupId: null }}
                             title={MESSAGES.UI.TIP_DRAG_SORT}
                         >
-                            <GripVertical class="w-5 h-5" />
+                             <GripVertical class="w-5 h-5" />
                         </div>
 
                         <button 
@@ -138,13 +138,13 @@
                             class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50" 
                             title={MESSAGES.UI.TIP_DELETE_GROUP}
                         >
-                              <Trash2 class="w-5 h-5" />
+                               <Trash2 class="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
                 <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
-                     {#each group.sites as item (item.id)}
+                    {#each group.sites as item (item.id)}
                         <div 
                             class="relative h-full z-10"
                             animate:flip={{ 
@@ -172,7 +172,7 @@
                             class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                             title={MESSAGES.UI.NEW_SITE}
                         >
-                            <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                             <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
                     {/if}
                 </div>
@@ -182,7 +182,7 @@
   {/each}
 
   {#if appState.isEditMode}
-   <button onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
+    <button onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/40 rounded-2xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active:scale-[0.98] animate-fade">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>
