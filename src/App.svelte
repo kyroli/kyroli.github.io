@@ -7,6 +7,7 @@
   import Header from './components/business/Header.svelte';
   import SiteGrid from './components/business/SiteGrid.svelte';
   import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
+  import TocRuler from './components/business/TocRuler.svelte';
   
   import ConfigModal from './components/modals/ConfigModal.svelte';
   import SiteModal from './components/modals/SiteModal.svelte';
@@ -36,6 +37,10 @@
 </script>
 
 <div class="min-h-screen w-full transition-colors duration-300 bg-bg text-text pb-20">
+  {#if dataState.isReady}
+    <TocRuler />
+  {/if}
+
   <div class="w-full max-w-[1600px] mx-auto px-6 lg:px-12 2xl:px-24">
     <Header />
 
