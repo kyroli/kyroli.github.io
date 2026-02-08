@@ -2,38 +2,47 @@
   import { onMount } from 'svelte';
   import { dataState } from '$lib/core/data.svelte';
 
-  const ITEM_HEIGHT = 44;
+  // --- 滚轮物理参数配置 ---
+  const RADIUS = 180;      // 滚轮半径 (px)，越大越平缓
+  const ITEM_ANGLE = 20;   // 每个刻度的间隔角度 (度)
+  const VISIBLE_RANGE = 70;// 可见范围角度 (超出这个角度隐藏，避免穿模)
 
   let scrollY = $state(0);
-  let containerH = $state(0);
-  let isHovering = $state(false);
-
-  const rulerTranslateY = $derived.by(() => {
+  
+  // 核心：计算当前页面的“虚拟索引”
+  // 页面从头滚到尾，对应滚轮从第0项转到第N项
+  const currentVirtualIndex = $derived.by(() => {
     if (dataState.groups.length === 0) return 0;
-
+    
+    // 获取页面最大滚动距离
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     if (maxScroll <= 0) return 0;
 
+    // 进度 0.0 ~ 1.0
     const progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
     
-    const totalContentH = dataState.groups.length * ITEM_HEIGHT;
-    const centerOffset = containerH / 2;
-    
-    const targetPos = progress * (totalContentH - ITEM_HEIGHT);
-    
-    return centerOffset - targetPos - (ITEM_HEIGHT / 2);
+    // 映射到索引：确保最后一个分组也能滚到正中间
+    return progress * (dataState.groups.length - 1);
   });
 
+  // 动画循环：高性能读取滚动位置
   function loop() {
     scrollY = window.scrollY;
     requestAnimationFrame(loop);
   }
 
-  function handleNav(id: string) {
+  // 导航点击：居中定位
+  function handleNav(e: MouseEvent, id: string) {
+    // 阻止默认行为，防止任何可能的干扰
+    e.preventDefault();
+    
     const el = document.querySelector(`[data-dnd-group-id="${id}"]`);
     if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 100;
-        window.scrollTo({ top, behavior: 'smooth' });
+        // 使用 scrollIntoView 的 block: 'center' 完美实现居中
+        el.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' // 关键修改：对齐到屏幕正中间
+        });
     }
   }
 
@@ -44,50 +53,52 @@
 </script>
 
 <aside 
-    class="fixed left-6 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col w-40 h-[400px] select-none pointer-events-none"
-    bind:clientHeight={containerH}
-    onmouseenter={() => isHovering = true}
-    onmouseleave={() => isHovering = false}
-    style="mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);"
+    class="fixed left-8 top-1/2 -translate-y-1/2 z-40 hidden xl:block h-[360px] w-48 select-none pointer-events-none"
+    style="
+        perspective: 800px; 
+        mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+    "
 >
     <div 
-        class="relative flex flex-col w-full will-change-transform"
-        style="transform: translateY({rulerTranslateY}px); transition: transform 0.1s linear;" 
+        class="relative w-full h-full" 
+        style="transform-style: preserve-3d;"
     >
         {#each dataState.groups as group, i (group.id)}
-            {@const itemCenterY = rulerTranslateY + (i * ITEM_HEIGHT) + (ITEM_HEIGHT / 2)}
-            {@const distFromCenter = Math.abs(itemCenterY - (containerH / 2))}
-            {@const normDist = Math.min(distFromCenter / 150, 1)} 
+            {@const deltaIndex = i - currentVirtualIndex}
+            {@const angle = deltaIndex * ITEM_ANGLE}
             
-            {@const scale = 1.1 - (normDist * 0.3)}
-            {@const opacity = 1 - (normDist * 0.7)}
-            {@const xOffset = normDist * -10}
+            {#if Math.abs(angle) < VISIBLE_RANGE}
+                {@const absAngle = Math.abs(angle)}
+                {@const opacity = 1 - (absAngle / VISIBLE_RANGE)}
+                {@const isActive = absAngle < (ITEM_ANGLE / 2)}
 
-            <button 
-                onclick={() => handleNav(group.id)}
-                class="flex items-center justify-end w-full gap-4 cursor-pointer outline-none pointer-events-auto transition-colors"
-                style="
-                    height: {ITEM_HEIGHT}px;
-                    opacity: {opacity};
-                    transform: scale({scale}) translateX({xOffset}px);
-                "
-            >
-                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-right truncate text-text">
-                    {group.name}
-                </span>
-
-                <div 
-                    class="h-[2px] rounded-full bg-current transition-colors duration-200"
-                    class:bg-primary={normDist < 0.2} 
-                    class:bg-text-dim={normDist >= 0.2}
+                <button 
+                    onclick={(e) => handleNav(e, group.id)}
+                    class="absolute left-0 top-1/2 -mt-[20px] w-full h-[40px] flex items-center justify-end gap-3 outline-none pointer-events-auto cursor-pointer group transition-colors duration-200"
                     style="
-                        width: {24 - (normDist * 16)}px; 
-                        box-shadow: {normDist < 0.1 ? '0 0 10px var(--color-primary)' : 'none'}
+                        transform: rotateX({-angle}deg) translateZ({RADIUS}px);
+                        opacity: {Math.max(opacity, 0)};
+                        visibility: {opacity <= 0 ? 'hidden' : 'visible'};
                     "
-                ></div>
-            </button>
+                >
+                    <span class={`
+                        text-[11px] font-bold tracking-[0.15em] uppercase text-right truncate transition-colors duration-200
+                        ${isActive ? 'text-primary' : 'text-text-dim/60 group-hover:text-text-dim'}
+                    `}>
+                        {group.name}
+                    </span>
+
+                    <div class={`
+                        h-[2px] rounded-full transition-all duration-200
+                        ${isActive 
+                            ? 'w-8 bg-primary shadow-[0_0_10px_var(--color-primary)]' 
+                            : 'w-4 bg-text-dim/40 group-hover:w-5 group-hover:bg-text-dim/60'
+                        }
+                    `}></div>
+                </button>
+            {/if}
         {/each}
     </div>
-    
-    <div class="absolute right-0 top-1/2 -translate-y-[1px] w-1.5 h-[2px] bg-primary rounded-l-full shadow-[0_0_8px_var(--color-primary)] z-50"></div>
+
+    <div class="absolute right-[-10px] top-1/2 -translate-y-1/2 w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-primary opacity-50"></div>
 </aside>
