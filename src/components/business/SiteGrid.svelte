@@ -10,6 +10,7 @@
   import { flip } from 'svelte/animate';
   import { cubicOut } from 'svelte/easing';
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
+  import type { DndPayload } from '$lib/types';
 
   const FLIP_DURATION = 300;
 
@@ -52,7 +53,6 @@
                 let insertIndex = dndState.hoverIndex ?? targetGroup.sites.length;
                 if (insertIndex < 0) insertIndex = 0;
                 if (insertIndex > targetGroup.sites.length) insertIndex = targetGroup.sites.length;
-                
                 const placeholder = { ...sourceSite, isPlaceholder: true };
                 targetGroup.sites.splice(insertIndex, 0, placeholder);
             }
@@ -62,7 +62,7 @@
     return groups;
   });
 
-  dndState.setOnDrop((payload: any) => {
+  dndState.setOnDrop((payload: DndPayload) => {
       const { type, srcId, targetGroupId, targetIndex } = payload;
       
       if (type === 'group') {
@@ -71,6 +71,8 @@
           const targetId = targetGroup ? targetGroup.id : null;
           manager.moveGroup(srcId, targetId);
       } else if (type === 'site') {
+          if (!targetGroupId) return;
+
           const targetGroup = dataState.groups.find(g => g.id === targetGroupId);
           if (targetGroup) {
               let sitesWithoutSrc = targetGroup.sites;
@@ -153,7 +155,7 @@
                             class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50" 
                             title={MESSAGES.UI.TIP_DELETE_GROUP}
                         >
-                            <Trash2 class="w-5 h-5" />
+                             <Trash2 class="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -163,8 +165,8 @@
                         <div 
                             class="relative h-full z-10"
                             animate:flip={{ 
-                              duration: dndState.type === 'group' ? 0 : FLIP_DURATION, 
-                              easing: cubicOut 
+                                duration: dndState.type === 'group' ? 0 : FLIP_DURATION, 
+                                easing: cubicOut 
                             }}
                             data-dnd-site-id={item.id}
                         >

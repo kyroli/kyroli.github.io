@@ -1,4 +1,5 @@
 import { appState } from '../core/app.svelte';
+import type { DndPayload } from '../types';
 
 interface GroupMeta {
     id: string;
@@ -43,7 +44,7 @@ class DndEngine {
     readonly DRAG_THRESHOLD = 5;
     readonly VIRTUAL_EXPANSION = 100; 
 
-    onDropCallback: ((payload: any) => void) | null = null;
+    onDropCallback: ((payload: DndPayload) => void) | null = null;
 
     init(e: PointerEvent, type: 'group' | 'site', id: string, groupId: string | null, node: HTMLElement) {
         if (!appState.isEditMode || !e.isPrimary || e.button !== 0 || e.pointerType === 'touch') return;
@@ -342,12 +343,12 @@ class DndEngine {
             this.#rafId = null;
         }
 
-        if (this.isDragging && this.onDropCallback) {
+        if (this.isDragging && this.onDropCallback && this.draggedId && this.type) {
             this.onDropCallback({
                 type: this.type,
                 srcId: this.draggedId,
                 targetGroupId: this.hoverGroupId,
-                targetIndex: this.hoverIndex
+                targetIndex: this.hoverIndex ?? 0
             });
         }
         this.#reset();
@@ -418,7 +419,7 @@ class DndEngine {
         return Math.min(Math.max(val, min), max);
     }
     
-    setOnDrop(fn: (payload: any) => void) {
+    setOnDrop(fn: (payload: DndPayload) => void) {
         this.onDropCallback = fn;
     }
 }

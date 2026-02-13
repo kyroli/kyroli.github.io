@@ -28,3 +28,10 @@ export interface RemoteFile {
   sha: string;
   content: string;
 }
+
+export interface DndPayload {
+  type: 'group' | 'site';
+  srcId: string;
+  targetGroupId: string | null;
+  targetIndex: number;
+}
