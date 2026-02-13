@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Search, X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff } from 'lucide-svelte';
+  import { Search, X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff, Globe, Bird, Circle } from 'lucide-svelte';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
@@ -9,7 +9,46 @@
   import Button from '../ui/Button.svelte';
   import ThemeSwitch from '../ui/ThemeSwitch.svelte';
 
+  const ENGINES = {
+    bing: { 
+      id: 'bing',
+      name: 'Bing', 
+      url: 'https://www.bing.com/search?q=', 
+      icon: Search,
+      placeholder: 'Search Bing...'
+    },
+    google: { 
+      id: 'google',
+      name: 'Google', 
+      url: 'https://www.google.com/search?q=', 
+      icon: Globe, 
+      placeholder: 'Search Google...'
+    },
+    duckduckgo: { 
+      id: 'duckduckgo',
+      name: 'DuckDuckGo', 
+      url: 'https://duckduckgo.com/?q=', 
+      icon: Bird, 
+      placeholder: 'Search DuckDuckGo...' 
+    },
+    yandex: { 
+      id: 'yandex',
+      name: 'Yandex', 
+      url: 'https://yandex.com/search/?text=', 
+      icon: Circle,
+      placeholder: 'Search Yandex...' 
+    }
+  } as const;
+
+  type EngineKey = keyof typeof ENGINES;
+
   let search = $state('');
+  let currentEngineId = $state<EngineKey>(
+    (localStorage.getItem('nav_engine') as EngineKey) || 'bing'
+  );
+  let showEngineMenu = $state(false);
+  
+  const activeEngine = $derived(ENGINES[currentEngineId] || ENGINES.bing);
   
   const logoHref = $derived(
     !appState.isEditMode && dataState.config.owner && dataState.config.repo 
@@ -63,8 +102,28 @@
 
   function handleSearch() {
     if (!search.trim()) return;
-    window.open(`${UI_CONSTANTS.SEARCH_ENGINE_URL}${encodeURIComponent(search)}`);
+    window.open(`${activeEngine.url}${encodeURIComponent(search)}`);
     search = '';
+  }
+
+  function switchEngine(id: EngineKey) {
+    currentEngineId = id;
+    localStorage.setItem('nav_engine', id);
+    showEngineMenu = false;
+  }
+
+  function clickOutside(node: HTMLElement) {
+    const handleClick = (event: MouseEvent) => {
+      if (!node.contains(event.target as Node)) {
+        showEngineMenu = false;
+      }
+    };
+    document.addEventListener('click', handleClick, true);
+    return {
+      destroy() {
+        document.removeEventListener('click', handleClick, true);
+      }
+    };
   }
 
   function handleEditClick() {
@@ -127,14 +186,42 @@
       </a>
     </div>
     
-    <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none">
+    <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20">
+      <div class="absolute left-2 top-1/2 -translate-y-1/2 z-30" use:clickOutside>
+        <button 
+          onclick={() => showEngineMenu = !showEngineMenu}
+          class="flex items-center justify-center w-8 h-8 rounded-lg text-text-dim hover:text-primary hover:bg-surface/50 transition-all cursor-pointer active:scale-95"
+          title="Switch Search Engine"
+        >
+          <svelte:component this={activeEngine.icon} class="w-4 h-4 transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110 text-primary' : ''}" />
+        </button>
+
+        {#if showEngineMenu}
+          <div class="absolute top-full left-0 mt-2 w-40 p-1.5 bg-surface/90 backdrop-blur-md border border-border/50 rounded-xl shadow-xl animate-fade flex flex-col gap-0.5 origin-top-left">
+            {#each Object.values(ENGINES) as engine}
+              <button
+                onclick={() => switchEngine(engine.id as EngineKey)}
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
+                {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
+              >
+                <svelte:component this={engine.icon} class="w-4 h-4 opacity-70" />
+                <span>{engine.name}</span>
+                
+                {#if currentEngineId === engine.id}
+                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary"></div>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+
       <Input 
         bind:value={search}
         onkeydown={e => e.key === 'Enter' && handleSearch()}
-        class="px-11 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
-        placeholder={MESSAGES.UI.SEARCH_PLACEHOLDER}
+        class="pl-12 pr-4 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
+        placeholder={activeEngine.placeholder}
       />
-      <Search onclick={handleSearch} class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-dim cursor-pointer hover:text-primary transition-colors" />
     </div>
 
     <div class="justify-self-end flex items-center justify-end">
