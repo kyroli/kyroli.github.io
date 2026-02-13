@@ -18,15 +18,12 @@
   let showEngineMenu = $state(false);
   
   const activeEngine = $derived(SEARCH_ENGINES[currentEngineId]);
-  
   const logoHref = $derived(
     !appState.isEditMode && dataState.config.owner && dataState.config.repo 
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-  
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
-  
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
       return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
@@ -61,7 +58,7 @@
     return MESSAGES.ERRORS.UNKNOWN;
   }
 
-  async function handleForcePush() {
+  async handleForcePush() {
     try {
       await sync.forcePush();
       appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
@@ -164,7 +161,11 @@
           class="flex items-center justify-center w-8 h-8 rounded-lg text-text-dim hover:text-primary hover:bg-surface/50 transition-all cursor-pointer active:scale-95"
           title="Switch Search Engine"
         >
-          <svelte:component this={activeEngine.icon} class="w-4 h-4 transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110 text-primary' : ''}" />
+          <img 
+            src={activeEngine.icon} 
+            alt={activeEngine.name} 
+            class="w-4 h-4 object-contain transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110' : ''}" 
+          />
         </button>
 
         {#if showEngineMenu}
@@ -175,7 +176,11 @@
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
                 {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
               >
-                <svelte:component this={engine.icon} class="w-4 h-4 opacity-70" />
+                <img 
+                  src={engine.icon} 
+                  alt={engine.name} 
+                  class="w-4 h-4 object-contain opacity-70" 
+                />
                 <span>{engine.name}</span>
                 
                 {#if currentEngineId === engine.id}

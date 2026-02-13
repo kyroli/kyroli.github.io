@@ -1,6 +1,3 @@
-import type { ComponentType } from 'svelte';
-import type { Icon } from 'lucide-svelte';
-
 export interface Site {
   id: string;
   name: string;
@@ -43,6 +40,6 @@ export interface SearchEngine {
   id: string;
   name: string;
   url: string;
-  icon: ComponentType<Icon>;
+  icon: string;
   placeholder?: string;
 }
