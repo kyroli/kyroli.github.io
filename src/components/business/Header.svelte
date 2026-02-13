@@ -155,7 +155,6 @@
               onclick={handleSync} 
               title={isSyncing ? MESSAGES.UI.SYNCING : MESSAGES.UI.SAVE_AND_SYNC} 
               disabled={!dataState.isDirty || isSyncing}
-              class={dataState.isDirty ? 'animate-pulse' : ''}
             >
               {#if isSyncing}
                 <Loader2 class="w-5 h-5 animate-spin" />
