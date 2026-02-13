@@ -15,51 +15,71 @@
   const FLIP_DURATION = 300;
 
   const visualGroups = $derived.by(() => {
-    let groups = dataState.groups.map(g => ({ 
-        ...g, 
-        sites: [...g.sites],
-        isPlaceholder: false
-    }));
-
-    if (!dndState.isDragging) return groups;
+    if (!dndState.isDragging) {
+        return dataState.groups.map(g => ({ ...g, isPlaceholder: false }));
+    }
 
     if (dndState.type === 'group' && dndState.draggedId) {
-        const srcIdx = groups.findIndex(g => g.id === dndState.draggedId);
-        let sourceGroup = null;
-        if (srcIdx !== -1) [sourceGroup] = groups.splice(srcIdx, 1);
+        const srcIdx = dataState.groups.findIndex(g => g.id === dndState.draggedId);
+        if (srcIdx === -1) return dataState.groups.map(g => ({ ...g, isPlaceholder: false }));
 
-        if (sourceGroup) {
-             let insertIdx = dndState.hoverIndex ?? srcIdx; 
-             if (insertIdx < 0) insertIdx = 0;
-             if (insertIdx > groups.length) insertIdx = groups.length;
-             
-             groups.splice(insertIdx, 0, { ...sourceGroup, isPlaceholder: true });
-        }
+        const tempGroups = [...dataState.groups];
+        const [sourceGroup] = tempGroups.splice(srcIdx, 1);
+
+        let insertIdx = dndState.hoverIndex ?? srcIdx;
+        if (insertIdx < 0) insertIdx = 0;
+        if (insertIdx > tempGroups.length) insertIdx = tempGroups.length;
+
+        tempGroups.splice(insertIdx, 0, { ...sourceGroup, isPlaceholder: true });
+
+        return tempGroups.map(g => ({
+            ...g,
+            isPlaceholder: g.id === sourceGroup.id
+        }));
     }
 
     if (dndState.type === 'site' && dndState.draggedId) {
-        let sourceSite = null;
-        for (const g of groups) {
-            const idx = g.sites.findIndex(s => s.id === dndState.draggedId);
-            if (idx !== -1) {
-                [sourceSite] = g.sites.splice(idx, 1);
-                break;
-            }
-        }
+        const groups = [];
+        for (const g of dataState.groups) {
+            const isSourceGroup = g.sites.some(s => s.id === dndState.draggedId);
+            const isTargetGroup = g.id === dndState.hoverGroupId;
 
-        if (sourceSite && dndState.hoverGroupId) {
-            const targetGroup = groups.find(g => g.id === dndState.hoverGroupId);
-            if (targetGroup) {
-                let insertIndex = dndState.hoverIndex ?? targetGroup.sites.length;
-                if (insertIndex < 0) insertIndex = 0;
-                if (insertIndex > targetGroup.sites.length) insertIndex = targetGroup.sites.length;
-                const placeholder = { ...sourceSite, isPlaceholder: true };
-                targetGroup.sites.splice(insertIndex, 0, placeholder);
+            if (!isSourceGroup && !isTargetGroup) {
+                groups.push({ ...g, isPlaceholder: false });
+                continue;
             }
+
+            const newGroup = { ...g, sites: [...g.sites], isPlaceholder: false };
+
+            if (isSourceGroup) {
+                const idx = newGroup.sites.findIndex(s => s.id === dndState.draggedId);
+                if (idx !== -1) {
+                    newGroup.sites.splice(idx, 1);
+                }
+            }
+
+            if (isTargetGroup) {
+                let sourceSite = null;
+                for (const rawG of dataState.groups) {
+                    const found = rawG.sites.find(s => s.id === dndState.draggedId);
+                    if (found) { sourceSite = found; break; }
+                }
+
+                if (sourceSite) {
+                    let insertIndex = dndState.hoverIndex ?? newGroup.sites.length;
+                    if (insertIndex < 0) insertIndex = 0;
+                    if (insertIndex > newGroup.sites.length) insertIndex = newGroup.sites.length;
+                    
+                    const placeholder = { ...sourceSite, isPlaceholder: true };
+                    newGroup.sites.splice(insertIndex, 0, placeholder);
+                }
+            }
+            groups.push(newGroup);
         }
+        return groups;
     }
 
-    return groups;
+    return dataState.groups.map(g => ({ ...g, isPlaceholder: false }));
   });
 
   dndState.setOnDrop((payload: DndPayload) => {
@@ -147,7 +167,7 @@
                             use:draggable={{ type: 'group', id: group.id, groupId: null }}
                             title={MESSAGES.UI.TIP_DRAG_SORT}
                         >
-                             <GripVertical class="w-5 h-5" />
+                              <GripVertical class="w-5 h-5" />
                         </div>
 
                         <button 
@@ -155,13 +175,13 @@
                             class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50" 
                             title={MESSAGES.UI.TIP_DELETE_GROUP}
                         >
-                             <Trash2 class="w-5 h-5" />
+                              <Trash2 class="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
                 <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
-                    {#each group.sites as item (item.id)}
+                     {#each group.sites as item (item.id)}
                         <div 
                             class="relative h-full z-10"
                             animate:flip={{ 
@@ -189,7 +209,7 @@
                             class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/40 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active:scale-[0.98]`}
                             title={MESSAGES.UI.NEW_SITE}
                         >
-                             <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                              <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
                         </button>
                     {/if}
                 </div>
