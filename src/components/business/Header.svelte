@@ -16,9 +16,7 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
-
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
       return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
@@ -47,15 +45,21 @@
     }
   });
 
+  function getSafeErrorMessage(e: unknown): string {
+    if (dataState.syncError) return dataState.syncError;
+    if (e instanceof Error) return e.message;
+    return MESSAGES.ERRORS.UNKNOWN;
+  }
+
   async function handleForcePush() {
     try {
       await sync.forcePush();
       appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
-    } catch (e: any) {
-      appState.showToast(MESSAGES.TOAST.FORCE_PUSH_FAIL, 'error');
+    } catch (e: unknown) {
+      const msg = getSafeErrorMessage(e);
+      appState.showToast(`${MESSAGES.TOAST.FORCE_PUSH_FAIL}: ${msg}`, 'error');
     }
   }
-  // -----------------------
 
   function handleSearch() {
     if (!search.trim()) return;
@@ -81,8 +85,9 @@
           if (dataState.syncStatus === 'success') {
              appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
           }
-        } catch (e: any) {
-           appState.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${e.message || MESSAGES.ERRORS.UNKNOWN}`, 'error');
+        } catch (e: unknown) {
+           const msg = getSafeErrorMessage(e);
+           appState.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${msg}`, 'error');
         }
       }
     });
@@ -96,7 +101,7 @@
           await sync.resetToRemote();
           appState.toggleEditMode();
           appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-        } catch (e) {
+        } catch (e: unknown) {
           appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
         }
       },
