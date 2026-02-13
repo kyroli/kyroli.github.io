@@ -1,8 +1,8 @@
 import type { SearchEngine } from '../types';
-import BingIcon from '../../assets/bing.png';
-import GoogleIcon from '../../assets/google.png';
-import DuckDuckGoIcon from '../../assets/duckduckgo.png';
-import YandexIcon from '../../assets/yandex.png';
+import BingIcon from '../../assets/bing.webp';
+import GoogleIcon from '../../assets/google.webp';
+import DuckDuckGoIcon from '../../assets/duckduckgo.webp';
+import YandexIcon from '../../assets/yandex.webp';
 
 export const DEFAULT_ENGINE_ID = 'bing';
 
