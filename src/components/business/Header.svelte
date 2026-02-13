@@ -154,8 +154,11 @@
       </a>
     </div>
     
-    <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20">
-      <div class="absolute left-2 top-1/2 -translate-y-1/2 z-30" use:clickOutside>
+    <div 
+      class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20"
+      use:clickOutside
+    >
+      <div class="absolute left-2 top-1/2 -translate-y-1/2 z-30">
         <button 
           onclick={() => showEngineMenu = !showEngineMenu}
           class="flex items-center justify-center w-8 h-8 rounded-lg text-text-dim hover:text-primary hover:bg-surface/50 transition-all cursor-pointer active:scale-95"
@@ -167,29 +170,6 @@
             class="w-5 h-5 object-contain transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110' : ''}" 
           />
         </button>
-
-        {#if showEngineMenu}
-          <div class="absolute top-full left-0 mt-2 w-40 p-1.5 bg-surface/90 backdrop-blur-md border border-border/50 rounded-xl shadow-xl animate-fade flex flex-col gap-0.5 origin-top-left">
-            {#each Object.values(SEARCH_ENGINES) as engine}
-              <button
-                onclick={() => switchEngine(engine.id)}
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
-                {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
-              >
-                <img 
-                  src={engine.icon} 
-                  alt={engine.name}
-                  class="w-4 h-4 object-contain {currentEngineId !== engine.id ? 'opacity-70 grayscale' : ''}" 
-                />
-                <span>{engine.name}</span>
-                
-                {#if currentEngineId === engine.id}
-                  <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary"></div>
-                {/if}
-              </button>
-            {/each}
-          </div>
-        {/if}
       </div>
 
       <Input 
@@ -198,6 +178,26 @@
         class="pl-12 pr-4 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
         placeholder={activeEngine.placeholder}
       />
+
+      {#if showEngineMenu}
+        <div class="absolute top-full left-0 mt-2 w-40 p-1.5 bg-surface/90 backdrop-blur-md border border-border/50 rounded-xl shadow-xl animate-fade flex flex-col gap-0.5 origin-top-left z-50">
+          {#each Object.values(SEARCH_ENGINES) as engine}
+            <button
+              onclick={() => switchEngine(engine.id)}
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
+              {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
+            >
+              <img 
+                src={engine.icon} 
+                alt={engine.name}
+                class="w-4 h-4 object-contain {currentEngineId !== engine.id ? 'opacity-70 grayscale' : ''}" 
+              />
+              <span>{engine.name}</span>
+              
+              </button>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     <div class="justify-self-end flex items-center justify-end">
