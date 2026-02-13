@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte';
   import type { HTMLAttributes } from 'svelte/elements';
   import { UI_CONSTANTS } from '$lib/utils';
+  import { cn } from '$lib/utils/cn';
   import Card from '../ui/Card.svelte';
 
   let { 
@@ -14,15 +15,15 @@
     skeleton?: boolean;
   }>();
 
-  const baseLayout = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4`;
+  const baseLayout = cn(UI_CONSTANTS.CARD_HEIGHT, "p-4 flex items-center gap-4", className);
 </script>
 
 {#if skeleton}
-  <div class="{baseLayout} border border-transparent {className}" {...rest}>
+  <div class={cn(baseLayout, "border border-transparent")} {...rest}>
     {@render children()}
   </div>
 {:else}
-  <Card class="{baseLayout} {className}" {...rest}>
+  <Card class={baseLayout} {...rest}>
     {@render children()}
   </Card>
 {/if}
