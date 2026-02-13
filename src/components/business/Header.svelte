@@ -1,61 +1,32 @@
 <script lang="ts">
-  import { Search, X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff, Globe, Bird, Circle } from 'lucide-svelte';
+  import { X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff } from 'lucide-svelte';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
-  import { UI_CONSTANTS } from '$lib/utils';
   import { MESSAGES } from '$lib/i18n';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
   import ThemeSwitch from '../ui/ThemeSwitch.svelte';
-
-  const ENGINES = {
-    bing: { 
-      id: 'bing',
-      name: 'Bing', 
-      url: 'https://www.bing.com/search?q=', 
-      icon: Search,
-      placeholder: 'Search Bing...'
-    },
-    google: { 
-      id: 'google',
-      name: 'Google', 
-      url: 'https://www.google.com/search?q=', 
-      icon: Globe, 
-      placeholder: 'Search Google...'
-    },
-    duckduckgo: { 
-      id: 'duckduckgo',
-      name: 'DuckDuckGo', 
-      url: 'https://duckduckgo.com/?q=', 
-      icon: Bird, 
-      placeholder: 'Search DuckDuckGo...' 
-    },
-    yandex: { 
-      id: 'yandex',
-      name: 'Yandex', 
-      url: 'https://yandex.com/search/?text=', 
-      icon: Circle,
-      placeholder: 'Search Yandex...' 
-    }
-  } as const;
-
-  type EngineKey = keyof typeof ENGINES;
+  import { SEARCH_ENGINES, DEFAULT_ENGINE_ID } from '$lib/config/search';
 
   let search = $state('');
-  let currentEngineId = $state<EngineKey>(
-    (localStorage.getItem('nav_engine') as EngineKey) || 'bing'
-  );
+  
+  let savedId = localStorage.getItem('nav_engine') || DEFAULT_ENGINE_ID;
+  if (!SEARCH_ENGINES[savedId]) savedId = DEFAULT_ENGINE_ID;
+
+  let currentEngineId = $state(savedId);
   let showEngineMenu = $state(false);
   
-  const activeEngine = $derived(ENGINES[currentEngineId] || ENGINES.bing);
+  const activeEngine = $derived(SEARCH_ENGINES[currentEngineId]);
   
   const logoHref = $derived(
     !appState.isEditMode && dataState.config.owner && dataState.config.repo 
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
+  
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
+  
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
       return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
@@ -102,11 +73,11 @@
 
   function handleSearch() {
     if (!search.trim()) return;
-    window.open(`${activeEngine.url}${encodeURIComponent(search)}`);
+    window.open(`${activeEngine.url}${encodeURIComponent(search.trim())}`);
     search = '';
   }
 
-  function switchEngine(id: EngineKey) {
+  function switchEngine(id: string) {
     currentEngineId = id;
     localStorage.setItem('nav_engine', id);
     showEngineMenu = false;
@@ -198,9 +169,9 @@
 
         {#if showEngineMenu}
           <div class="absolute top-full left-0 mt-2 w-40 p-1.5 bg-surface/90 backdrop-blur-md border border-border/50 rounded-xl shadow-xl animate-fade flex flex-col gap-0.5 origin-top-left">
-            {#each Object.values(ENGINES) as engine}
+            {#each Object.values(SEARCH_ENGINES) as engine}
               <button
-                onclick={() => switchEngine(engine.id as EngineKey)}
+                onclick={() => switchEngine(engine.id)}
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
                 {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
               >
