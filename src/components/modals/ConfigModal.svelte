@@ -21,7 +21,6 @@
 
   async function handleSave() {
     globalError = '';
-    
     if (!repoPath || !token) { 
       globalError = MESSAGES.TOAST.CONFIG_INCOMPLETE; 
       return;
@@ -65,15 +64,16 @@
     const input = e.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      
+
       appState.openConfirm({
         msg: MESSAGES.CONFIRM.RESTORE,
         onConfirm: async () => {
              try {
                 await manager.importData(file);
                 appState.showToast(MESSAGES.TOAST.RESTORE_SUCCESS, 'success');
-             } catch (err: any) {
-                appState.showToast(err.message || MESSAGES.TOAST.IMPORT_FAIL_FORMAT, 'error');
+             } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : MESSAGES.TOAST.IMPORT_FAIL_FORMAT;
+                appState.showToast(message, 'error');
              }
         },
         isDestructive: true
@@ -122,6 +122,7 @@
     <div class="flex gap-4">
       <button onclick={handleExport} class={actionBtnClass} title={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>
+      
       <label class={actionBtnClass} title={MESSAGES.MODAL.IMPORT_TITLE}>
         {MESSAGES.MODAL.IMPORT_DATA}
         <input type="file" accept=".json" class="hidden" onchange={handleFileImport} />

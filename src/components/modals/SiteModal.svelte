@@ -51,8 +51,8 @@
       });
       appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
       onClose();
-    } catch (e: any) {
-      error = e.message || MESSAGES.TOAST.SITE_URL_ERROR;
+    } catch (e: unknown) {
+      error = e instanceof Error ? e.message : MESSAGES.TOAST.SITE_URL_ERROR;
     }
   }
 

@@ -38,8 +38,8 @@
         appState.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
       }
       onClose();
-    } catch (e: any) {
-      error = e.message;
+    } catch (e: unknown) {
+      error = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
     }
   }
 </script>
