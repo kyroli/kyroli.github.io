@@ -21,6 +21,7 @@
   let url = $state(site?.url ?? '');
   let icon = $state(site?.icon ?? '');
   let invert = $state(site?.invert ?? false);
+  let error = $state('');
 
   const modalTitle = $derived(siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW);
 
@@ -39,6 +40,7 @@
   });
 
   function handleSave() {
+    error = '';
     try {
       manager.saveSite(groupId, {
         id: siteId,
@@ -50,9 +52,11 @@
       appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
       onClose();
     } catch (e: any) {
-      appState.showToast(e.message || MESSAGES.TOAST.SITE_URL_ERROR, 'error');
+      error = e.message || MESSAGES.TOAST.SITE_URL_ERROR;
     }
   }
+
+  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold animate-fade";
 </script>
 
 <Modal {onClose} title={modalTitle}>
@@ -67,20 +71,27 @@
     </Button>
   </div>
 
+  {#if error}
+    <div class={errorBannerClass}>⚠️ {error}</div>
+  {/if}
+
   <div class="space-y-3">
     <Input 
       bind:value={name} 
       placeholder={MESSAGES.MODAL.SITE_NAME_PLACEHOLDER} 
+      oninput={() => error = ''}
       onkeydown={(e) => e.key === 'Enter' && handleSave()}
     />
     <Input 
       bind:value={url} 
       placeholder={MESSAGES.MODAL.SITE_URL_PLACEHOLDER} 
+      oninput={() => error = ''}
       onkeydown={(e) => e.key === 'Enter' && handleSave()}
     />
     <Input 
       bind:value={icon} 
       placeholder={MESSAGES.MODAL.SITE_ICON_PLACEHOLDER} 
+      oninput={() => error = ''}
       onkeydown={(e) => e.key === 'Enter' && handleSave()}
     />
     

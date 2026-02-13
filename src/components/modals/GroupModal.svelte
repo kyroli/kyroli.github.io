@@ -15,6 +15,8 @@
   const group = $derived(groupId ? dataState.groups.find(g => g.id === groupId) : null);
   
   let name = $state(group?.name ?? '');
+  let error = $state('');
+
   const modalTitle = $derived(groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW);
 
   $effect(() => {
@@ -26,6 +28,7 @@
   });
 
   function handleSave() {
+    error = '';
     try {
       if (groupId) {
         manager.renameGroup(groupId, name);
@@ -36,7 +39,7 @@
       }
       onClose();
     } catch (e: any) {
-      appState.showToast(e.message, 'error');
+      error = e.message;
     }
   }
 </script>
@@ -45,8 +48,11 @@
   <div class="space-y-3">
     <Input 
       bind:value={name} 
+      error={error}
       placeholder={MESSAGES.MODAL.GROUP_PLACEHOLDER}
+      oninput={() => error = ''}
       onkeydown={(e) => e.key === 'Enter' && handleSave()}
+      autofocus
     />
     
     <div class="flex gap-2 pt-4">
