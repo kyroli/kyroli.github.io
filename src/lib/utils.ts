@@ -24,15 +24,19 @@ const assets = Object.fromEntries(
 );
 
 export const getIcon = (url: string, custom?: string): string => {
+  // 1. 优先使用自定义图标
   if (custom && assets[custom.toLowerCase()]) {
     return assets[custom.toLowerCase()];
   }
   
   try {
     const domain = new URL(url).hostname;
+    // 使用 Bitwarden 图标服务作为源
     const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;
+    // 使用 wsrv.nl 进行图片优化和转换 (webp)
     return `https://wsrv.nl/?url=${originalUrl}&w=128&h=128&output=webp&q=85&il`;
   } catch (e) {
-    return '/src/assets/globe.svg';
+    // 2. 发生错误时，返回本地默认地球图标 (import.meta.glob 解析后)
+    return assets['globe'] || '';
   }
 };

@@ -7,7 +7,6 @@
   import Header from './components/business/Header.svelte';
   import SiteGrid from './components/business/SiteGrid.svelte';
   import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
-  // import TocRuler from './components/business/TocRuler.svelte'; //书签太少用不上
   
   import ConfigModal from './components/modals/ConfigModal.svelte';
   import SiteModal from './components/modals/SiteModal.svelte';
@@ -20,7 +19,7 @@
   onMount(() => {
     sync.init();
   });
-
+  
   $effect(() => {
     document.title = `${MESSAGES.UI.APP_NAME} - ${MESSAGES.UI.SUBTITLE}`;
   });
@@ -37,11 +36,6 @@
 </script>
 
 <div class="min-h-screen w-full transition-colors duration-300 bg-bg text-text pb-20">
-<!--
-{#if dataState.isReady}
-  <TocRuler />
-{/if}
--->
   <div class="w-full max-w-[1800px] mx-auto px-6 lg:px-12 2xl:pl-[240px] 2xl:pr-12 transition-[padding] duration-300">
     <Header />
 
@@ -61,6 +55,7 @@
             <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
           </div>
       {:else}
+  
         <LoadingSkeleton />
       {/if}
   
