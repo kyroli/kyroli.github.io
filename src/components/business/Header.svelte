@@ -167,7 +167,7 @@
           <img 
             src={activeEngine.icon} 
             alt={activeEngine.name}
-            class="w-5 h-5 object-contain transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110' : ''}" 
+            class="w-5 h-5 object-contain transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110' : ''} {appState.isDark ? 'invert' : ''}" 
           />
         </button>
       </div>
@@ -185,16 +185,15 @@
             <button
               onclick={() => switchEngine(engine.id)}
               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
-              {currentEngineId === engine.id ? 'bg-primary/10 text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
+              {currentEngineId === engine.id ? 'bg-primary/10 text-text' : 'text-text hover:bg-bg hover:text-primary'}"
             >
               <img 
                 src={engine.icon} 
                 alt={engine.name}
-                class="w-4 h-4 object-contain {currentEngineId !== engine.id ? 'opacity-70 grayscale' : ''}" 
+                class="w-4 h-4 object-contain {currentEngineId !== engine.id ? 'opacity-70 grayscale' : ''} {appState.isDark ? 'invert' : ''}" 
               />
               <span>{engine.name}</span>
-              
-              </button>
+            </button>
           {/each}
         </div>
       {/if}
