@@ -33,6 +33,9 @@ class DndEngine {
     #currentX = 0; #currentY = 0;
     #offsetX = 0; #offsetY = 0;
     
+    #lastCollisionX = -1;
+    #lastCollisionY = -1;
+    
     #ghostEl: HTMLElement | null = null;
     #dragNode: HTMLElement | null = null;
     #pointerId: number | null = null;
@@ -62,6 +65,9 @@ class DndEngine {
         this.#startY = e.clientY;
         this.#inputX = e.clientX;
         this.#inputY = e.clientY;
+        
+        this.#lastCollisionX = -1;
+        this.#lastCollisionY = -1;
 
         let visualTarget = node;
         if (type === 'group') {
@@ -157,7 +163,14 @@ class DndEngine {
         const centerX = ghostLeft + (ghostW / 2) + window.scrollX;
         const centerY = ghostTop + (ghostH / 2) + window.scrollY;
 
-        this.#updateCollision(centerX, centerY);
+        const dist = Math.abs(centerX - this.#lastCollisionX) + Math.abs(centerY - this.#lastCollisionY);
+        
+        if (dist > 1 || scrollDelta !== 0) {
+            this.#updateCollision(centerX, centerY);
+            this.#lastCollisionX = centerX;
+            this.#lastCollisionY = centerY;
+        }
+
         this.#rafId = requestAnimationFrame(this.#loop);
     }
 
@@ -373,6 +386,8 @@ class DndEngine {
         this.#dragNode = null;
         this.#pointerId = null;
         this.#groupMetas = [];
+        this.#lastCollisionX = -1;
+        this.#lastCollisionY = -1;
 
         if (this.#ghostEl) {
             this.#ghostEl.remove();
