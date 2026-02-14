@@ -16,8 +16,15 @@
 
   dataState.init();
   appState.init();
+
+  let showSkeleton = $state(false);
+
   onMount(() => {
     sync.init();
+    const timer = setTimeout(() => {
+      showSkeleton = true;
+    }, 200);
+    return () => clearTimeout(timer);
   });
   
   $effect(() => {
@@ -45,6 +52,7 @@
           <div class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim animate-fade">
             <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
           </div>
+    
         {/if}
   
         <SiteGrid />
@@ -54,8 +62,7 @@
             <p>Error: {dataState.syncError}</p>
             <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
           </div>
-      {:else}
-  
+      {:else if showSkeleton}
         <LoadingSkeleton />
       {/if}
   
@@ -79,6 +86,7 @@
       groupId={appState.editingGroupId}
       onClose={appState.closeModal}
     />
+ 
   {/if}
 
   {#if appState.activeModal === 'confirm' && appState.confirmPayload}
@@ -108,7 +116,8 @@
     <div 
       use:promoteToTopLayer
       popover="manual"
-      class="fixed bottom-10 left-1/2 -translate-x-1/2 animate-fade w-full max-w-sm px-4 pointer-events-none bg-transparent m-0 p-0 border-none outline-none"
+      class="fixed bottom-10 left-1/2 -translate-x-1/2 animate-fade w-full max-w-sm px-4 
+pointer-events-none bg-transparent m-0 p-0 border-none outline-none"
     >
       <div class={`px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border ${toastClass}`}>
         {appState.toast.msg}
