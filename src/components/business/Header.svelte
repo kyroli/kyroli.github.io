@@ -23,7 +23,6 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
-
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
@@ -155,51 +154,68 @@
       </a>
     </div>
     
-    
     <div 
       class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20"
       use:clickOutside
     >
-      <div class="absolute left-2 top-1/2 -translate-y-1/2 z-30">
+      <div class={`
+        relative flex items-center w-full rounded-2xl transition-all duration-300
+        bg-surface border
+        ${showEngineMenu ? 'border-primary shadow-sm' : 'border-border shadow-solid hover:border-primary/50'}
+        focus-within:border-primary focus-within:shadow-sm focus-within:ring-2 focus-within:ring-primary/10
+      `}>
         <button 
           onclick={() => showEngineMenu = !showEngineMenu}
-          class="flex items-center justify-center w-8 h-8 rounded-lg text-text-dim hover:text-primary hover:bg-surface/50 transition-all cursor-pointer active:scale-95"
+          class="flex items-center justify-center pl-4 pr-3 h-14 rounded-l-2xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn"
           title="Switch Search Engine"
         >
           <img 
             src={activeEngine.icon} 
             alt={activeEngine.name}
-            class="w-5 h-5 object-contain transition-transform duration-300 {showEngineMenu ? 'rotate-12 scale-110' : ''} {appState.isDark ? 'invert' : ''}" 
+            class={`w-6 h-6 object-contain transition-transform duration-300 ${showEngineMenu ? 'rotate-12 scale-110' : 'group-hover/btn:scale-110'} ${appState.isDark ? 'invert' : ''}`} 
           />
+          <div class={`w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-current opacity-50 transition-transform duration-300 ${showEngineMenu ? 'rotate-180' : ''}`}></div>
         </button>
+
+        <div class="h-6 w-[1px] bg-border/60 shrink-0"></div>
+
+        <Input 
+          bind:value={search}
+          name="search"
+          autocomplete="off"
+          onkeydown={e => e.key === 'Enter' && handleSearch()}
+          class="
+            border-none shadow-none bg-transparent 
+            focus:border-none focus:ring-0 
+            h-14 py-0 pl-3 pr-4 text-base
+            placeholder:text-text-dim/40
+          "
+          placeholder={activeEngine.placeholder}
+        />
       </div>
 
-      <Input 
-        bind:value={search}
-        name="search"
-        autocomplete="off"
-        onkeydown={e => e.key === 'Enter' && handleSearch()}
-        class="pl-12 pr-4 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
-        placeholder={activeEngine.placeholder}
-      />
-
       {#if showEngineMenu}
-        <div class="absolute top-full left-0 mt-2 w-40 p-1.5 bg-surface/90 backdrop-blur-md border border-border/50 rounded-xl shadow-xl animate-fade flex flex-col gap-0.5 origin-top-left z-50">
+        <div class="absolute top-full left-0 mt-2 w-48 p-2 bg-surface border border-border rounded-xl shadow-solid animate-fade flex flex-col gap-1 origin-top-left z-50">
           {#each Object.values(SEARCH_ENGINES) as engine}
             <button
               onclick={() => switchEngine(engine.id)}
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left {currentEngineId === engine.id ? 'text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
+              class={`
+                flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-bold transition-all w-full text-left
+                ${currentEngineId === engine.id 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-text-dim hover:bg-bg hover:text-text'}
+              `}
             >
               <img 
                 src={engine.icon} 
                 alt={engine.name}
-                class="w-4 h-4 object-contain {appState.isDark ? 'invert' : ''}" 
+                class={`w-5 h-5 object-contain ${appState.isDark ? 'invert' : ''}`} 
               />
               
               <span class="flex-1">{engine.name}</span>
 
               {#if currentEngineId === engine.id}
-                <div class="w-1.5 h-1.5 rounded-full bg-primary animate-fade"></div>
+                <div class="w-2 h-2 rounded-full bg-primary animate-fade"></div>
               {/if}
             </button>
           {/each}
