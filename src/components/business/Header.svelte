@@ -187,27 +187,19 @@
           {#each Object.values(SEARCH_ENGINES) as engine}
             <button
               onclick={() => switchEngine(engine.id)}
-              class="group/item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left relative overflow-hidden
-              {currentEngineId === engine.id 
-                ? 'text-text' 
-                : 'text-text-dim hover:text-primary hover:bg-primary/5'}"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
+              {currentEngineId === engine.id ? 'text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
             >
               <img 
                 src={engine.icon} 
                 alt={engine.name}
-                class="w-4 h-4 object-contain transition-all duration-300 relative z-10 
-                {currentEngineId !== engine.id 
-                  ? 'opacity-60 grayscale group-hover/item:grayscale-0 group-hover/item:opacity-100' 
-                  : 'opacity-100 scale-110'} 
-                {appState.isDark ? 'invert' : ''}" 
+                class="w-4 h-4 object-contain {appState.isDark ? 'invert' : ''}" 
               />
               
-              <span class="relative z-10 flex-1">{engine.name}</span>
+              <span class="flex-1">{engine.name}</span>
 
               {#if currentEngineId === engine.id}
-                <div class="relative z-10 flex items-center justify-center animate-fade">
-                  <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_1px_var(--color-primary)]"></div>
-                </div>
+                <div class="w-1.5 h-1.5 rounded-full bg-primary animate-fade"></div>
               {/if}
             </button>
           {/each}
