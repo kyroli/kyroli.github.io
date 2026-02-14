@@ -23,7 +23,9 @@
       ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
       : undefined
   );
+
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
+  
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
       return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
@@ -154,6 +156,7 @@
       </a>
     </div>
     
+    
     <div 
       class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20"
       use:clickOutside
@@ -184,15 +187,28 @@
           {#each Object.values(SEARCH_ENGINES) as engine}
             <button
               onclick={() => switchEngine(engine.id)}
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
-              {currentEngineId === engine.id ? 'bg-primary/10 text-text' : 'text-text hover:bg-bg hover:text-primary'}"
+              class="group/item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all w-full text-left relative overflow-hidden
+              {currentEngineId === engine.id 
+                ? 'text-text' 
+                : 'text-text-dim hover:text-primary hover:bg-primary/5'}"
             >
               <img 
                 src={engine.icon} 
                 alt={engine.name}
-                class="w-4 h-4 object-contain {currentEngineId !== engine.id ? 'opacity-70 grayscale' : ''} {appState.isDark ? 'invert' : ''}" 
+                class="w-4 h-4 object-contain transition-all duration-300 relative z-10 
+                {currentEngineId !== engine.id 
+                  ? 'opacity-60 grayscale group-hover/item:grayscale-0 group-hover/item:opacity-100' 
+                  : 'opacity-100 scale-110'} 
+                {appState.isDark ? 'invert' : ''}" 
               />
-              <span>{engine.name}</span>
+              
+              <span class="relative z-10 flex-1">{engine.name}</span>
+
+              {#if currentEngineId === engine.id}
+                <div class="relative z-10 flex items-center justify-center animate-fade">
+                  <div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_1px_var(--color-primary)]"></div>
+                </div>
+              {/if}
             </button>
           {/each}
         </div>
