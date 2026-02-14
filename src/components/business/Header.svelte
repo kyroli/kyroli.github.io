@@ -25,7 +25,6 @@
   );
 
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
-  
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) {
       return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
@@ -177,6 +176,8 @@
 
       <Input 
         bind:value={search}
+        name="search"
+        autocomplete="off"
         onkeydown={e => e.key === 'Enter' && handleSearch()}
         class="pl-12 pr-4 py-3 text-sm shadow-sm bg-surface text-text placeholder:text-text-dim/40 transition-shadow focus:shadow-md"
         placeholder={activeEngine.placeholder}
@@ -187,8 +188,7 @@
           {#each Object.values(SEARCH_ENGINES) as engine}
             <button
               onclick={() => switchEngine(engine.id)}
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left
-              {currentEngineId === engine.id ? 'text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left {currentEngineId === engine.id ? 'text-primary' : 'text-text hover:bg-bg hover:text-primary'}"
             >
               <img 
                 src={engine.icon} 
