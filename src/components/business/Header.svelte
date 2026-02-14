@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff } from 'lucide-svelte';
+  import { X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff, Search } from 'lucide-svelte';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
@@ -159,25 +159,25 @@
       use:clickOutside
     >
       <div class={`
-        relative flex items-center w-full rounded-2xl transition-all duration-300
+        relative flex items-center w-full rounded-xl transition-all duration-300
         bg-surface border
         ${showEngineMenu ? 'border-primary shadow-sm' : 'border-border shadow-solid hover:border-primary/50'}
         focus-within:border-primary focus-within:shadow-sm focus-within:ring-2 focus-within:ring-primary/10
       `}>
         <button 
           onclick={() => showEngineMenu = !showEngineMenu}
-          class="flex items-center justify-center pl-4 pr-3 h-14 rounded-l-2xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn"
+          class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn"
           title="Switch Search Engine"
         >
           <img 
             src={activeEngine.icon} 
             alt={activeEngine.name}
-            class={`w-6 h-6 object-contain transition-transform duration-300 ${showEngineMenu ? 'rotate-12 scale-110' : 'group-hover/btn:scale-110'} ${appState.isDark ? 'invert' : ''}`} 
+            class={`w-5 h-5 object-contain transition-transform duration-300 ${showEngineMenu ? 'rotate-12 scale-110' : 'group-hover/btn:scale-110'} ${appState.isDark ? 'invert' : ''}`} 
           />
-          <div class={`w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-current opacity-50 transition-transform duration-300 ${showEngineMenu ? 'rotate-180' : ''}`}></div>
+          <div class={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-300 ${showEngineMenu ? 'rotate-180' : ''}`}></div>
         </button>
 
-        <div class="h-6 w-[1px] bg-border/60 shrink-0"></div>
+        <div class="h-5 w-[1px] bg-border/60 shrink-0"></div>
 
         <Input 
           bind:value={search}
@@ -187,11 +187,20 @@
           class="
             border-none shadow-none bg-transparent 
             focus:border-none focus:ring-0 
-            h-14 py-0 pl-3 pr-4 text-base
+            h-10 py-0 pl-3 pr-2 text-sm
             placeholder:text-text-dim/40
           "
           placeholder={activeEngine.placeholder}
         />
+
+        {#if search.trim().length > 0}
+            <button 
+                onclick={handleSearch}
+                class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors animate-fade active:scale-95 cursor-pointer"
+            >
+                <Search class="w-4 h-4" />
+            </button>
+        {/if}
       </div>
 
       {#if showEngineMenu}
@@ -199,23 +208,18 @@
           {#each Object.values(SEARCH_ENGINES) as engine}
             <button
               onclick={() => switchEngine(engine.id)}
-              class={`
-                flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-bold transition-all w-full text-left
-                ${currentEngineId === engine.id 
-                  ? 'bg-primary/10 text-primary' 
-                  : 'text-text-dim hover:bg-bg hover:text-text'}
-              `}
+              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all w-full text-left text-text hover:bg-bg"
             >
               <img 
                 src={engine.icon} 
                 alt={engine.name}
-                class={`w-5 h-5 object-contain ${appState.isDark ? 'invert' : ''}`} 
+                class={`w-4 h-4 object-contain ${appState.isDark ? 'invert' : ''}`} 
               />
               
               <span class="flex-1">{engine.name}</span>
 
               {#if currentEngineId === engine.id}
-                <div class="w-2 h-2 rounded-full bg-primary animate-fade"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-primary animate-fade"></div>
               {/if}
             </button>
           {/each}
