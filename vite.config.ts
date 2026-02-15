@@ -13,6 +13,10 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: false,
       workbox: {
+        cleanupOutdatedCaches: true, 
+        clientsClaim: true,
+        skipWaiting: true,
+        
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         runtimeCaching: [{
           urlPattern: /^https:\/\/wsrv\.nl\/.*/i,
@@ -21,7 +25,8 @@ export default defineConfig({
             cacheName: 'external-icons',
             expiration: {
               maxEntries: 200,
-              maxAgeSeconds: 60 * 60 * 24 * 30
+              maxAgeSeconds: 60 * 60 * 24 * 7,
+              purgeOnQuotaError: true
             },
             cacheableResponse: {
               statuses: [0, 200]
