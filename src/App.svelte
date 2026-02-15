@@ -8,9 +8,6 @@
   import SiteGrid from './components/business/SiteGrid.svelte';
   import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
   
-  import ConfigModal from './components/modals/ConfigModal.svelte';
-  import SiteModal from './components/modals/SiteModal.svelte';
-  import GroupModal from './components/modals/GroupModal.svelte';
   import Modal from './components/ui/Modal.svelte';
   import Button from './components/ui/Button.svelte';
 
@@ -18,7 +15,6 @@
   appState.init();
 
   let showSkeleton = $state(false);
-
   onMount(() => {
     sync.init();
     const timer = setTimeout(() => {
@@ -26,17 +22,14 @@
     }, 200);
     return () => clearTimeout(timer);
   });
-  
   $effect(() => {
     document.title = `${MESSAGES.UI.APP_NAME} - ${MESSAGES.UI.SUBTITLE}`;
   });
-
   const toastClass = $derived(
     appState.toast?.type === 'error' 
       ? 'bg-danger border-danger text-white shadow-lg' 
       : 'bg-surface border-border text-text shadow-xl'
   );
-
   function promoteToTopLayer(node: HTMLElement) {
     node.showPopover();
   }
@@ -70,23 +63,28 @@
   </div>
   
   {#if appState.activeModal === 'config'}
-    <ConfigModal onClose={appState.closeModal} />
+    {#await import('./components/modals/ConfigModal.svelte') then { default: ConfigModal }}
+      <ConfigModal onClose={appState.closeModal} />
+    {/await}
   {/if}
 
   {#if appState.activeModal === 'site' && appState.editingGroupId}
-    <SiteModal 
-      groupId={appState.editingGroupId} 
-      siteId={appState.editingSiteId} 
-      onClose={appState.closeModal} 
-    />
+    {#await import('./components/modals/SiteModal.svelte') then { default: SiteModal }}
+      <SiteModal 
+        groupId={appState.editingGroupId} 
+        siteId={appState.editingSiteId} 
+        onClose={appState.closeModal} 
+      />
+    {/await}
   {/if}
 
   {#if appState.activeModal === 'group'}
-    <GroupModal 
-      groupId={appState.editingGroupId}
-      onClose={appState.closeModal}
-    />
- 
+    {#await import('./components/modals/GroupModal.svelte') then { default: GroupModal }}
+      <GroupModal 
+        groupId={appState.editingGroupId}
+        onClose={appState.closeModal}
+      />
+    {/await}
   {/if}
 
   {#if appState.activeModal === 'confirm' && appState.confirmPayload}
@@ -116,8 +114,7 @@
     <div 
       use:promoteToTopLayer
       popover="manual"
-      class="fixed bottom-10 left-1/2 -translate-x-1/2 animate-fade w-full max-w-sm px-4 
-pointer-events-none bg-transparent m-0 p-0 border-none outline-none"
+      class="fixed bottom-10 left-1/2 -translate-x-1/2 animate-fade w-full max-w-sm px-4 pointer-events-none bg-transparent m-0 p-0 border-none outline-none"
     >
       <div class={`px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border ${toastClass}`}>
         {appState.toast.msg}
