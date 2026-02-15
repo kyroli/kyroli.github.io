@@ -13,7 +13,7 @@ export default defineConfig({
       injectRegister: 'auto',
       manifest: false,
       workbox: {
-        cleanupOutdatedCaches: true, 
+        cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         
@@ -24,12 +24,12 @@ export default defineConfig({
           options: {
             cacheName: 'external-icons',
             expiration: {
-              maxEntries: 200,
+              maxEntries: 100,
               maxAgeSeconds: 60 * 60 * 24 * 7,
               purgeOnQuotaError: true
             },
             cacheableResponse: {
-              statuses: [0, 200]
+              statuses: [200] 
             }
           }
         }]
