@@ -23,7 +23,6 @@
     "@types/node": "^22.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.7.2",
-    "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite": "^5.0.0"
   }
 }
