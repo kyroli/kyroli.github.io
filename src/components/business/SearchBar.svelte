@@ -5,9 +5,11 @@
   import Input from '../ui/Input.svelte';
   import { SEARCH_ENGINES, DEFAULT_ENGINE_ID } from '$lib/config/search';
   import { tooltip } from '$lib/actions/tooltip';
+  import { ANIMATION_SPEED } from '$lib/constants';
 
   let search = $state('');
   let initialEngineId = DEFAULT_ENGINE_ID;
+  
   if (typeof window !== 'undefined') {
     const savedId = localStorage.getItem('nav_engine');
     if (savedId && SEARCH_ENGINES[savedId]) {
@@ -61,20 +63,20 @@
     <Input bind:value={search} name="search" autocomplete="off" onkeydown={e => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
 
     {#if search.trim().length > 0}
-      <button transition:fade={{ duration: 150 }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active:scale-95 cursor-pointer" use:tooltip={"Search"}>
+      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active:scale-95 cursor-pointer" use:tooltip={"Search"}>
         <Search class="w-4 h-4" />
       </button>
     {/if}
   </div>
 
   {#if showEngineMenu}
-    <div transition:fade={{ duration: 150 }} class="absolute top-full left-0 mt-2 w-48 p-2 bg-surface border border-border rounded-xl shadow-float flex flex-col gap-1 origin-top-left z-50">
+    <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class="absolute top-full left-0 mt-2 w-48 p-2 bg-surface border border-border rounded-xl shadow-float flex flex-col gap-1 origin-top-left z-50">
       {#each Object.values(SEARCH_ENGINES) as engine}
         <button onclick={() => switchEngine(engine.id)} class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 w-full text-left text-text hover:bg-bg active:scale-95">
           <img src={engine.icon} alt={engine.name} class={`w-4 h-4 object-contain ${appState.isDark ? 'invert' : ''}`} />
           <span class="flex-1">{engine.name}</span>
           {#if currentEngineId === engine.id}
-            <div transition:fade={{ duration: 150 }} class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+            <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class="w-1.5 h-1.5 rounded-full bg-primary"></div>
           {/if}
         </button>
       {/each}

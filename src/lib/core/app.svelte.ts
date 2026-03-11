@@ -1,5 +1,6 @@
 import { storage } from '../infra/storage';
 import { tick } from 'svelte';
+import { APP_TIMEOUTS } from '../constants';
 
 type ToastType = 'info' | 'success' | 'error';
 
@@ -98,7 +99,7 @@ class AppCore {
     this.toast = { msg, type };
     this.toastTimer = window.setTimeout(() => {
       this.toast = null;
-    }, 3000);
+    }, APP_TIMEOUTS.TOAST_DURATION); // 使用常量替换硬编码的 3000
   };
 
   showTooltip = (msg: string, x: number, y: number, position: 'top' | 'bottom') => {

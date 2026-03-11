@@ -1,4 +1,5 @@
 import { appState } from '../core/app.svelte';
+import { APP_TIMEOUTS } from '../constants';
 
 export function tooltip(node: HTMLElement, msg?: string | null) {
   if (!msg) return;
@@ -70,15 +71,13 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
 
   const onMouseEnter = () => {
     if (hoverTimeout) clearTimeout(hoverTimeout);
-    hoverTimeout = setTimeout(show, 250);
+    hoverTimeout = setTimeout(show, APP_TIMEOUTS.TOOLTIP_DELAY); // 使用常量替换 250
   };
 
   const onFocus = () => {
     try {
       if (!node.matches(':focus-visible')) return;
-    } catch (e) {
-      // 忽略此异常：向下兼容不支持 :focus-visible 伪类的老旧浏览器
-    }
+    } catch (e) {}
     onMouseEnter();
   };
 

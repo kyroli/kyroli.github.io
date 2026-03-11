@@ -5,11 +5,13 @@
   import { appState } from '$lib/core/app.svelte';
   import { sync } from '$lib/services/sync';
   import { MESSAGES } from '$lib/i18n';
+  import { ANIMATION_SPEED } from '$lib/constants';
   import Button from '../ui/Button.svelte';
   import ThemeSwitch from '../ui/ThemeSwitch.svelte';
   import { tooltip } from '$lib/actions/tooltip';
 
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
+
   const syncStatusConfig = $derived.by(() => {
     if (!appState.isOnline) return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
     if (!dataState.hasToken) return { icon: CloudOff, color: 'text-text-dim/30', title: 'No Config' };
@@ -97,7 +99,7 @@
 
     <div class="grid">
       {#if appState.isEditMode}
-        <div transition:fade={{ duration: 200 }} class="col-start-1 row-start-1 flex gap-3 items-center">
+        <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="col-start-1 row-start-1 flex gap-3 items-center">
           <Button variant="outline" size="icon" onclick={appState.toggleEditMode} title={MESSAGES.UI.TIP_EXIT_EDIT}>
             <X class="w-5 h-5" />
           </Button>
@@ -115,7 +117,7 @@
           </Button>
         </div>
       {:else}
-        <div transition:fade={{ duration: 200 }} class="col-start-1 row-start-1 flex gap-3 items-center">
+        <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="col-start-1 row-start-1 flex gap-3 items-center">
           <ThemeSwitch />
           
           <div class="relative">

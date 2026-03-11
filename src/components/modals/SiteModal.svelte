@@ -8,6 +8,7 @@
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
   import { fade } from 'svelte/transition';
+  import { ANIMATION_SPEED } from '$lib/constants';
 
   let { groupId, siteId, onClose } = $props<{ 
     groupId: string, 
@@ -57,6 +58,7 @@
         icon: trimmedIcon,
         invert
       });
+
       appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
       onClose();
     } catch (e: unknown) {
@@ -81,7 +83,7 @@
 
 <Modal {onClose} title={modalTitle} {headerExtra}>
   {#if error}
-    <div transition:fade={{ duration: 150 }} class={errorBannerClass}>⚠️ {error}</div>
+    <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>⚠️ {error}</div>
   {/if}
 
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-3">

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { UI_CONSTANTS } from '$lib/constants';
+  import { UI_CONSTANTS, ANIMATION_SPEED } from '$lib/constants';
   import { dataState } from '$lib/core/data.svelte';
   import { appState } from '$lib/core/app.svelte';
   import { manager } from '$lib/services/manager';
@@ -13,11 +13,9 @@
   import { tooltip } from '$lib/actions/tooltip';
   import { fade } from 'svelte/transition';
 
-  const FLIP_DURATION = 300;
-
   type VisualSite = Site & { isPlaceholder?: boolean };
   type VisualGroup = Group & { isPlaceholder?: boolean, sites: VisualSite[] };
-
+  
   const visualGroups = $derived.by<VisualGroup[]>(() => {
     if (!dndState.isDragging || !dndState.draggedId) {
         return dataState.groups as VisualGroup[];
@@ -53,12 +51,10 @@
         }
 
         if (!sourceSite || srcGroupIdx === -1) return groupsCopy;
-
         const targetGroupIdx = groupsCopy.findIndex(g => g.id === dndState.hoverGroupId);
 
         groupsCopy[srcGroupIdx] = { ...groupsCopy[srcGroupIdx], sites: groupsCopy[srcGroupIdx].sites.slice() };
         groupsCopy[srcGroupIdx].sites.splice(srcSiteIdx, 1);
-
         if (targetGroupIdx !== -1) {
             if (targetGroupIdx !== srcGroupIdx) {
                  groupsCopy[targetGroupIdx] = { ...groupsCopy[targetGroupIdx], sites: groupsCopy[targetGroupIdx].sites.slice() };
@@ -121,7 +117,7 @@
     <div 
         class="w-full transition-all"
         data-dnd-group-id={group.id}
-        animate:flip={{ duration: FLIP_DURATION, easing: cubicOut }}
+        animate:flip={{ duration: ANIMATION_SPEED.FLIP, easing: cubicOut }}
     >
         {#if group.isPlaceholder}
             <div 
@@ -169,7 +165,7 @@
                         <div 
                             class="relative h-full z-10"
                             animate:flip={{ 
-                                duration: dndState.type === 'group' ? 0 : FLIP_DURATION, 
+                                duration: dndState.type === 'group' ? 0 : ANIMATION_SPEED.FLIP, 
                                 easing: cubicOut 
                             }}
                             data-dnd-site-id={item.id}
@@ -182,7 +178,7 @@
                                     class="h-full rounded-xl"
                                 >
                                    <SiteCard site={item} groupId={group.id} />
-                                </div>
+                               </div>
                             {/if}
                         </div>
                     {/each}
@@ -203,7 +199,7 @@
   {/each}
 
   {#if appState.isEditMode}
-    <button in:fade={{ duration: 200 }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
+    <button in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>

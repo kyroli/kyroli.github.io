@@ -10,6 +10,7 @@
   import Button from '../ui/Button.svelte';
   import { tooltip } from '$lib/actions/tooltip';
   import { fade } from 'svelte/transition';
+  import { ANIMATION_SPEED } from '$lib/constants';
 
   let { onClose } = $props<{ onClose: () => void }>();
 
@@ -23,10 +24,11 @@
 
   async function handleSave() {
     globalError = '';
+
     const trimmedRepo = repoPath.trim();
     const trimmedToken = token.trim();
     const currentRepo = dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : '';
-    
+
     if (trimmedRepo === currentRepo && trimmedToken === (dataState.config.token || '')) {
       onClose();
       return;
@@ -39,6 +41,7 @@
 
     try {
       const { owner, repo } = GithubClient.parseRepoPath(trimmedRepo);
+
       isSaving = true;
       
       await sync.updateConfig({ 
@@ -73,8 +76,10 @@
 
   function handleFileImport(e: Event) {
     const input = e.target as HTMLInputElement;
+
     if (input.files && input.files[0]) {
       const file = input.files[0];
+
       appState.openConfirm({
         msg: MESSAGES.CONFIRM.RESTORE,
         onConfirm: async () => {
@@ -88,6 +93,7 @@
         },
         isDestructive: true
       });
+
       input.value = '';
     }
   }
@@ -99,7 +105,7 @@
 
 <Modal {onClose} title={MESSAGES.MODAL.CONFIG_TITLE}>
   {#if globalError}
-    <div transition:fade={{ duration: 150 }} class={errorBannerClass}>⚠️ {globalError}</div>
+    <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>⚠️ {globalError}</div>
   {/if}
 
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>

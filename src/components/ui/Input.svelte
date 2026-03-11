@@ -2,6 +2,7 @@
   import type { HTMLInputAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils/cn';
   import { fade } from 'svelte/transition';
+  import { ANIMATION_SPEED } from '$lib/constants';
 
   let { 
     value = $bindable(), 
@@ -18,9 +19,7 @@
     class?: string;
   } & HTMLInputAttributes>();
 
-  // 精准控制颜色的过渡
   const baseStyles = "w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition-colors transition-shadow duration-200 placeholder:text-text-dim/60";
-  
   const stateStyles = $derived(error 
     ? 'border-danger/50 focus:border-danger text-danger placeholder:text-danger/40 focus:ring-2 focus:ring-danger/20' 
     : 'border-border focus-ring'
@@ -40,7 +39,7 @@
   <input {id} {type} bind:value class={inputClass} {...rest} />
 
   {#if error}
-    <span in:fade={{ duration: 150 }} class={errorClass}>
+    <span in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorClass}>
       {error}
     </span>
   {/if}

@@ -5,6 +5,7 @@
   import { tooltip } from '$lib/actions/tooltip';
   import { MESSAGES } from '$lib/i18n';
   import { fade } from 'svelte/transition';
+  import { ANIMATION_SPEED } from '$lib/constants';
 
   let { 
     children, 
@@ -57,7 +58,7 @@
   onclose={() => onClose()}
   onmousedown={handleMousedown}
   onmouseup={handleMouseup}
-  transition:fade={{ duration: 200 }}
+  transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
 >
   <div class="flex flex-col gap-6 relative">
     {#if title}
