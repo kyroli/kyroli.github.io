@@ -1,4 +1,13 @@
+/**
+ * @description 国际化与全局文案管理字典。
+ * 采用按业务场景模块化分类的静态对象管理模式。
+ * 实现视图层(UI)与静态文案(Copywriting)的解耦，为后续多语言扩展和统一审校提供基础。
+ */
+
 export const MESSAGES = {
+  /** * 基础交互文案 
+   * 包含应用层级的通用标签、按钮文本及状态提示。
+   */
   UI: {
     APP_NAME: 'Kilonova',
     SUBTITLE: 'Personal Startpage',
@@ -26,6 +35,9 @@ export const MESSAGES = {
     GIT_COMMIT_MSG: 'update bookmarks via Kilonova',
   },
   
+  /** * 模态框(Modal)专用文案 
+   * 集中管理各类表单弹窗的标题、表单字段标签及占位符，保持组件内部逻辑高内聚。
+   */
   MODAL: {
     CONFIG_TITLE: '连接 GitHub 数据源',
     CONFIG_LABEL_REPO: '仓库路径 (用户名/仓库名)',
@@ -48,6 +60,9 @@ export const MESSAGES = {
     SITE_ICON_PLACEHOLDER: '自定义图标名称 (可选)',
   },
 
+  /** * 全局状态提示(Toast)文案 
+   * 规范用户交互反馈（成功/异常/警告），统一系统消息的抛出格式。
+   */
   TOAST: {
     SYNC_SUCCESS: '云端同步成功',
     RESET_SUCCESS: '本地数据已重置',
@@ -78,15 +93,24 @@ export const MESSAGES = {
     REMOTE_EMPTY: '云端仓库为空',
   },
 
+  /** * 二次确认(Confirm)对话框文案 
+   * 包含敏感操作的前置警告及支持动态变量注入的格式化文案。
+   */
   CONFIRM: {
     CONFLICT_FORCE: '检测到云端数据更新，且本地有未保存的修改。\n\n是否强制将本地版本覆盖到云端？\n(注意：这将覆盖云端的最新更改)',
     RESTORE: '确定要用此备份覆盖当前所有数据吗？\n此操作不可撤销。',
     SYNC_CHANGES: '确定要将当前的修改推送到 GitHub 吗？',
     DISCARD_CHANGES: '确定要放弃所有未保存的修改并重置吗？',
     DELETE_SITE: '移除这个网站快捷方式？',
+    /** * 基于高阶函数的动态文案：
+     * 利用 TypeScript 实现严格的参数类型约束，替代基于正则匹配的传统模板字符串方案，降低运行时异常风险。
+     */
     DELETE_GROUP: (name: string) => `确定删除分组 "${name}" 吗？\n组内的所有网站也会被移除。`,
   },
 
+  /** * 服务端错误映射文案 
+   * 专用于在数据层拦截底层 API 异常状态码，并将其转译为面向用户的可读提示。
+   */
   ERRORS: {
     REPO_NOT_FOUND: '未找到指定仓库 (404)',
     TOKEN_INVALID: '访问令牌 (Token) 无效或过期',
