@@ -17,7 +17,6 @@
   appState.init();
 
   let showSkeleton = $state(false);
-
   onMount(() => {
     sync.init();
     const timer = setTimeout(() => {
@@ -26,16 +25,16 @@
     return () => clearTimeout(timer);
   });
 
-  $effect(() => {
-    document.title = `${MESSAGES.UI.APP_NAME} - ${MESSAGES.UI.SUBTITLE}`;
-  });
-
   const toastClass = $derived(
     appState.toast?.type === 'error' 
       ? 'bg-danger border-danger text-white shadow-float' 
       : 'bg-surface border-border text-text shadow-float'
   );
 </script>
+
+<svelte:head>
+  <title>{MESSAGES.UI.APP_NAME} - {MESSAGES.UI.SUBTITLE}</title>
+</svelte:head>
 
 <div class="min-h-screen w-full transition-colors duration-300 bg-bg text-text pb-20">
   <div class="w-full max-w-[1800px] mx-auto px-6 lg:px-12 2xl:pl-[240px] 2xl:pr-12 transition-[padding] duration-300">
@@ -91,7 +90,7 @@
     <Modal onClose={appState.closeModal} title={MESSAGES.UI.CONFIRM_ACTION}>
       <div class="space-y-6 pt-2">
          <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line">
-            {appState.confirmPayload.msg}
+           {appState.confirmPayload.msg}
          </p>
         <div class="flex gap-3">
           <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
