@@ -477,24 +477,17 @@ export function draggable(node: HTMLElement, params: { type: 'group' | 'site', i
             node.addEventListener('pointerdown', onDown);
             node.addEventListener('click', onClick, { capture: true });
             node.addEventListener('contextmenu', onContextMenu);
-        } else {
-            node.style.cursor = '';
-            node.style.touchAction = '';
-            node.style.userSelect = '';
-            
-            window.removeEventListener('resize', updateTouchAction);
-            node.removeEventListener('pointerdown', onDown);
-            node.removeEventListener('click', onClick, { capture: true });
-            node.removeEventListener('contextmenu', onContextMenu);
+
+            return () => {
+                node.style.cursor = '';
+                node.style.touchAction = '';
+                node.style.userSelect = '';
+                
+                window.removeEventListener('resize', updateTouchAction);
+                node.removeEventListener('pointerdown', onDown);
+                node.removeEventListener('click', onClick, { capture: true });
+                node.removeEventListener('contextmenu', onContextMenu);
+            };
         }
     });
-
-    return { 
-        destroy() { 
-            window.removeEventListener('resize', updateTouchAction);
-            node.removeEventListener('pointerdown', onDown); 
-            node.removeEventListener('click', onClick, { capture: true });
-            node.removeEventListener('contextmenu', onContextMenu);
-        } 
-    };
 }

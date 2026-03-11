@@ -15,7 +15,7 @@
     skeleton?: boolean;
   }>();
 
-  const baseLayout = cn(UI_CONSTANTS.CARD_HEIGHT, "p-4 flex items-center gap-4", className);
+  const baseLayout = $derived(cn(UI_CONSTANTS.CARD_HEIGHT, "p-4 flex items-center gap-4", className));
 </script>
 
 {#if skeleton}
