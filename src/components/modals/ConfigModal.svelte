@@ -9,6 +9,7 @@
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
   import { tooltip } from '$lib/actions/tooltip';
+  import { fade } from 'svelte/transition';
 
   let { onClose } = $props<{ onClose: () => void }>();
 
@@ -24,8 +25,8 @@
     globalError = '';
     const trimmedRepo = repoPath.trim();
     const trimmedToken = token.trim();
-
     const currentRepo = dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : '';
+    
     if (trimmedRepo === currentRepo && trimmedToken === (dataState.config.token || '')) {
       onClose();
       return;
@@ -72,10 +73,8 @@
 
   function handleFileImport(e: Event) {
     const input = e.target as HTMLInputElement;
-
     if (input.files && input.files[0]) {
       const file = input.files[0];
-
       appState.openConfirm({
         msg: MESSAGES.CONFIRM.RESTORE,
         onConfirm: async () => {
@@ -89,19 +88,18 @@
         },
         isDestructive: true
       });
-
       input.value = '';
     }
   }
 
-  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold animate-fade";
+  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold";
   const footerClass = "mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs text-text-dim/60";
   const actionBtnClass = "hover:text-primary transition-colors cursor-pointer";
 </script>
 
 <Modal {onClose} title={MESSAGES.MODAL.CONFIG_TITLE}>
   {#if globalError}
-    <div class={errorBannerClass}>⚠️ {globalError}</div>
+    <div transition:fade={{ duration: 150 }} class={errorBannerClass}>⚠️ {globalError}</div>
   {/if}
 
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>

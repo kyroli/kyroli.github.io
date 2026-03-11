@@ -11,6 +11,7 @@
   import { draggable, dndState } from '$lib/actions/dnd.svelte';
   import type { DndPayload, Group, Site } from '$lib/types';
   import { tooltip } from '$lib/actions/tooltip';
+  import { fade } from 'svelte/transition';
 
   const FLIP_DURATION = 300;
 
@@ -91,6 +92,7 @@
               
               const srcGroupIdx = dataState.groups.findIndex(g => g.sites.some(s => s.id === srcId));
               const isSameGroup = dataState.groups[srcGroupIdx]?.id === targetGroupId;
+              
               if (isSameGroup) {
                   sitesWithoutSrc = targetGroup.sites.filter(s => s.id !== srcId);
               }
@@ -201,7 +203,7 @@
   {/each}
 
   {#if appState.isEditMode}
-    <button onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press animate-fade">
+    <button in:fade={{ duration: 200 }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
       <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>

@@ -24,8 +24,9 @@
     type?: 'button' | 'submit' | 'reset';
   }>();
 
-  const baseStyles = "flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border";
-  
+  // 严格限制过渡属性
+  const baseStyles = "flex items-center justify-center rounded-xl transition-colors transition-transform transition-opacity duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border";
+
   const variants = {
     primary: "bg-primary text-white border-primary hover:opacity-90 shadow-sm",
     outline: "bg-surface text-text border-border hover:bg-bg hover:border-primary/50",

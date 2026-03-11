@@ -87,7 +87,6 @@
     color: var(--text);
     font-family: var(--font-sans);
     line-height: 1.5;
-    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
     position: relative;
   }
 
@@ -109,19 +108,6 @@
     opacity: 0.15;
     mix-blend-mode: overlay;
   }
-
-  :root.theme-syncing * {
-    transition: none !important;
-  }
-}
-
-@keyframes fade {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade {
-  animation: fade 0.2s ease-out;
 }
 
 ::view-transition-old(root),

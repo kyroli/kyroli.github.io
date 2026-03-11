@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements';
   import { cn } from '$lib/utils/cn';
+  import { fade } from 'svelte/transition';
 
   let { 
     value = $bindable(), 
@@ -17,7 +18,8 @@
     class?: string;
   } & HTMLInputAttributes>();
 
-  const baseStyles = "w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition-all duration-200 placeholder:text-text-dim/60";
+  // 精准控制颜色的过渡
+  const baseStyles = "w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition-colors transition-shadow duration-200 placeholder:text-text-dim/60";
   
   const stateStyles = $derived(error 
     ? 'border-danger/50 focus:border-danger text-danger placeholder:text-danger/40 focus:ring-2 focus:ring-danger/20' 
@@ -27,26 +29,18 @@
   const inputClass = $derived(cn(baseStyles, stateStyles, className));
   
   const labelClass = "text-xs font-bold text-text-dim tracking-wide ml-1 select-none";
-  const errorClass = "text-[10px] font-bold text-danger ml-1 animate-fade";
+  const errorClass = "text-[10px] font-bold text-danger ml-1";
 </script>
 
 <div class="w-full flex flex-col gap-1.5">
   {#if label}
-    <label for={id} class={labelClass}>
-      {label}
-    </label>
+    <label for={id} class={labelClass}>{label}</label>
   {/if}
 
-  <input 
-    {id}
-    {type}
-    bind:value 
-    class={inputClass}
-    {...rest}
-  />
+  <input {id} {type} bind:value class={inputClass} {...rest} />
 
   {#if error}
-    <span class={errorClass}>
+    <span in:fade={{ duration: 150 }} class={errorClass}>
       {error}
     </span>
   {/if}

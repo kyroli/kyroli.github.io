@@ -4,6 +4,7 @@
   import { X } from 'lucide-svelte';
   import { tooltip } from '$lib/actions/tooltip';
   import { MESSAGES } from '$lib/i18n';
+  import { fade } from 'svelte/transition';
 
   let { 
     children, 
@@ -44,7 +45,6 @@
     "bg-surface text-text",
     "border border-border shadow-2xl shadow-black/20",
     "outline-none",
-    "animate-fade",
     "backdrop:bg-black/40 backdrop:transition-opacity backdrop:backdrop-blur-[1px]"
   );
 
@@ -57,6 +57,7 @@
   onclose={() => onClose()}
   onmousedown={handleMousedown}
   onmouseup={handleMouseup}
+  transition:fade={{ duration: 200 }}
 >
   <div class="flex flex-col gap-6 relative">
     {#if title}

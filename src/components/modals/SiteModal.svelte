@@ -7,6 +7,7 @@
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
   import Button from '../ui/Button.svelte';
+  import { fade } from 'svelte/transition';
 
   let { groupId, siteId, onClose } = $props<{ 
     groupId: string, 
@@ -16,6 +17,7 @@
 
   const group = dataState.groups.find(g => g.id === groupId);
   const site = siteId ? group?.sites.find(s => s.id === siteId) : null;
+
   const modalTitle = siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW;
 
   let name = $state(site?.name ?? '');
@@ -62,7 +64,7 @@
     }
   }
 
-  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold animate-fade";
+  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold";
 </script>
 
 {#snippet headerExtra()}
@@ -79,7 +81,7 @@
 
 <Modal {onClose} title={modalTitle} {headerExtra}>
   {#if error}
-    <div class={errorBannerClass}>⚠️ {error}</div>
+    <div transition:fade={{ duration: 150 }} class={errorBannerClass}>⚠️ {error}</div>
   {/if}
 
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-3">
