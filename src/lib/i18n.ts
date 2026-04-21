@@ -33,6 +33,14 @@ export const MESSAGES = {
     NEW_GROUP: '新建分组',
     NEW_SITE: '添加网站',
     GIT_COMMIT_MSG: 'update bookmarks via Kilonova',
+    TIP_SWITCH_ENGINE: '切换搜索引擎',
+    SEARCH: '搜索',
+    STATUS_OFFLINE: '离线模式',
+    STATUS_NO_CONFIG: '未配置同步',
+    STATUS_SYNC_ERROR: '同步异常',
+    STATUS_SYNCING: '同步中...',
+    STATUS_UNSAVED: '有未保存的更改',
+    STATUS_SAVED: '数据已同步',
   },
   
   /** * 模态框(Modal)专用文案 

@@ -93,7 +93,6 @@
         },
         isDestructive: true
       });
-
       input.value = '';
     }
   }
@@ -111,7 +110,9 @@
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>
     <div class="space-y-4">
       <Input 
-        id="repo" 
+        id="username" 
+        name="username"
+        autocomplete="username"
         label={MESSAGES.MODAL.CONFIG_LABEL_REPO}
         bind:value={repoPath} 
         placeholder={MESSAGES.MODAL.CONFIG_PLACEHOLDER_REPO} 
@@ -120,7 +121,9 @@
       />
       
       <Input 
-        id="token" 
+        id="password" 
+        name="password"
+        autocomplete="current-password"
         label={MESSAGES.MODAL.CONFIG_LABEL_TOKEN}
         bind:value={token} 
         type="password" 
@@ -135,8 +138,8 @@
       {saveBtnText}
     </Button>
   </form>
-
-  <div class={footerClass}>
+  
+<div class={footerClass}>
     <div class="flex gap-4">
       <button type="button" onclick={handleExport} class={actionBtnClass} use:tooltip={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>

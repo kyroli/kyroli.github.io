@@ -14,7 +14,7 @@
 
   const group = groupId ? dataState.groups.find(g => g.id === groupId) : null;
   const modalTitle = groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW;
-  
+
   let name = $state(group?.name ?? '');
   let error = $state('');
 
@@ -23,7 +23,7 @@
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      error = MESSAGES.TOAST.UNKNOWN_ERROR || 'Group name cannot be empty';
+      error = MESSAGES.TOAST.GROUP_NAME_REQUIRED;
       return;
     }
 

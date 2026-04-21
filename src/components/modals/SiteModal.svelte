@@ -34,7 +34,7 @@
     const trimmedIcon = icon.trim();
 
     if (!trimmedName || !trimmedUrl) {
-      error = MESSAGES.TOAST.SITE_URL_ERROR || 'Name and URL are required';
+      error = MESSAGES.TOAST.SITE_INFO_REQUIRED;
       return;
     }
 

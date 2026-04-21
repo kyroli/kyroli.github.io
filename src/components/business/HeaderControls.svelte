@@ -11,14 +11,13 @@
   import { tooltip } from '$lib/actions/tooltip';
 
   const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
-
   const syncStatusConfig = $derived.by(() => {
-    if (!appState.isOnline) return { icon: WifiOff, color: 'text-text-dim', title: 'Offline Mode' };
-    if (!dataState.hasToken) return { icon: CloudOff, color: 'text-text-dim/30', title: 'No Config' };
-    if (dataState.syncStatus === 'error' || dataState.syncStatus === 'conflict') return { icon: CloudAlert, color: 'text-danger', title: 'Sync Error' };
-    if (isSyncing) return { icon: Loader2, color: 'text-primary animate-spin', title: 'Syncing...' };
-    if (dataState.isDirty) return { icon: Cloud, color: 'text-primary', title: 'Unsaved Changes' };
-    return { icon: Check, color: 'text-text-dim/50', title: 'All Saved' };
+    if (!appState.isOnline) return { icon: WifiOff, color: 'text-text-dim', title: MESSAGES.UI.STATUS_OFFLINE };
+    if (!dataState.hasToken) return { icon: CloudOff, color: 'text-text-dim/30', title: MESSAGES.UI.STATUS_NO_CONFIG };
+    if (dataState.syncStatus === 'error' || dataState.syncStatus === 'conflict') return { icon: CloudAlert, color: 'text-danger', title: MESSAGES.UI.STATUS_SYNC_ERROR };
+    if (isSyncing) return { icon: Loader2, color: 'text-primary animate-spin', title: MESSAGES.UI.STATUS_SYNCING };
+    if (dataState.isDirty) return { icon: Cloud, color: 'text-primary', title: MESSAGES.UI.STATUS_UNSAVED };
+    return { icon: Check, color: 'text-text-dim/50', title: MESSAGES.UI.STATUS_SAVED };
   });
 
   const StatusIcon = $derived(syncStatusConfig.icon);
