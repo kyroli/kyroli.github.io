@@ -7,9 +7,10 @@
  */
 export const UI_CONSTANTS = {
   /** Uniform height for site cards and loading skeletons */
-  CARD_HEIGHT: "h-[72px]",
+  CARD_HEIGHT: 'h-[72px]',
   /** Responsive grid layout classes */
-  GRID_LAYOUT: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6"
+  GRID_LAYOUT:
+    'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6'
 } as const;
 
 /**
@@ -31,15 +32,15 @@ export const DND_CONSTANTS = {
  */
 export const ANIMATION_SPEED = {
   /** Fast transition for immediate feedback (e.g., Tooltips) */
-  FADE_FAST: 150,     
+  FADE_FAST: 150,
   /** Standard transition for modals and general interactions */
-  FADE_NORMAL: 200,   
+  FADE_NORMAL: 200,
   /** Slow transition for page-level module loading */
-  FADE_SLOW: 300,     
+  FADE_SLOW: 300,
   /** Micro-delay for smooth rendering sequence */
-  DELAY_SHORT: 50,    
+  DELAY_SHORT: 50,
   /** FLIP animation duration for drag and drop reordering */
-  FLIP: 300           
+  FLIP: 300
 } as const;
 
 /**
@@ -47,9 +48,9 @@ export const ANIMATION_SPEED = {
  */
 export const APP_TIMEOUTS = {
   /** Default duration for global toast messages */
-  TOAST_DURATION: 3000,    
+  TOAST_DURATION: 3000,
   /** Debounce delay for tooltip triggering */
-  TOOLTIP_DELAY: 250,      
+  TOOLTIP_DELAY: 250,
   /** Delay before showing skeleton to prevent flickering on fast loads */
-  SKELETON_DELAY: 200      
+  SKELETON_DELAY: 200
 } as const;

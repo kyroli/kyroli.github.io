@@ -1,75 +1,75 @@
 <script lang="ts">
-  import { dataState } from '$lib/core/data.svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import { ANIMATION_SPEED } from '$lib/constants';
-  import { fade } from 'svelte/transition';
+import { fade } from 'svelte/transition';
+import { ANIMATION_SPEED } from '$lib/constants';
+import { appState } from '$lib/core/app.svelte';
+import { dataState } from '$lib/core/data.svelte';
 
-  let observer: IntersectionObserver | null = null;
+let observer: IntersectionObserver | null = null;
 
-  $effect(() => {
-    // Rebind observer when groups change
-    const _groups = dataState.groups;
-    if (typeof window === 'undefined') return;
+$effect(() => {
+  // Rebind observer when groups change
+  dataState.groups;
+  if (typeof window === 'undefined') return;
 
-    const timer = setTimeout(() => {
-      setupObserver();
-    }, 100);
+  const timer = setTimeout(() => {
+    setupObserver();
+  }, 100);
 
-    return () => {
-      clearTimeout(timer);
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-      }
-    };
-  });
-
-  function setupObserver() {
+  return () => {
+    clearTimeout(timer);
     if (observer) {
       observer.disconnect();
+      observer = null;
     }
+  };
+});
 
-    const visibilityMap = new Map<string, boolean>();
+function setupObserver() {
+  if (observer) {
+    observer.disconnect();
+  }
 
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const id = entry.target.getAttribute('data-dnd-group-id');
-          if (id) {
-            // Use 0.98 threshold for "fully visible" to allow margin of error
-            visibilityMap.set(id, entry.intersectionRatio >= 0.98);
-          }
-        });
+  const visibilityMap = new Map<string, boolean>();
 
-        appState.visibleGroupIds = Array.from(visibilityMap.entries())
-          .filter(([_, visible]) => visible)
-          .map(([id]) => id);
-      },
-      {
-        threshold: [0, 0.5, 0.98, 1.0],
-        rootMargin: '-20px 0px -20px 0px'
-      }
-    );
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const id = entry.target.getAttribute('data-dnd-group-id');
+        if (id) {
+          // Use 0.98 threshold for "fully visible" to allow margin of error
+          visibilityMap.set(id, entry.intersectionRatio >= 0.98);
+        }
+      });
 
-    document.querySelectorAll('[data-dnd-group-id]').forEach((el) => {
-      observer?.observe(el);
+      appState.visibleGroupIds = Array.from(visibilityMap.entries())
+        .filter(([_, visible]) => visible)
+        .map(([id]) => id);
+    },
+    {
+      threshold: [0, 0.5, 0.98, 1.0],
+      rootMargin: '-20px 0px -20px 0px'
+    }
+  );
+
+  document.querySelectorAll('[data-dnd-group-id]').forEach((el) => {
+    observer?.observe(el);
+  });
+}
+
+function scrollToGroup(id: string) {
+  const el = document.querySelector(`[data-dnd-group-id="${id}"]`);
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    // Offset for header height
+    const targetY = rect.top + scrollTop - 100;
+
+    window.scrollTo({
+      top: targetY,
+      behavior: 'smooth'
     });
   }
-
-  function scrollToGroup(id: string) {
-    const el = document.querySelector(`[data-dnd-group-id="${id}"]`);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      // Offset for header height
-      const targetY = rect.top + scrollTop - 100;
-
-      window.scrollTo({
-        top: targetY,
-        behavior: 'smooth'
-      });
-    }
-  }
+}
 </script>
 
 {#if dataState.groups.length > 0}

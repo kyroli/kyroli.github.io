@@ -1,25 +1,26 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-  import { cn } from '$lib/utils/cn';
+import type { Snippet } from 'svelte';
+import { cn } from '$lib/utils/cn';
 
-  let { 
-    children, 
-    class: className = '',
-    onclick,
-    href,
-    ...rest
-  } = $props<{ 
-    children: Snippet;
-    class?: string;
-    onclick?: (e: MouseEvent) => void;
-    href?: string;
-  }>();
+let {
+  children,
+  class: className = '',
+  onclick,
+  href,
+  ...rest
+} = $props<{
+  children: Snippet;
+  class?: string;
+  onclick?: (e: MouseEvent) => void;
+  href?: string;
+}>();
 
-  const role = $derived(onclick ? "button" : undefined);
-  
-  const baseStyles = "block bg-surface border border-border rounded-xl transition-colors transition-shadow transition-transform duration-200 will-change-transform";
-  
-  const finalClass = $derived(cn(baseStyles, className));
+const role = $derived(onclick ? 'button' : undefined);
+
+const baseStyles =
+  'block bg-surface border border-border rounded-xl transition-colors transition-shadow transition-transform duration-200 will-change-transform';
+
+const finalClass = $derived(cn(baseStyles, className));
 </script>
 
 {#if href}

@@ -1,5 +1,5 @@
-import { appState } from '../core/app.svelte';
 import { APP_TIMEOUTS } from '../constants';
+import { appState } from '../core/app.svelte';
 
 export function tooltip(node: HTMLElement, msg?: string | null) {
   if (!msg) return;
@@ -30,7 +30,7 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
   const calculatePos = () => {
     const rect = node.getBoundingClientRect();
     const tooltipGap = 10;
-    
+
     let x = rect.left + rect.width / 2;
     let y = rect.top - tooltipGap;
     let position: 'top' | 'bottom' = 'top';
@@ -42,8 +42,8 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
 
     const margin = 10;
     const maxVW = window.innerWidth;
-    
-    if (x < margin + 50) x = margin + 50; 
+
+    if (x < margin + 50) x = margin + 50;
     if (x > maxVW - margin - 50) x = maxVW - margin - 50;
 
     return { x, y, position };
@@ -82,7 +82,7 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
   };
 
   const onMouseLeave = () => forceHide();
-  
+
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && isVisible) forceHide();
   };
@@ -103,7 +103,7 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
       }
       currentMsg = newMsg;
       applyA11y(currentMsg);
-      
+
       if (isVisible) {
         const { x, y, position } = calculatePos();
         appState.updateTooltip(currentMsg, x, y, position);

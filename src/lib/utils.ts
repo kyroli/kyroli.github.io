@@ -23,7 +23,7 @@ export const getIcon = (url: string, custom?: string): string => {
   if (custom && assets[custom.toLowerCase()]) {
     return assets[custom.toLowerCase()];
   }
-  
+
   try {
     const domain = new URL(url).hostname;
     const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;

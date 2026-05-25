@@ -8,21 +8,24 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "format": "biome format --write .",
+    "lint": "biome check ."
   },
   "dependencies": {
-    "svelte": "^5.1.0",
-    "tailwindcss": "^4.0.0",
-    "lucide-svelte": "^0.473.0",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0"
+    "lucide-svelte": "^0.473.0",
+    "svelte": "^5.1.0",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@biomejs/biome": "2.4.15",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.7.2",
-    "vite": "^5.0.0"
+    "vite": "^6.0.0"
   }
 }

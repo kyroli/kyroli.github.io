@@ -1,5 +1,5 @@
-import type { GithubConfig, NavData, RemoteFile } from '../types';
 import { MESSAGES } from '../i18n';
+import type { GithubConfig, NavData, RemoteFile } from '../types';
 
 export const GITHUB_ERRORS = {
   TOKEN_INVALID: 'TOKEN_INVALID',
@@ -22,8 +22,8 @@ export class GithubClient {
 
   private get headers() {
     return {
-      'Authorization': `Bearer ${this.config.token}`,
-      'Accept': 'application/vnd.github.v3+json',
+      Authorization: `Bearer ${this.config.token}`,
+      Accept: 'application/vnd.github.v3+json',
       'Content-Type': 'application/json'
     };
   }
@@ -51,9 +51,9 @@ export class GithubClient {
 
   async updateFile(path: string, content: NavData, sha?: string): Promise<{ sha: string }> {
     const jsonStr = JSON.stringify(content, null, 2);
-    
+
     const base64Content = new TextEncoder().encode(jsonStr).toBase64();
-    
+
     const body = {
       message: MESSAGES.UI.GIT_COMMIT_MSG,
       content: base64Content,

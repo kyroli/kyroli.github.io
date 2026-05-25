@@ -1,43 +1,43 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fade } from 'svelte/transition';
-  import { dataState } from '$lib/core/data.svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import { sync } from '$lib/services/sync';
-  import { MESSAGES } from '$lib/i18n';
-  import { ANIMATION_SPEED, APP_TIMEOUTS } from '$lib/constants';
-  
-  import Header from './components/business/Header.svelte';
-  import SiteGrid from './components/business/SiteGrid.svelte';
-  import Catalog from './components/business/Catalog.svelte';
-  import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
-  import Modal from './components/ui/Modal.svelte';
-  import Button from './components/ui/Button.svelte';
-  import TooltipContainer from './components/ui/TooltipContainer.svelte';
-  import { promoteToTopLayer } from '$lib/actions/popover';
+import { onMount } from 'svelte';
+import { fade } from 'svelte/transition';
+import { promoteToTopLayer } from '$lib/actions/popover';
+import { ANIMATION_SPEED, APP_TIMEOUTS } from '$lib/constants';
+import { appState } from '$lib/core/app.svelte';
+import { dataState } from '$lib/core/data.svelte';
+import { MESSAGES } from '$lib/i18n';
+import { sync } from '$lib/services/sync';
+import Catalog from './components/business/Catalog.svelte';
 
-  dataState.init();
-  appState.init();
-  let isMounted = $state(false);
-  let showSkeleton = $state(false);
+import Header from './components/business/Header.svelte';
+import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
+import SiteGrid from './components/business/SiteGrid.svelte';
+import Button from './components/ui/Button.svelte';
+import Modal from './components/ui/Modal.svelte';
+import TooltipContainer from './components/ui/TooltipContainer.svelte';
 
-  onMount(() => {
-    isMounted = true;
-    sync.init();
-    
-    const timer = setTimeout(() => {
-      if (!dataState.isReady) {
-        showSkeleton = true;
-      }
-    }, APP_TIMEOUTS.SKELETON_DELAY);
-    
-    return () => clearTimeout(timer);
-  });
-  const toastClass = $derived(
-    appState.toast?.type === 'error' 
-      ? 'bg-danger border-danger text-white shadow-float' 
-      : 'bg-surface border-border text-text shadow-float'
-  );
+dataState.init();
+appState.init();
+let isMounted = $state(false);
+let showSkeleton = $state(false);
+
+onMount(() => {
+  isMounted = true;
+  sync.init();
+
+  const timer = setTimeout(() => {
+    if (!dataState.isReady) {
+      showSkeleton = true;
+    }
+  }, APP_TIMEOUTS.SKELETON_DELAY);
+
+  return () => clearTimeout(timer);
+});
+const toastClass = $derived(
+  appState.toast?.type === 'error'
+    ? 'bg-danger border-danger text-white shadow-float'
+    : 'bg-surface border-border text-text shadow-float'
+);
 </script>
 
 <svelte:head>

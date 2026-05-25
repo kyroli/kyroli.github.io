@@ -1,55 +1,55 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
-  import { Search } from 'lucide-svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import Input from '../ui/Input.svelte';
-  import { SEARCH_ENGINES, DEFAULT_ENGINE_ID } from '$lib/config/search';
-  import { tooltip } from '$lib/actions/tooltip';
-  import { ANIMATION_SPEED } from '$lib/constants';
-  import { MESSAGES } from '$lib/i18n';
+import { Search } from 'lucide-svelte';
+import { fade } from 'svelte/transition';
+import { tooltip } from '$lib/actions/tooltip';
+import { DEFAULT_ENGINE_ID, SEARCH_ENGINES } from '$lib/config/search';
+import { ANIMATION_SPEED } from '$lib/constants';
+import { appState } from '$lib/core/app.svelte';
+import { MESSAGES } from '$lib/i18n';
+import Input from '../ui/Input.svelte';
 
-  let search = $state('');
-  let initialEngineId = DEFAULT_ENGINE_ID;
+let search = $state('');
+let initialEngineId = DEFAULT_ENGINE_ID;
 
+if (typeof window !== 'undefined') {
+  const savedId = localStorage.getItem('nav_engine');
+  if (savedId && SEARCH_ENGINES[savedId]) {
+    initialEngineId = savedId;
+  }
+}
+
+let currentEngineId = $state(initialEngineId);
+let showEngineMenu = $state(false);
+
+const activeEngine = $derived(SEARCH_ENGINES[currentEngineId]);
+
+function handleSearch() {
+  if (!search.trim()) return;
+  window.open(`${activeEngine.url}${encodeURIComponent(search.trim())}`);
+  search = '';
+}
+
+function switchEngine(id: string) {
+  currentEngineId = id;
   if (typeof window !== 'undefined') {
-    const savedId = localStorage.getItem('nav_engine');
-    if (savedId && SEARCH_ENGINES[savedId]) {
-      initialEngineId = savedId;
+    localStorage.setItem('nav_engine', id);
+  }
+  showEngineMenu = false;
+}
+
+function clickOutside(node: HTMLElement) {
+  const handleClick = (event: MouseEvent) => {
+    if (!node.contains(event.target as Node)) {
+      showEngineMenu = false;
     }
-  }
-  
-  let currentEngineId = $state(initialEngineId);
-  let showEngineMenu = $state(false);
-
-  const activeEngine = $derived(SEARCH_ENGINES[currentEngineId]);
-
-  function handleSearch() {
-    if (!search.trim()) return;
-    window.open(`${activeEngine.url}${encodeURIComponent(search.trim())}`);
-    search = '';
-  }
-
-  function switchEngine(id: string) {
-    currentEngineId = id;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('nav_engine', id);
+  };
+  document.addEventListener('click', handleClick, true);
+  return {
+    destroy() {
+      document.removeEventListener('click', handleClick, true);
     }
-    showEngineMenu = false;
-  }
-
-  function clickOutside(node: HTMLElement) {
-    const handleClick = (event: MouseEvent) => {
-      if (!node.contains(event.target as Node)) {
-        showEngineMenu = false;
-      }
-    };
-    document.addEventListener('click', handleClick, true);
-    return {
-      destroy() {
-        document.removeEventListener('click', handleClick, true);
-      }
-    };
-  }
+  };
+}
 </script>
 
 <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20" use:clickOutside>

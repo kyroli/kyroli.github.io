@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { dataState } from '$lib/core/data.svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import { MESSAGES } from '$lib/i18n';
-  
-  import SearchBar from './SearchBar.svelte';
-  import HeaderControls from './HeaderControls.svelte';
+import { appState } from '$lib/core/app.svelte';
+import { dataState } from '$lib/core/data.svelte';
+import { MESSAGES } from '$lib/i18n';
+import HeaderControls from './HeaderControls.svelte';
 
-  const logoHref = $derived(
-    !appState.isEditMode && dataState.config.owner && dataState.config.repo 
-      ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}` 
-      : undefined
-  );
+import SearchBar from './SearchBar.svelte';
+
+const logoHref = $derived(
+  !appState.isEditMode && dataState.config.owner && dataState.config.repo
+    ? `https://github.com/${dataState.config.owner}/${dataState.config.repo}`
+    : undefined
+);
 </script>
 
 <div class="w-full mt-8 mb-8 relative">

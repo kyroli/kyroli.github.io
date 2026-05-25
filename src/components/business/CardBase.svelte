@@ -1,21 +1,24 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-  import type { HTMLAttributes } from 'svelte/elements';
-  import { UI_CONSTANTS } from '$lib/constants';
-  import { cn } from '$lib/utils/cn';
-  import Card from '../ui/Card.svelte';
+import type { Snippet } from 'svelte';
+import type { HTMLAttributes } from 'svelte/elements';
+import { UI_CONSTANTS } from '$lib/constants';
+import { cn } from '$lib/utils/cn';
+import Card from '../ui/Card.svelte';
 
-  let { 
-    children, 
-    class: className = '', 
-    skeleton = false,
-    ...rest 
-  } = $props<HTMLAttributes<HTMLDivElement> & {
+let {
+  children,
+  class: className = '',
+  skeleton = false,
+  ...rest
+} = $props<
+  HTMLAttributes<HTMLDivElement> & {
     children: Snippet;
     skeleton?: boolean;
-  }>();
+    href?: string;
+  }
+>();
 
-  const baseLayout = $derived(cn(UI_CONSTANTS.CARD_HEIGHT, "p-4 flex items-center gap-4", className));
+const baseLayout = $derived(cn(UI_CONSTANTS.CARD_HEIGHT, 'p-4 flex items-center gap-4', className));
 </script>
 
 {#if skeleton}

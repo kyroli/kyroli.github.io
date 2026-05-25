@@ -1,93 +1,112 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
-  import { X, Save, RotateCcw, Pencil, Settings, Loader2, Cloud, CloudOff, CloudAlert, Check, WifiOff } from 'lucide-svelte';
-  import { dataState } from '$lib/core/data.svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import { sync } from '$lib/services/sync';
-  import { MESSAGES } from '$lib/i18n';
-  import { ANIMATION_SPEED } from '$lib/constants';
-  import Button from '../ui/Button.svelte';
-  import ThemeSwitch from '../ui/ThemeSwitch.svelte';
-  import { tooltip } from '$lib/actions/tooltip';
+import {
+  Check,
+  Cloud,
+  CloudAlert,
+  CloudOff,
+  Loader2,
+  Pencil,
+  RotateCcw,
+  Save,
+  Settings,
+  WifiOff,
+  X
+} from 'lucide-svelte';
+import { fade } from 'svelte/transition';
+import { tooltip } from '$lib/actions/tooltip';
+import { ANIMATION_SPEED } from '$lib/constants';
+import { appState } from '$lib/core/app.svelte';
+import { dataState } from '$lib/core/data.svelte';
+import { MESSAGES } from '$lib/i18n';
+import { sync } from '$lib/services/sync';
+import Button from '../ui/Button.svelte';
+import ThemeSwitch from '../ui/ThemeSwitch.svelte';
 
-  const isSyncing = $derived(dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking');
-  const syncStatusConfig = $derived.by(() => {
-    if (!appState.isOnline) return { icon: WifiOff, color: 'text-text-dim', title: MESSAGES.UI.STATUS_OFFLINE };
-    if (!dataState.hasToken) return { icon: CloudOff, color: 'text-text-dim/30', title: MESSAGES.UI.STATUS_NO_CONFIG };
-    if (dataState.syncStatus === 'error' || dataState.syncStatus === 'conflict') return { icon: CloudAlert, color: 'text-danger', title: MESSAGES.UI.STATUS_SYNC_ERROR };
-    if (isSyncing) return { icon: Loader2, color: 'text-primary animate-spin', title: MESSAGES.UI.STATUS_SYNCING };
-    if (dataState.isDirty) return { icon: Cloud, color: 'text-primary', title: MESSAGES.UI.STATUS_UNSAVED };
-    return { icon: Check, color: 'text-text-dim/50', title: MESSAGES.UI.STATUS_SAVED };
-  });
+const isSyncing = $derived(
+  dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking'
+);
+const syncStatusConfig = $derived.by(() => {
+  if (!appState.isOnline)
+    return { icon: WifiOff, color: 'text-text-dim', title: MESSAGES.UI.STATUS_OFFLINE };
+  if (!dataState.hasToken)
+    return { icon: CloudOff, color: 'text-text-dim/30', title: MESSAGES.UI.STATUS_NO_CONFIG };
+  if (dataState.syncStatus === 'error' || dataState.syncStatus === 'conflict')
+    return { icon: CloudAlert, color: 'text-danger', title: MESSAGES.UI.STATUS_SYNC_ERROR };
+  if (isSyncing)
+    return { icon: Loader2, color: 'text-primary animate-spin', title: MESSAGES.UI.STATUS_SYNCING };
+  if (dataState.isDirty)
+    return { icon: Cloud, color: 'text-primary', title: MESSAGES.UI.STATUS_UNSAVED };
+  return { icon: Check, color: 'text-text-dim/50', title: MESSAGES.UI.STATUS_SAVED };
+});
 
-  const StatusIcon = $derived(syncStatusConfig.icon);
+const StatusIcon = $derived(syncStatusConfig.icon);
 
-  $effect(() => {
-    if (dataState.syncStatus === 'conflict') {
-       appState.openConfirm({
-          msg: MESSAGES.CONFIRM.CONFLICT_FORCE,
-          onConfirm: handleForcePush
-       });
-    }
-  });
-
-  function getSafeErrorMessage(e: unknown): string {
-    if (dataState.syncError) return dataState.syncError;
-    if (e instanceof Error) return e.message;
-    return MESSAGES.ERRORS.UNKNOWN;
-  }
-
-  async function handleForcePush() {
-    try {
-      await sync.forcePush();
-      appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
-    } catch (e: unknown) {
-      const msg = getSafeErrorMessage(e);
-      appState.showToast(`${MESSAGES.TOAST.FORCE_PUSH_FAIL}: ${msg}`, 'error');
-    }
-  }
-
-  function handleEditClick() {
-    if (!dataState.hasToken) { 
-      appState.showToast(MESSAGES.TOAST.CONFIG_MISSING, 'error');
-      return;
-    }
-    appState.toggleEditMode();
-  }
-  
-  function handleSync() {
+$effect(() => {
+  if (dataState.syncStatus === 'conflict') {
     appState.openConfirm({
-      msg: MESSAGES.CONFIRM.SYNC_CHANGES,
-      onConfirm: async () => {
-        appState.toggleEditMode();
-        try {
-          await sync.push();
-          if (dataState.syncStatus === 'success') {
-             appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
-          }
-        } catch (e: unknown) {
-           const msg = getSafeErrorMessage(e);
-           appState.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${msg}`, 'error');
+      msg: MESSAGES.CONFIRM.CONFLICT_FORCE,
+      onConfirm: handleForcePush
+    });
+  }
+});
+
+function getSafeErrorMessage(e: unknown): string {
+  if (dataState.syncError) return dataState.syncError;
+  if (e instanceof Error) return e.message;
+  return MESSAGES.ERRORS.UNKNOWN;
+}
+
+async function handleForcePush() {
+  try {
+    await sync.forcePush();
+    appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
+  } catch (e: unknown) {
+    const msg = getSafeErrorMessage(e);
+    appState.showToast(`${MESSAGES.TOAST.FORCE_PUSH_FAIL}: ${msg}`, 'error');
+  }
+}
+
+function handleEditClick() {
+  if (!dataState.hasToken) {
+    appState.showToast(MESSAGES.TOAST.CONFIG_MISSING, 'error');
+    return;
+  }
+  appState.toggleEditMode();
+}
+
+function handleSync() {
+  appState.openConfirm({
+    msg: MESSAGES.CONFIRM.SYNC_CHANGES,
+    onConfirm: async () => {
+      appState.toggleEditMode();
+      try {
+        await sync.push();
+        if (dataState.syncStatus === 'success') {
+          appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
         }
+      } catch (e: unknown) {
+        const msg = getSafeErrorMessage(e);
+        appState.showToast(`${MESSAGES.TOAST.SYNC_FAIL_PREFIX}${msg}`, 'error');
       }
-    });
-  }
+    }
+  });
+}
 
-  function handleReset() {
-    appState.openConfirm({
-      msg: MESSAGES.CONFIRM.DISCARD_CHANGES,
-      onConfirm: async () => {
-        try {
-          await sync.resetToRemote();
-          appState.toggleEditMode();
-          appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-        } catch (e: unknown) {
-          appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
-        }
-      },
-      isDestructive: true
-    });
-  }
+function handleReset() {
+  appState.openConfirm({
+    msg: MESSAGES.CONFIRM.DISCARD_CHANGES,
+    onConfirm: async () => {
+      try {
+        await sync.resetToRemote();
+        appState.toggleEditMode();
+        appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+      } catch (e: unknown) {
+        appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
+      }
+    },
+    isDestructive: true
+  });
+}
 </script>
 
 <div class="justify-self-end flex items-center justify-end">

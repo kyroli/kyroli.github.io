@@ -2,9 +2,9 @@
  * GitHub sync service. Handles data communication between local storage and GitHub.
  */
 
-import { GithubClient, GITHUB_ERRORS } from '../infra/github';
 import { dataState } from '../core/data.svelte';
 import { MESSAGES } from '../i18n';
+import { GITHUB_ERRORS, GithubClient } from '../infra/github';
 import type { GithubConfig } from '../types';
 
 class SyncService {
@@ -26,7 +26,7 @@ class SyncService {
 
     try {
       const remote = await this.client.getFile();
-      
+
       if (!remote) {
         dataState.updateSyncState('success');
         return;
@@ -70,10 +70,10 @@ class SyncService {
       dataState.updateSyncState('success', sha);
     } catch (e: unknown) {
       console.error('Push failed:', e);
-      
+
       if (e instanceof Error && e.message === GITHUB_ERRORS.CONFLICT) {
         dataState.updateSyncState('conflict');
-        await this.init(); 
+        await this.init();
       } else {
         dataState.updateSyncState('error', undefined, this.formatError(e));
         throw e;
@@ -129,9 +129,9 @@ class SyncService {
 
   private formatError(e: unknown): string {
     if (e instanceof Error) {
-        if (e.message === GITHUB_ERRORS.TOKEN_INVALID) return MESSAGES.ERRORS.TOKEN_INVALID;
-        if (e.message === GITHUB_ERRORS.NOT_FOUND) return MESSAGES.ERRORS.REPO_NOT_FOUND;
-        if (e.message === GITHUB_ERRORS.CONFLICT) return MESSAGES.ERRORS.CONFLICT;
+      if (e.message === GITHUB_ERRORS.TOKEN_INVALID) return MESSAGES.ERRORS.TOKEN_INVALID;
+      if (e.message === GITHUB_ERRORS.NOT_FOUND) return MESSAGES.ERRORS.REPO_NOT_FOUND;
+      if (e.message === GITHUB_ERRORS.CONFLICT) return MESSAGES.ERRORS.CONFLICT;
     }
     return MESSAGES.ERRORS.UNKNOWN;
   }

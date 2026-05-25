@@ -1,105 +1,111 @@
 <script lang="ts">
-  import { dataState } from '$lib/core/data.svelte';
-  import { appState } from '$lib/core/app.svelte';
-  import { sync } from '$lib/services/sync';
-  import { manager } from '$lib/services/manager';
-  import { GithubClient } from '$lib/infra/github';
-  import { MESSAGES } from '$lib/i18n';
-  import Modal from '../ui/Modal.svelte';
-  import Input from '../ui/Input.svelte';
-  import Button from '../ui/Button.svelte';
-  import { tooltip } from '$lib/actions/tooltip';
-  import { fade } from 'svelte/transition';
-  import { ANIMATION_SPEED } from '$lib/constants';
+import { fade } from 'svelte/transition';
+import { tooltip } from '$lib/actions/tooltip';
+import { ANIMATION_SPEED } from '$lib/constants';
+import { appState } from '$lib/core/app.svelte';
+import { dataState } from '$lib/core/data.svelte';
+import { MESSAGES } from '$lib/i18n';
+import { GithubClient } from '$lib/infra/github';
+import { manager } from '$lib/services/manager';
+import { sync } from '$lib/services/sync';
+import Button from '../ui/Button.svelte';
+import Input from '../ui/Input.svelte';
+import Modal from '../ui/Modal.svelte';
 
-  let { onClose } = $props<{ onClose: () => void }>();
+let { onClose } = $props<{ onClose: () => void }>();
 
-  let repoPath = $state(dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : '');
-  let token = $state(dataState.config.token || ''); 
-  
-  let isSaving = $state(false);
-  let globalError = $state('');
+let repoPath = $state(
+  dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : ''
+);
+let token = $state(dataState.config.token || '');
 
-  const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
+let isSaving = $state(false);
+let globalError = $state('');
 
-  async function handleSave() {
-    globalError = '';
+const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
 
-    const trimmedRepo = repoPath.trim();
-    const trimmedToken = token.trim();
-    const currentRepo = dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : '';
+async function handleSave() {
+  globalError = '';
 
-    if (trimmedRepo === currentRepo && trimmedToken === (dataState.config.token || '')) {
-      onClose();
-      return;
-    }
+  const trimmedRepo = repoPath.trim();
+  const trimmedToken = token.trim();
+  const currentRepo = dataState.config.owner
+    ? `${dataState.config.owner}/${dataState.config.repo}`
+    : '';
 
-    if (!trimmedRepo || !trimmedToken) { 
-      globalError = MESSAGES.TOAST.CONFIG_INCOMPLETE; 
-      return;
-    }
+  if (trimmedRepo === currentRepo && trimmedToken === (dataState.config.token || '')) {
+    onClose();
+    return;
+  }
 
-    try {
-      const { owner, repo } = GithubClient.parseRepoPath(trimmedRepo);
+  if (!trimmedRepo || !trimmedToken) {
+    globalError = MESSAGES.TOAST.CONFIG_INCOMPLETE;
+    return;
+  }
 
-      isSaving = true;
-      
-      await sync.updateConfig({ 
-        owner, 
-        repo, 
-        token: trimmedToken 
-      });
+  try {
+    const { owner, repo } = GithubClient.parseRepoPath(trimmedRepo);
 
-      if (dataState.syncStatus === 'error') {
-         globalError = dataState.syncError || MESSAGES.TOAST.UNKNOWN_ERROR;
-      } else {
-         appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
-         if (appState.activeModal === 'config') {
-            onClose();
-         }
+    isSaving = true;
+
+    await sync.updateConfig({
+      owner,
+      repo,
+      token: trimmedToken
+    });
+
+    if (dataState.syncStatus === 'error') {
+      globalError = dataState.syncError || MESSAGES.TOAST.UNKNOWN_ERROR;
+    } else {
+      appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
+      if (appState.activeModal === 'config') {
+        onClose();
       }
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message === 'Invalid repository format') {
-         globalError = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
-      } else {
-         globalError = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
-      }
-    } finally {
-      isSaving = false;
     }
-  }
-
-  function handleExport() {
-      manager.exportData();
-      appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
-  }
-
-  function handleFileImport(e: Event) {
-    const input = e.target as HTMLInputElement;
-
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-
-      appState.openConfirm({
-        msg: MESSAGES.CONFIRM.RESTORE,
-        onConfirm: async () => {
-             try {
-                await manager.importData(file);
-                appState.showToast(MESSAGES.TOAST.RESTORE_SUCCESS, 'success');
-             } catch (err: unknown) {
-                const message = err instanceof Error ? err.message : MESSAGES.TOAST.IMPORT_FAIL_FORMAT;
-                appState.showToast(message, 'error');
-             }
-        },
-        isDestructive: true
-      });
-      input.value = '';
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === 'Invalid repository format') {
+      globalError = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
+    } else {
+      globalError = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
     }
+  } finally {
+    isSaving = false;
   }
+}
 
-  const errorBannerClass = "bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold";
-  const footerClass = "mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs text-text-dim/60";
-  const actionBtnClass = "hover:text-primary transition-colors cursor-pointer";
+function handleExport() {
+  manager.exportData();
+  appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
+}
+
+function handleFileImport(e: Event) {
+  const input = e.target as HTMLInputElement;
+
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+
+    appState.openConfirm({
+      msg: MESSAGES.CONFIRM.RESTORE,
+      onConfirm: async () => {
+        try {
+          await manager.importData(file);
+          appState.showToast(MESSAGES.TOAST.RESTORE_SUCCESS, 'success');
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : MESSAGES.TOAST.IMPORT_FAIL_FORMAT;
+          appState.showToast(message, 'error');
+        }
+      },
+      isDestructive: true
+    });
+    input.value = '';
+  }
+}
+
+const errorBannerClass =
+  'bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold';
+const footerClass =
+  'mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs text-text-dim/60';
+const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
 </script>
 
 <Modal {onClose} title={MESSAGES.MODAL.CONFIG_TITLE}>

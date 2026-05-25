@@ -1,16 +1,16 @@
-import { storage } from '../infra/storage';
 import { untrack } from 'svelte';
-import type { NavData, Group, GithubConfig, SyncStatus } from '../types';
+import { storage } from '../infra/storage';
+import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
 class DataCore {
   groups = $state<Group[]>([]);
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
-  
+
   lastSha = $state('');
   isDirty = $state(false);
 
   private skipDirtyCheck = false;
-  
+
   syncStatus = $state<SyncStatus>('idle');
   syncError = $state<string | undefined>(undefined);
 
@@ -25,9 +25,9 @@ class DataCore {
   }
 
   private sanitizeGroups(groups: Group[]): Group[] {
-    return groups.map(g => ({
+    return groups.map((g) => ({
       ...g,
-      sites: g.sites.map(s => ({
+      sites: g.sites.map((s) => ({
         ...s,
         url: s.url.trim()
       }))
@@ -39,7 +39,7 @@ class DataCore {
 
     $effect(() => {
       storage.data = { groups: this.groups };
-      
+
       untrack(() => {
         if (isFirstRun) {
           isFirstRun = false;
@@ -74,7 +74,7 @@ class DataCore {
             console.error('Cross-tab sync error:', err);
           }
         }
-        
+
         if (e.key === 'nav_cfg' && e.newValue) {
           try {
             const parsed = JSON.parse(e.newValue);
@@ -100,7 +100,7 @@ class DataCore {
     this.syncStatus = status;
     if (sha) this.lastSha = sha;
     if (error) this.syncError = error;
-    
+
     if (status === 'success') {
       this.syncError = undefined;
       this.isDirty = false;

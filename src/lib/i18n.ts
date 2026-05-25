@@ -35,9 +35,9 @@ const MESSAGES_EN = {
     STATUS_SYNC_ERROR: 'Sync Error',
     STATUS_SYNCING: 'Syncing...',
     STATUS_UNSAVED: 'Unsaved changes',
-    STATUS_SAVED: 'Data synced',
+    STATUS_SAVED: 'Data synced'
   },
-  
+
   MODAL: {
     CONFIG_TITLE: 'Connect GitHub DataSource',
     CONFIG_LABEL_REPO: 'Repository (user/repo)',
@@ -48,16 +48,16 @@ const MESSAGES_EN = {
     IMPORT_DATA: 'Restore Backup',
     EXPORT_TITLE: 'Export data to JSON',
     IMPORT_TITLE: 'Restore from JSON file',
-    
+
     GROUP_TITLE_NEW: 'New Group',
     GROUP_TITLE_EDIT: 'Edit Group Name',
     GROUP_PLACEHOLDER: 'Enter group name...',
-    
+
     SITE_TITLE_NEW: 'Add New Site',
     SITE_TITLE_EDIT: 'Edit Site Info',
     SITE_NAME_PLACEHOLDER: 'Site Title (e.g. Google)',
     SITE_URL_PLACEHOLDER: 'URL (e.g. https://www.google.com/)',
-    SITE_ICON_PLACEHOLDER: 'Custom icon name (optional)',
+    SITE_ICON_PLACEHOLDER: 'Custom icon name (optional)'
   },
 
   TOAST: {
@@ -72,7 +72,7 @@ const MESSAGES_EN = {
     GROUP_DELETED: 'Group deleted',
     SITE_SAVED: 'Site info saved',
     SITE_DELETED: 'Site deleted',
-    
+
     SYNC_FAIL_PREFIX: 'Sync interrupted: ',
     RESET_FAIL: 'Reset failed, please try again',
     FORCE_PUSH_FAIL: 'Force push failed, check network',
@@ -87,16 +87,18 @@ const MESSAGES_EN = {
     SITE_PROTOCOL_ERROR: 'Only HTTP or HTTPS protocols are supported',
     SITE_URL_ERROR: 'Invalid URL format',
     GROUP_NOT_FOUND: 'Group not found',
-    REMOTE_EMPTY: 'Remote repository is empty',
+    REMOTE_EMPTY: 'Remote repository is empty'
   },
 
   CONFIRM: {
-    CONFLICT_FORCE: 'Cloud data updated with unsaved local changes.\n\nForce overwrite cloud version?\n(Note: This will overwrite remote changes)',
-    RESTORE: 'Are you sure you want to overwrite all current data with this backup?\nThis action cannot be undone.',
+    CONFLICT_FORCE:
+      'Cloud data updated with unsaved local changes.\n\nForce overwrite cloud version?\n(Note: This will overwrite remote changes)',
+    RESTORE:
+      'Are you sure you want to overwrite all current data with this backup?\nThis action cannot be undone.',
     SYNC_CHANGES: 'Push current changes to GitHub?',
     DISCARD_CHANGES: 'Discard all unsaved changes and reset?',
     DELETE_SITE: 'Remove this website shortcut?',
-    DELETE_GROUP: (name: string) => `Delete group "${name}" and all its sites?`,
+    DELETE_GROUP: (name: string) => `Delete group "${name}" and all its sites?`
   },
 
   ERRORS: {
@@ -105,7 +107,7 @@ const MESSAGES_EN = {
     CONFLICT: 'Data version conflict',
     UNKNOWN: 'Unknown network error'
   }
-} as const;
+};
 
 const MESSAGES_ZH: typeof MESSAGES_EN = {
   UI: {
@@ -140,9 +142,9 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
     STATUS_SYNC_ERROR: '同步错误',
     STATUS_SYNCING: '同步中...',
     STATUS_UNSAVED: '未保存的更改',
-    STATUS_SAVED: '数据已同步',
+    STATUS_SAVED: '数据已同步'
   },
-  
+
   MODAL: {
     CONFIG_TITLE: '连接 GitHub 数据源',
     CONFIG_LABEL_REPO: '仓库 (用户名/仓库名)',
@@ -153,16 +155,16 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
     IMPORT_DATA: '恢复备份',
     EXPORT_TITLE: '将数据导出为 JSON 文件',
     IMPORT_TITLE: '从 JSON 文件恢复数据',
-    
+
     GROUP_TITLE_NEW: '新建分组',
     GROUP_TITLE_EDIT: '编辑分组名称',
     GROUP_PLACEHOLDER: '输入分组名称...',
-    
+
     SITE_TITLE_NEW: '添加新网站',
     SITE_TITLE_EDIT: '编辑网站信息',
     SITE_NAME_PLACEHOLDER: '网站名称 (例如: Google)',
     SITE_URL_PLACEHOLDER: '网址 (例如: https://www.google.com/)',
-    SITE_ICON_PLACEHOLDER: '自定义图标名称 (可选)',
+    SITE_ICON_PLACEHOLDER: '自定义图标名称 (可选)'
   },
 
   TOAST: {
@@ -177,7 +179,7 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
     GROUP_DELETED: '分组已删除',
     SITE_SAVED: '网站信息已保存',
     SITE_DELETED: '网站已删除',
-    
+
     SYNC_FAIL_PREFIX: '同步中断：',
     RESET_FAIL: '重置失败，请重试',
     FORCE_PUSH_FAIL: '强制推送失败，请检查网络',
@@ -192,16 +194,17 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
     SITE_PROTOCOL_ERROR: '仅支持 HTTP 或 HTTPS 协议',
     SITE_URL_ERROR: '无效的网址格式',
     GROUP_NOT_FOUND: '未找到分组',
-    REMOTE_EMPTY: '远程仓库为空',
+    REMOTE_EMPTY: '远程仓库为空'
   },
 
   CONFIRM: {
-    CONFLICT_FORCE: '云端数据已更新，且本地有未保存的更改。\n\n是否强制覆盖云端版本？\n(注意：这将覆盖远程的更改)',
+    CONFLICT_FORCE:
+      '云端数据已更新，且本地有未保存的更改。\n\n是否强制覆盖云端版本？\n(注意：这将覆盖远程的更改)',
     RESTORE: '确定要用此备份覆盖当前所有数据吗？\n此操作无法撤销。',
     SYNC_CHANGES: '将当前更改推送到 GitHub？',
     DISCARD_CHANGES: '放弃所有未保存的更改并重置？',
     DELETE_SITE: '移除此网站快捷方式？',
-    DELETE_GROUP: (name: string) => `删除分组 "${name}" 及其所有网站？`,
+    DELETE_GROUP: (name: string) => `删除分组 "${name}" 及其所有网站？`
   },
 
   ERRORS: {
@@ -212,4 +215,7 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
   }
 } as const;
 
-export const MESSAGES = typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh') ? MESSAGES_ZH : MESSAGES_EN;
+export const MESSAGES =
+  typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh')
+    ? MESSAGES_ZH
+    : MESSAGES_EN;

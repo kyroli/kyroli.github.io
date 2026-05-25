@@ -1,55 +1,50 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
-  import { cn } from '$lib/utils/cn';
-  import { X } from 'lucide-svelte';
-  import { tooltip } from '$lib/actions/tooltip';
-  import { MESSAGES } from '$lib/i18n';
-  import { fade } from 'svelte/transition';
-  import { ANIMATION_SPEED } from '$lib/constants';
+import { X } from 'lucide-svelte';
+import type { Snippet } from 'svelte';
+import { fade } from 'svelte/transition';
+import { tooltip } from '$lib/actions/tooltip';
+import { ANIMATION_SPEED } from '$lib/constants';
+import { MESSAGES } from '$lib/i18n';
+import { cn } from '$lib/utils/cn';
 
-  let { 
-    children, 
-    onClose, 
-    title,
-    headerExtra 
-  } = $props<{ 
-    children: Snippet;
-    onClose: () => void;
-    title?: string;
-    headerExtra?: Snippet;
-  }>();
+let { children, onClose, title, headerExtra } = $props<{
+  children: Snippet;
+  onClose: () => void;
+  title?: string;
+  headerExtra?: Snippet;
+}>();
 
-  let dialog = $state<HTMLDialogElement>();
-  let interactStart = $state<EventTarget | null>(null);
+let dialog = $state<HTMLDialogElement>();
+let interactStart = $state<EventTarget | null>(null);
 
-  $effect(() => {
-    if (dialog) {
-      dialog.showModal();
-      return () => dialog.close();
-    }
-  });
-
-  function handleMousedown(e: MouseEvent) {
-    interactStart = e.target;
+$effect(() => {
+  if (dialog) {
+    dialog?.showModal();
+    return () => dialog?.close();
   }
+});
 
-  function handleMouseup(e: MouseEvent) {
-    if (interactStart === dialog && e.target === dialog) {
-      dialog?.close();
-    }
-    interactStart = null;
+function handleMousedown(e: MouseEvent) {
+  interactStart = e.target;
+}
+
+function handleMouseup(e: MouseEvent) {
+  if (interactStart === dialog && e.target === dialog) {
+    dialog?.close();
   }
+  interactStart = null;
+}
 
-  const dialogStyles = cn(
-    "m-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8",
-    "max-h-[90vh] overflow-y-auto",
-    "bg-surface text-text",
-    "border border-border shadow-2xl shadow-black/20",
-    "outline-none",
-    "backdrop:bg-black/40 backdrop:transition-opacity backdrop:backdrop-blur-[1px]"
-  );
+const dialogStyles = cn(
+  'm-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8',
+  'max-h-[90vh] overflow-y-auto',
+  'bg-surface text-text',
+  'border border-border shadow-2xl shadow-black/20',
+  'outline-none',
+  'backdrop:bg-black/40 backdrop:transition-opacity backdrop:backdrop-blur-[1px]'
+);
 
-  const titleClass = "text-xl font-bold tracking-tight text-text m-0";
+const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 </script>
 
 <dialog 

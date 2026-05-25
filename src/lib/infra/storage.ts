@@ -1,4 +1,4 @@
-import type { NavData, GithubConfig } from '../types';
+import type { GithubConfig, NavData } from '../types';
 
 const KEYS = {
   DATA: 'nav_data',

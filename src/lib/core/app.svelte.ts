@@ -1,6 +1,6 @@
-import { storage } from '../infra/storage';
 import { tick } from 'svelte';
 import { APP_TIMEOUTS } from '../constants';
+import { storage } from '../infra/storage';
 
 type ToastType = 'info' | 'success' | 'error';
 
@@ -26,11 +26,14 @@ interface TooltipState {
 }
 
 class AppCore {
-  isDark = $state(storage.theme === 'dark' || (!storage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches));
+  isDark = $state(
+    storage.theme === 'dark' ||
+      (!storage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
   isOnline = $state(navigator.onLine);
 
   isEditMode = $state(false);
-  
+
   activeModal = $state<ModalType>(null);
   editingGroupId = $state<string | undefined>(undefined);
   editingSiteId = $state<string | undefined>(undefined);
@@ -45,8 +48,12 @@ class AppCore {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => { this.isOnline = true; });
-      window.addEventListener('offline', () => { this.isOnline = false; });
+      window.addEventListener('online', () => {
+        this.isOnline = true;
+      });
+      window.addEventListener('offline', () => {
+        this.isOnline = false;
+      });
     }
   }
 
