@@ -53,7 +53,7 @@ function clickOutside(node: HTMLElement) {
 </script>
 
 <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20" use:clickOutside>
-  <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${showEngineMenu ? 'border-primary shadow-sm' : 'border-border shadow-solid hover:border-primary/50'}`}>
+  <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${showEngineMenu ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
     <button onclick={() => showEngineMenu = !showEngineMenu} class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn" use:tooltip={MESSAGES.UI.TIP_SWITCH_ENGINE}>
       <img src={activeEngine.icon} alt={activeEngine.name} class={`w-5 h-5 object-contain transition-transform duration-200 ${showEngineMenu ? 'rotate-12 scale-110' : 'group-hover/btn:scale-110'} ${appState.isDark ? 'invert' : ''}`} />
       <div class={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-200 ${showEngineMenu ? 'rotate-180' : ''}`}></div>

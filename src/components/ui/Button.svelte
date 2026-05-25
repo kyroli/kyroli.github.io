@@ -28,10 +28,10 @@ const baseStyles =
   'flex items-center justify-center rounded-xl transition-colors transition-transform transition-opacity duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border';
 
 const variants: Record<string, string> = {
-  primary: 'bg-primary text-white border-primary hover:opacity-90 shadow-sm',
+  primary: 'bg-primary text-white border-primary hover:opacity-90 shadow-xs',
   outline: 'bg-surface text-text border-border hover:bg-bg hover:border-primary/50',
   ghost: 'bg-transparent text-text border-transparent hover:bg-bg hover:text-primary',
-  danger: 'bg-danger text-white border-danger hover:opacity-90 shadow-sm'
+  danger: 'bg-danger text-white border-danger hover:opacity-90 shadow-xs'
 };
 
 const sizes: Record<string, string> = {

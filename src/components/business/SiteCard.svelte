@@ -16,7 +16,7 @@ const safeHref = $derived(!appState.isEditMode ? site.url : undefined);
 const cardClass = $derived(
   `group relative transition-all duration-200 border active-press ${
     appState.isEditMode
-      ? 'cursor-move border-border/60 bg-surface border-dashed hover:border-primary hover:border-solid hover:shadow-sm hover:bg-surface/50'
+      ? 'cursor-move border-border/60 bg-surface border-dashed hover:border-primary hover:border-solid hover:shadow-xs hover:bg-surface/50'
       : 'border-transparent hover:border-border hover:shadow-solid'
   }`
 );
