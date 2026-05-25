@@ -1,9 +1,12 @@
 import { APP_TIMEOUTS } from '../constants';
 import { appState } from '../core/app.svelte';
 
+let tooltipIdCounter = 0;
+
 export function tooltip(node: HTMLElement, msg?: string | null) {
   if (!msg) return;
 
+  const tooltipId = `--tooltip-anchor-${++tooltipIdCounter}`;
   let currentMsg = msg;
   let hoverTimeout: ReturnType<typeof setTimeout>;
   let isVisible = false;
@@ -25,48 +28,23 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
     };
   }
 
+  // Register the element as an anchor
+  // @ts-expect-error Typescript doesn't know about anchorName yet
+  node.style.anchorName = tooltipId;
   applyA11y(currentMsg);
-
-  const calculatePos = () => {
-    const rect = node.getBoundingClientRect();
-    const tooltipGap = 10;
-
-    let x = rect.left + rect.width / 2;
-    let y = rect.top - tooltipGap;
-    let position: 'top' | 'bottom' = 'top';
-
-    if (rect.top < 50) {
-      y = rect.bottom + tooltipGap;
-      position = 'bottom';
-    }
-
-    const margin = 10;
-    const maxVW = window.innerWidth;
-
-    if (x < margin + 50) x = margin + 50;
-    if (x > maxVW - margin - 50) x = maxVW - margin - 50;
-
-    return { x, y, position };
-  };
 
   const forceHide = () => {
     if (hoverTimeout) clearTimeout(hoverTimeout);
     if (isVisible) {
       appState.hideTooltip();
       isVisible = false;
-      window.removeEventListener('scroll', forceHide, { capture: true });
-      window.removeEventListener('resize', forceHide, { capture: true });
     }
   };
 
   const show = () => {
     if (!currentMsg) return;
-    const { x, y, position } = calculatePos();
-    appState.showTooltip(currentMsg, x, y, position);
+    appState.showTooltip(currentMsg, tooltipId);
     isVisible = true;
-
-    window.addEventListener('scroll', forceHide, { passive: true, once: true, capture: true });
-    window.addEventListener('resize', forceHide, { passive: true, once: true, capture: true });
   };
 
   const onMouseEnter = () => {
@@ -105,12 +83,13 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
       applyA11y(currentMsg);
 
       if (isVisible) {
-        const { x, y, position } = calculatePos();
-        appState.updateTooltip(currentMsg, x, y, position);
+        appState.updateTooltip(currentMsg, tooltipId);
       }
     },
     destroy() {
       forceHide();
+      // @ts-expect-error
+      node.style.anchorName = '';
       node.removeEventListener('mouseenter', onMouseEnter);
       node.removeEventListener('mouseleave', onMouseLeave);
       node.removeEventListener('focus', onFocus);

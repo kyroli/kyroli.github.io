@@ -20,9 +20,7 @@ type ModalType = 'config' | 'site' | 'group' | 'confirm' | null;
 interface TooltipState {
   visible: boolean;
   msg: string;
-  x: number;
-  y: number;
-  position: 'top' | 'bottom';
+  anchorName: string;
 }
 
 class AppCore {
@@ -111,8 +109,8 @@ class AppCore {
     }, APP_TIMEOUTS.TOAST_DURATION);
   };
 
-  showTooltip = (msg: string, x: number, y: number, position: 'top' | 'bottom') => {
-    this.tooltip = { visible: true, msg, x, y, position };
+  showTooltip = (msg: string, anchorName: string) => {
+    this.tooltip = { visible: true, msg, anchorName };
   };
 
   hideTooltip = () => {
@@ -121,9 +119,9 @@ class AppCore {
     }
   };
 
-  updateTooltip = (msg: string, x: number, y: number, position: 'top' | 'bottom') => {
+  updateTooltip = (msg: string, anchorName: string) => {
     if (this.tooltip && this.tooltip.visible) {
-      this.tooltip = { visible: true, msg, x, y, position };
+      this.tooltip = { visible: true, msg, anchorName };
     }
   };
 }

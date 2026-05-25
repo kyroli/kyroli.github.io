@@ -11,9 +11,10 @@ import { appState } from '$lib/core/app.svelte';
     popover="manual"
     class="fixed m-0 p-0 border-none outline-none bg-transparent pointer-events-none z-[10000] overflow-visible"
     style="
-      left: {appState.tooltip.x}px; 
-      top: {appState.tooltip.y}px;
-      transform: translate(-50%, {appState.tooltip.position === 'top' ? '-100%' : '0'});
+      position-anchor: {appState.tooltip.anchorName};
+      position-area: top;
+      position-try-fallbacks: flip-block;
+      margin-bottom: 8px;
     "
   >
     <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class="px-3 py-1.5 bg-text text-bg text-xs rounded-lg font-bold tracking-wide shadow-float max-w-[200px] text-center text-balance leading-relaxed">
