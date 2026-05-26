@@ -63,6 +63,7 @@
     --text-dim: oklch(55.2% 0.016 285.9);
     --icon-bg: oklch(98.5% 0 0);
     --danger: oklch(57.7% 0.245 27.3);
+    --shine-color: rgba(0, 0, 0, 0.04);
     
     --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-float: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -77,6 +78,7 @@
     --text-dim: oklch(70.5% 0.015 286.1);
     --icon-bg: oklch(27.4% 0.006 286);
     --danger: oklch(63.7% 0.237 25.3);
+    --shine-color: rgba(255, 255, 255, 0.08);
     
     --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
     --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -2px rgba(0, 0, 0, 0.2);
@@ -137,4 +139,29 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.tilt-card {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale3d(var(--scale, 1), var(--scale, 1), 1);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.tilt-card:hover {
+  transition: transform 0.1s ease-out, border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.tilt-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle 150px at var(--mx, 50%) var(--my, 50%),
+    var(--shine-color),
+    transparent
+  );
+  opacity: var(--shine-opacity, 0);
+  transition: opacity 0.3s ease;
+  z-index: 5;
 }

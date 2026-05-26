@@ -1,6 +1,8 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import { cn } from '$lib/utils/cn';
+import { tilt } from '$lib/actions/tilt.svelte';
+import { appState } from '$lib/core/app.svelte';
 
 let {
   children,
@@ -18,17 +20,21 @@ let {
 const role = $derived(onclick ? 'button' : undefined);
 
 const baseStyles =
-  'block bg-surface border border-border rounded-xl transition-colors transition-shadow transition-transform duration-200 will-change-transform';
+  'block bg-surface border border-border rounded-xl transition-colors transition-shadow will-change-transform tilt-card';
 
-const finalClass = $derived(cn(baseStyles, className));
+const finalClass = $derived(
+  cn(baseStyles, appState.isEditMode ? 'overflow-visible' : 'overflow-hidden', className)
+);
 </script>
 
 {#if href}
-  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {...rest}>
+  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} use:tilt={() => ({ disabled: appState.isEditMode })} {...rest}>
     {@render children()}
+    <div class="tilt-shine"></div>
   </a>
 {:else}
-  <div {onclick} class={finalClass} {role} {...rest}>
+  <div {onclick} class={finalClass} {role} use:tilt={() => ({ disabled: appState.isEditMode })} {...rest}>
     {@render children()}
+    <div class="tilt-shine"></div>
   </div>
 {/if}
