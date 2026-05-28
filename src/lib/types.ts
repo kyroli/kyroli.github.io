@@ -12,6 +12,9 @@ export interface Group {
   sites: Site[];
 }
 
+export type VisualSite = Site & { isPlaceholder?: boolean };
+export type VisualGroup = Group & { isPlaceholder?: boolean; sites: VisualSite[] };
+
 export interface NavData {
   groups: Group[];
 }

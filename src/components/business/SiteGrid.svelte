@@ -1,20 +1,16 @@
 <script lang="ts">
-import { GripVertical, Plus, Trash2 } from '@lucide/svelte';
+import { Plus } from '@lucide/svelte';
 import { flip } from 'svelte/animate';
 import { cubicOut } from 'svelte/easing';
 import { fade } from 'svelte/transition';
-import { dndState, draggable } from '$lib/actions/dnd.svelte';
-import { tooltip } from '$lib/actions/tooltip';
-import { ANIMATION_SPEED, UI_CONSTANTS } from '$lib/constants';
+import { dndState } from '$lib/actions/dnd.svelte';
+import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
-import type { DndPayload, Group, Site } from '$lib/types';
-import SiteCard from './SiteCard.svelte';
-
-type VisualSite = Site & { isPlaceholder?: boolean };
-type VisualGroup = Group & { isPlaceholder?: boolean; sites: VisualSite[] };
+import type { DndPayload, VisualGroup } from '$lib/types';
+import SiteGroup from './SiteGroup.svelte';
 
 const visualGroups = $derived.by<VisualGroup[]>(() => {
   if (!dndState.isDragging || !dndState.draggedId) {
@@ -36,7 +32,7 @@ const visualGroups = $derived.by<VisualGroup[]>(() => {
   }
 
   if (dndState.type === 'site') {
-    let sourceSite: VisualSite | null = null;
+    let sourceSite: any = null;
     let srcGroupIdx = -1;
     let srcSiteIdx = -1;
 
@@ -134,75 +130,7 @@ function handleDeleteGroup(groupName: string, groupId: string) {
                 style="height: {dndState.sourceHeight}px"
             ></div>
         {:else}
-            <div class="group-item flex flex-col gap-4 relative">
-                <div class="flex items-center gap-3 pb-2 h-11 border-b border-border/40 group/header justify-between">
-                    {#if appState.isEditMode}
-                        <button 
-                            onclick={() => appState.openGroupModal(group.id)}
-                            class="text-xs font-bold tracking-widest text-text-dim hover:text-primary transition-colors cursor-pointer uppercase truncate text-left opacity-80"
-                            use:tooltip={MESSAGES.UI.TIP_RENAME_GROUP}
-                        >
-                              {group.name}
-                        </button>
-                    {:else}
-                        <h2 class="text-xs font-bold tracking-widest text-text-dim uppercase opacity-80">{group.name}</h2>
-                    {/if}
-                    
-                    <div class={`flex items-center gap-2 transition-all duration-200 ${
-                        appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
-                    }`}>
-                        <div 
-                            class="cursor-grab text-text-dim hover:text-primary active:scale-95 transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
-                            use:draggable={{ type: 'group', id: group.id, groupId: null }}
-                            use:tooltip={MESSAGES.UI.TIP_DRAG_SORT}
-                        >
-                            <GripVertical class="w-5 h-5" />
-                        </div>
-
-                        <button 
-                            onclick={() => handleDeleteGroup(group.name, group.id)} 
-                            class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50 active-press-icon" 
-                            use:tooltip={MESSAGES.UI.TIP_DELETE_GROUP}
-                        >
-                            <Trash2 class="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
-                    {#each group.sites as item (item.id)}
-                        <div 
-                            class="relative h-full z-10"
-                            animate:flip={{ 
-                                duration: dndState.type === 'group' ? 0 : ANIMATION_SPEED.FLIP, 
-                                easing: cubicOut 
-                            }}
-                            data-dnd-site-id={item.id}
-                        >
-                            {#if item.isPlaceholder}
-                                <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border"></div>
-                            {:else}
-                                <div 
-                                    use:draggable={{ type: 'site', id: item.id, groupId: group.id }} 
-                                    class="h-full rounded-xl"
-                                >
-                                   <SiteCard site={item} groupId={group.id} />
-                               </div>
-                            {/if}
-                        </div>
-                    {/each}
-
-                    {#if appState.isEditMode}
-                        <button 
-                            onclick={() => appState.openSiteModal(group.id)} 
-                            class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active-press`}
-                            use:tooltip={MESSAGES.UI.NEW_SITE}
-                        >
-                            <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        </button>
-                    {/if}
-                </div>
-            </div>
+            <SiteGroup {group} onDeleteGroup={handleDeleteGroup} />
         {/if}
     </div>
   {/each}

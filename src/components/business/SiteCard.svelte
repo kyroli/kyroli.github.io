@@ -10,7 +10,13 @@ import CardBase from './CardBase.svelte';
 
 let { site, groupId } = $props<{ site: Site; groupId: string }>();
 
-const displayHostname = $derived(new URL(site.url).hostname.replace(/^www\./, ''));
+const displayHostname = $derived.by(() => {
+  try {
+    return new URL(site.url).hostname.replace(/^www\./, '');
+  } catch {
+    return site.url;
+  }
+});
 const safeHref = $derived(!appState.isEditMode ? site.url : undefined);
 
 const cardClass = $derived(

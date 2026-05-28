@@ -6,9 +6,11 @@ import { dataState } from '$lib/core/data.svelte';
 
 let observer: IntersectionObserver | null = null;
 
+const groupIds = $derived(dataState.groups.map((g) => g.id).join(','));
+
 $effect(() => {
-  // Rebind observer when groups change
-  dataState.groups;
+  // Rebind observer only when group IDs or order changes
+  groupIds;
   if (typeof window === 'undefined') return;
 
   const timer = setTimeout(() => {
