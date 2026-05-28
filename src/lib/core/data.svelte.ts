@@ -1,4 +1,3 @@
-
 import { storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
