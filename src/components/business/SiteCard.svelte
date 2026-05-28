@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Trash2 } from 'lucide-svelte';
+import { Trash2 } from '@lucide/svelte';
 import { tooltip } from '$lib/actions/tooltip';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';

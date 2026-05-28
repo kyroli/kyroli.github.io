@@ -1,5 +1,5 @@
 <script lang="ts">
-import { X } from 'lucide-svelte';
+import { X } from '@lucide/svelte';
 import type { Snippet } from 'svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';

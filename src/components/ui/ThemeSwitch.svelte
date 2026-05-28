@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Moon, Sun } from 'lucide-svelte';
+import { Moon, Sun } from '@lucide/svelte';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import Button from './Button.svelte';

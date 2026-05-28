@@ -1,5 +1,5 @@
 <script lang="ts">
-import { GripVertical, Plus, Trash2 } from 'lucide-svelte';
+import { GripVertical, Plus, Trash2 } from '@lucide/svelte';
 import { flip } from 'svelte/animate';
 import { cubicOut } from 'svelte/easing';
 import { fade } from 'svelte/transition';

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Search } from 'lucide-svelte';
+import { Search } from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { DEFAULT_ENGINE_ID, SEARCH_ENGINES } from '$lib/config/search';

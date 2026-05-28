@@ -8,15 +8,13 @@ export default defineConfig({
   base: './',
   resolve: {
     alias: {
-      $lib: path.resolve(__dirname, './src/lib')
+      $lib: path.resolve(import.meta.dirname, './src/lib')
     }
   },
   server: {
     host: true
   },
   build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    cssMinify: 'esbuild'
+    target: 'esnext'
   }
 });

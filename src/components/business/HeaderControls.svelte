@@ -11,7 +11,7 @@ import {
   Settings,
   WifiOff,
   X
-} from 'lucide-svelte';
+} from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED } from '$lib/constants';

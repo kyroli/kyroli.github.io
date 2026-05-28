@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Contrast } from 'lucide-svelte';
+import { Contrast } from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';

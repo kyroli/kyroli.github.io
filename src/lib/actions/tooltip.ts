@@ -29,7 +29,6 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
   }
 
   // Register the element as an anchor
-  // @ts-expect-error Typescript doesn't know about anchorName yet
   node.style.anchorName = tooltipId;
   applyA11y(currentMsg);
 
@@ -88,7 +87,6 @@ export function tooltip(node: HTMLElement, msg?: string | null) {
     },
     destroy() {
       forceHide();
-      // @ts-expect-error
       node.style.anchorName = '';
       node.removeEventListener('mouseenter', onMouseEnter);
       node.removeEventListener('mouseleave', onMouseLeave);
