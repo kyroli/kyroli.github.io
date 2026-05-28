@@ -5,7 +5,7 @@ A personal browser startpage.
 ## 🛠️ Design & Tech Choices
 
 - **Modern Browsers Only**: Built with modern Web standards (ESNext). No polyfills or legacy browser support.
-- **Tech Stack**: Svelte 5 (Runes) + Vite 6 + Tailwind CSS v4.
+- **Tech Stack**: Svelte 5 (Runes) + Vite 8 (Rolldown) + Tailwind CSS v4 + TypeScript 6.
 - **Tooling**: Strict linting and formatting enforced by Biome.
 
 ## ⚙️ Features
