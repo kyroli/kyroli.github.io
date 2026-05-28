@@ -1,4 +1,4 @@
-import { untrack } from 'svelte';
+
 import { storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
@@ -36,21 +36,27 @@ class DataCore {
 
   init() {
     let isFirstRun = true;
+    let timer: number;
 
     $effect(() => {
-      storage.data = { groups: this.groups };
+      const groupsSnapshot = $state.snapshot(this.groups);
 
-      untrack(() => {
-        if (isFirstRun) {
-          isFirstRun = false;
-          return;
-        }
+      if (isFirstRun) {
+        isFirstRun = false;
+        return;
+      }
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        storage.data = { groups: groupsSnapshot };
         if (this.skipDirtyCheck) {
           this.skipDirtyCheck = false;
           return;
         }
         this.isDirty = true;
-      });
+      }, 500) as unknown as number;
+
+      return () => clearTimeout(timer);
     });
 
     $effect(() => {

@@ -13,6 +13,9 @@ export function tilt(node: HTMLElement, options: () => TiltOptions) {
   let rect: DOMRect | null = null;
   let isInside = false;
 
+  let rafId: number | null = null;
+  let latestEvent: MouseEvent | null = null;
+
   function handleMouseEnter() {
     if (activeOptions.disabled || !isHoverable) return;
     rect = node.getBoundingClientRect();
@@ -22,12 +25,15 @@ export function tilt(node: HTMLElement, options: () => TiltOptions) {
     node.style.willChange = 'transform';
   }
 
-  function handleMouseMove(e: MouseEvent) {
-    if (activeOptions.disabled || !isHoverable || !isInside) return;
+  function updateTilt() {
+    if (!latestEvent || activeOptions.disabled || !isHoverable || !isInside) {
+      rafId = null;
+      return;
+    }
     if (!rect) rect = node.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = latestEvent.clientX - rect.left;
+    const y = latestEvent.clientY - rect.top;
 
     const w = rect.width;
     const h = rect.height;
@@ -44,11 +50,26 @@ export function tilt(node: HTMLElement, options: () => TiltOptions) {
     node.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
     node.style.setProperty('--mx', `${x.toFixed(1)}px`);
     node.style.setProperty('--my', `${y.toFixed(1)}px`);
+
+    rafId = null;
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (activeOptions.disabled || !isHoverable || !isInside) return;
+    latestEvent = e;
+    if (rafId === null) {
+      rafId = requestAnimationFrame(updateTilt);
+    }
   }
 
   function handleMouseLeave() {
     isInside = false;
     rect = null;
+    latestEvent = null;
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
     node.style.setProperty('--rx', '0deg');
     node.style.setProperty('--ry', '0deg');
     node.style.setProperty('--scale', '1');
@@ -69,6 +90,9 @@ export function tilt(node: HTMLElement, options: () => TiltOptions) {
       }
     },
     destroy() {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       node.removeEventListener('mouseenter', handleMouseEnter);
       node.removeEventListener('mousemove', handleMouseMove);
       node.removeEventListener('mouseleave', handleMouseLeave);
