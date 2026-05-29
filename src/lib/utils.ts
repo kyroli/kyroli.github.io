@@ -1,3 +1,6 @@
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 interface AssetModule {
   default?: string;
   src?: string;
@@ -29,8 +32,12 @@ export const getIcon = (url: string, custom?: string): string => {
     const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;
     return `https://wsrv.nl/?url=${originalUrl}&w=80&h=80&output=webp&q=85&il`;
   } catch (e) {
-    return assets['globe'] || '';
+    return assets.globe || '';
   }
 };
 
-export const DEFAULT_ICON = assets['globe'] || '';
+export const DEFAULT_ICON = assets.globe || '';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}

@@ -83,7 +83,7 @@ async function handleExport() {
 function handleFileImport(e: Event) {
   const input = e.target as HTMLInputElement;
 
-  if (input.files && input.files[0]) {
+  if (input.files?.[0]) {
     const file = input.files[0];
 
     appState.openConfirm({

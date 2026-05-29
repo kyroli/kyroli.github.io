@@ -5,7 +5,7 @@ import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
-import { cn } from '$lib/utils/cn';
+import { cn } from '$lib/utils';
 
 let { children, onClose, title, headerExtra } = $props<{
   children: Snippet;

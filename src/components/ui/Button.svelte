@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import { tooltip } from '$lib/actions/tooltip';
-import { cn } from '$lib/utils/cn';
+import { cn } from '$lib/utils';
 
 let {
   children,

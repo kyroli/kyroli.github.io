@@ -129,7 +129,7 @@ class AppCore {
   };
 
   updateTooltip = (msg: string, anchorName: string) => {
-    if (this.tooltip && this.tooltip.visible) {
+    if (this.tooltip?.visible) {
       this.tooltip = { visible: true, msg, anchorName };
     }
   };

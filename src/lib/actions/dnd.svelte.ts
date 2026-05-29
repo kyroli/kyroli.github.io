@@ -298,7 +298,8 @@ class DndEngine {
     const sX = window.scrollX;
     const sY = window.scrollY;
 
-    const stdRect = this.#dragNode!.getBoundingClientRect();
+    if (!this.#dragNode) return;
+    const stdRect = this.#dragNode.getBoundingClientRect();
     const stdW = stdRect.width;
     const stdH = stdRect.height;
 
@@ -306,7 +307,7 @@ class DndEngine {
 
     for (const el of groupEls) {
       const rect = el.getBoundingClientRect();
-      const id = el.getAttribute('data-dnd-group-id')!;
+      const id = el.getAttribute('data-dnd-group-id') ?? '';
       const gridEl = el.querySelector('.grid') as HTMLElement;
 
       let cols = 1;
@@ -323,10 +324,10 @@ class DndEngine {
         const computed = getComputedStyle(gridEl);
 
         const gapVal = parseFloat(computed.gap || computed.columnGap);
-        if (!isNaN(gapVal)) gap = gapVal;
+        if (!Number.isNaN(gapVal)) gap = gapVal;
 
         const rowGapVal = parseFloat(computed.rowGap || computed.gap);
-        const rowGap = isNaN(rowGapVal) ? gap : rowGapVal;
+        const rowGap = Number.isNaN(rowGapVal) ? gap : rowGapVal;
 
         offsetX = gridRect.left - rect.left + parseFloat(computed.paddingLeft || '0');
         offsetY = gridRect.top - rect.top + parseFloat(computed.paddingTop || '0');

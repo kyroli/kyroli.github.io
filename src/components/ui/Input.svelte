@@ -2,7 +2,7 @@
 import type { HTMLInputAttributes } from 'svelte/elements';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
-import { cn } from '$lib/utils/cn';
+import { cn } from '$lib/utils';
 
 let {
   value = $bindable(),

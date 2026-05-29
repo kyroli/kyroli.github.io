@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import { cn } from '$lib/utils/cn';
+import { cn } from '$lib/utils';
 import { tilt } from '$lib/actions/tilt.svelte';
 import { appState } from '$lib/core/app.svelte';
 
