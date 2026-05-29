@@ -30,7 +30,7 @@
   @apply focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20;
 }
 
-@layer app.physics {
+@layer base {
   :root {
     -webkit-user-select: none;
     user-select: none;
@@ -38,23 +38,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-size-adjust: from-font;
-  }
 
-  * {
-    user-select: inherit;
-    -webkit-user-select: inherit;
-    outline: none !important;
-  }
-
-  input {
-    -webkit-user-select: text;
-    user-select: text;
-    cursor: text;
-  }
-}
-
-@layer base {
-  :root {
     --primary: oklch(65% 0.2 30);
     --bg: oklch(96.7% 0.001 286.4); 
     --surface: oklch(100% 0 0);
@@ -67,6 +51,18 @@
     
     --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-float: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  * {
+    user-select: inherit;
+    -webkit-user-select: inherit;
+    outline: none !important;
+  }
+
+  input {
+    -webkit-user-select: text;
+    user-select: text;
+    cursor: text;
   }
 
   :root.dark {

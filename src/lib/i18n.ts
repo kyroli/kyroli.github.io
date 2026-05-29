@@ -109,7 +109,7 @@ const MESSAGES_EN = {
   }
 };
 
-const MESSAGES_ZH: typeof MESSAGES_EN = {
+const MESSAGES_ZH = {
   UI: {
     APP_NAME: 'Kilonova',
     SUBTITLE: 'Personal Startpage',
@@ -213,7 +213,7 @@ const MESSAGES_ZH: typeof MESSAGES_EN = {
     CONFLICT: '数据版本冲突',
     UNKNOWN: '未知网络错误'
   }
-} as const;
+} as const satisfies typeof MESSAGES_EN;
 
 export const MESSAGES =
   typeof navigator !== 'undefined' && navigator.language.toLowerCase().startsWith('zh')

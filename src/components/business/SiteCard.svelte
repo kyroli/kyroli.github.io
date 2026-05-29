@@ -73,6 +73,7 @@ function handleClick(e: MouseEvent) {
         class={imgClass}
         loading="lazy" 
         decoding="async" 
+        fetchpriority="low"
         alt={site.name} 
       />
     </div>

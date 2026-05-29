@@ -73,9 +73,11 @@ async function handleSave() {
   }
 }
 
-function handleExport() {
-  manager.exportData();
-  appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
+async function handleExport() {
+  const success = await manager.exportData();
+  if (success) {
+    appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
+  }
 }
 
 function handleFileImport(e: Event) {

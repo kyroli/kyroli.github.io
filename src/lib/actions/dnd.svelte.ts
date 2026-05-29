@@ -122,7 +122,9 @@ class DndEngine {
     }
     try {
       captureTarget.setPointerCapture(this.#pointerId);
-    } catch {}
+    } catch (e) {
+      console.warn('Pointer capture failed:', e);
+    }
 
     this.#captureSnapshots();
     this.#createGhost(this.#dragNode);
@@ -143,7 +145,10 @@ class DndEngine {
     this.#currentY = this.#inputY;
 
     const scrollDelta = this.#calculateScrollDelta(safeDt);
-    if (scrollDelta !== 0) window.scrollBy(0, scrollDelta);
+    if (scrollDelta !== 0) {
+      window.scrollBy(0, scrollDelta);
+      this.#captureSnapshots();
+    }
 
     const ghostW = this.#ghostEl ? parseFloat(this.#ghostEl.style.width) : 0;
     const ghostH = this.#ghostEl ? parseFloat(this.#ghostEl.style.height) : 0;

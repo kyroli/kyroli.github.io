@@ -128,17 +128,36 @@ class DataManager {
     }
   }
 
-  exportData() {
+  async exportData(): Promise<boolean> {
     const data = { groups: dataState.groups };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const filename = `nav-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return true;
+      } catch (e: unknown) {
+        // User cancelled the picker — fall through silently
+        if (e instanceof DOMException && e.name === 'AbortError') return false;
+        throw e;
+      }
+    }
+
+    // Fallback for browsers without File System Access API
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nav-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
+    a.download = filename;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    return true;
   }
 
   async importData(file: File) {

@@ -1,6 +1,14 @@
 import { storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
+function trackDeep(obj: unknown) {
+  if (obj && typeof obj === 'object') {
+    for (const key in obj) {
+      trackDeep((obj as Record<string, unknown>)[key]);
+    }
+  }
+}
+
 class DataCore {
   groups = $state<Group[]>([]);
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -38,7 +46,8 @@ class DataCore {
     let timer: number;
 
     $effect(() => {
-      const groupsSnapshot = $state.snapshot(this.groups);
+      // Read to track dependency — snapshot is deferred to the write callback
+      trackDeep(this.groups);
 
       if (isFirstRun) {
         isFirstRun = false;
@@ -47,7 +56,7 @@ class DataCore {
 
       clearTimeout(timer);
       timer = setTimeout(() => {
-        storage.data = { groups: groupsSnapshot };
+        storage.data = { groups: $state.snapshot(this.groups) };
         if (this.skipDirtyCheck) {
           this.skipDirtyCheck = false;
           return;

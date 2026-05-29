@@ -9,7 +9,7 @@ import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
-import type { DndPayload, VisualGroup } from '$lib/types';
+import type { DndPayload, VisualGroup, VisualSite } from '$lib/types';
 import SiteGroup from './SiteGroup.svelte';
 
 const visualGroups = $derived.by<VisualGroup[]>(() => {
@@ -32,7 +32,7 @@ const visualGroups = $derived.by<VisualGroup[]>(() => {
   }
 
   if (dndState.type === 'site') {
-    let sourceSite: any = null;
+    let sourceSite: VisualSite | null = null;
     let srcGroupIdx = -1;
     let srcSiteIdx = -1;
 

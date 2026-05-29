@@ -63,8 +63,17 @@ class AppCore {
   }
 
   toggleTheme = async () => {
-    this.isDark = !this.isDark;
-    await tick();
+    if (!document.startViewTransition) {
+      this.isDark = !this.isDark;
+      await tick();
+      return;
+    }
+
+    const transition = document.startViewTransition(async () => {
+      this.isDark = !this.isDark;
+      await tick();
+    });
+    await transition.finished;
   };
 
   toggleEditMode = () => {
