@@ -16,7 +16,7 @@ let { group, onDelete } = $props<{
     <button 
       onclick={() => appState.openGroupModal(group.id)}
       class="text-xs font-bold tracking-widest text-text-dim hover:text-primary transition-colors cursor-pointer uppercase truncate text-left opacity-80"
-      use:tooltip={MESSAGES.UI.TIP_RENAME_GROUP}
+      {@attach tooltip(MESSAGES.UI.TIP_RENAME_GROUP)}
     >
       {group.name}
     </button>
@@ -29,8 +29,8 @@ let { group, onDelete } = $props<{
   }`}>
     <div 
       class="cursor-grab text-text-dim hover:text-primary active:scale-95 transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
-      use:draggable={{ type: 'group', id: group.id, groupId: null }}
-      use:tooltip={MESSAGES.UI.TIP_DRAG_SORT}
+      {@attach draggable({ type: 'group', id: group.id, groupId: null })}
+      {@attach tooltip(MESSAGES.UI.TIP_DRAG_SORT)}
     >
       <GripVertical class="w-5 h-5" />
     </div>
@@ -38,7 +38,7 @@ let { group, onDelete } = $props<{
     <button 
       onclick={() => onDelete(group.name, group.id)} 
       class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50 active-press-icon" 
-      use:tooltip={MESSAGES.UI.TIP_DELETE_GROUP}
+      {@attach tooltip(MESSAGES.UI.TIP_DELETE_GROUP)}
     >
       <Trash2 class="w-5 h-5" />
     </button>

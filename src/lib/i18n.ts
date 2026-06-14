@@ -35,7 +35,8 @@ const MESSAGES_EN = {
     STATUS_SYNC_ERROR: 'Sync Error',
     STATUS_SYNCING: 'Syncing...',
     STATUS_UNSAVED: 'Unsaved changes',
-    STATUS_SAVED: 'Data synced'
+    STATUS_SAVED: 'Data synced',
+    BACK_TO_TOP: 'Back to Top'
   },
 
   MODAL: {
@@ -142,7 +143,8 @@ const MESSAGES_ZH = {
     STATUS_SYNC_ERROR: '同步错误',
     STATUS_SYNCING: '同步中...',
     STATUS_UNSAVED: '未保存的更改',
-    STATUS_SAVED: '数据已同步'
+    STATUS_SAVED: '数据已同步',
+    BACK_TO_TOP: '回到顶部'
   },
 
   MODAL: {

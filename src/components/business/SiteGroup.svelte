@@ -7,7 +7,7 @@ import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED, UI_CONSTANTS } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
-import type { VisualGroup } from '$lib/types'; // 如果 types 里没有 VisualGroup，我们可以局部定义，这里用 VisualGroup
+import type { VisualGroup } from '$lib/types';
 import GroupHeader from './GroupHeader.svelte';
 import SiteCard from './SiteCard.svelte';
 
@@ -34,7 +34,7 @@ let { group, onDeleteGroup } = $props<{
           <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border"></div>
         {:else}
           <div 
-            use:draggable={{ type: 'site', id: item.id, groupId: group.id }} 
+            {@attach draggable({ type: 'site', id: item.id, groupId: group.id })} 
             class="h-full rounded-xl"
           >
             <SiteCard site={item} groupId={group.id} />
@@ -47,7 +47,7 @@ let { group, onDeleteGroup } = $props<{
       <button 
         onclick={() => appState.openSiteModal(group.id)} 
         class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active-press`}
-        use:tooltip={MESSAGES.UI.NEW_SITE}
+        {@attach tooltip(MESSAGES.UI.NEW_SITE)}
       >
         <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
       </button>

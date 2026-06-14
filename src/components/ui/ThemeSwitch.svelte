@@ -41,8 +41,7 @@ async function handleToggle(e: MouseEvent) {
   size="icon"
   onclick={handleToggle}
   title={MESSAGES.UI.TIP_SWITCH_THEME}
-  
-  
+  class="tap-target hover-spin"
 >
   {#if appState.isDark}
     <Moon class="w-5 h-5" />

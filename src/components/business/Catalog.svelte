@@ -5,11 +5,22 @@ import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 
 let observer: IntersectionObserver | null = null;
+let scrollY = $state(0);
 
 const groupIds = $derived(dataState.groups.map((g) => g.id).join(','));
 
+// Calculate the active group ID for mobile layout (first visible or first available)
+const activeGroupId = $derived.by(() => {
+  if (appState.visibleGroupIds.length > 0) {
+    return appState.visibleGroupIds[0];
+  }
+  return dataState.groups[0]?.id || '';
+});
+
+// Map to store mobile nav button elements for auto-centering
+const buttonEls = new Map<string, HTMLButtonElement>();
+
 $effect(() => {
-  // Rebind observer only when group IDs or order changes
   groupIds;
   if (typeof window === 'undefined') return;
 
@@ -26,6 +37,20 @@ $effect(() => {
   };
 });
 
+// Auto-center the active category in the horizontal scrollbar on mobile
+$effect(() => {
+  if (activeGroupId) {
+    const btn = buttonEls.get(activeGroupId);
+    if (btn) {
+      btn.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }
+});
+
 function setupObserver() {
   if (observer) {
     observer.disconnect();
@@ -38,7 +63,6 @@ function setupObserver() {
       entries.forEach((entry) => {
         const id = entry.target.getAttribute('data-dnd-group-id');
         if (id) {
-          // Use 0.98 threshold for "fully visible" to allow margin of error
           visibilityMap.set(id, entry.intersectionRatio >= 0.98);
         }
       });
@@ -63,7 +87,6 @@ function scrollToGroup(id: string) {
   if (el) {
     const rect = el.getBoundingClientRect();
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    // Offset for header height
     const targetY = rect.top + scrollTop - 100;
 
     window.scrollTo({
@@ -72,9 +95,22 @@ function scrollToGroup(id: string) {
     });
   }
 }
+
+// Action to register elements in the map
+function registerButton(node: HTMLButtonElement, id: string) {
+  buttonEls.set(id, node);
+  return {
+    destroy() {
+      buttonEls.delete(id);
+    }
+  };
+}
 </script>
 
+<svelte:window bind:scrollY={scrollY} />
+
 {#if dataState.groups.length > 0}
+  <!-- Desktop left sidebar navigation -->
   <aside 
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
     class="fixed left-12 top-1/2 -translate-y-1/2 hidden 2xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
@@ -110,6 +146,31 @@ function scrollToGroup(id: string) {
       </button>
     {/each}
   </aside>
+
+  <!-- Mobile/narrow viewport horizontal scroll sticky navigation -->
+  <nav
+    in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
+    class={`sticky top-0 z-30 w-full flex 2xl:hidden bg-bg overflow-x-auto no-scrollbar transition-all duration-200 ${
+      scrollY > 10 ? 'border-b border-border py-2 px-5' : 'py-3.5 px-5'
+    }`}
+  >
+    <div class="flex gap-2.5 mx-auto md:mx-0">
+      {#each dataState.groups as group (group.id)}
+        {@const isActive = activeGroupId === group.id}
+        <button
+          use:registerButton={group.id}
+          onclick={() => scrollToGroup(group.id)}
+          class={`flex items-center justify-center h-9 px-3.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer border active-press-icon ${
+            isActive 
+              ? 'text-primary bg-surface border-border shadow-solid' 
+              : 'text-text-dim hover:text-text border-transparent bg-transparent'
+          }`}
+        >
+          {group.name}
+        </button>
+      {/each}
+    </div>
+  </nav>
 {/if}
 
 <style>

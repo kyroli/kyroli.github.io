@@ -23,9 +23,13 @@ const modalTitle = $derived(
   siteId ? MESSAGES.MODAL.SITE_TITLE_EDIT : MESSAGES.MODAL.SITE_TITLE_NEW
 );
 
+// svelte-ignore state_referenced_locally
 let name = $state(site?.name ?? '');
+// svelte-ignore state_referenced_locally
 let url = $state(site?.url ?? '');
+// svelte-ignore state_referenced_locally
 let icon = $state(site?.icon ?? '');
+// svelte-ignore state_referenced_locally
 let invert = $state(site?.invert ?? false);
 let error = $state('');
 

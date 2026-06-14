@@ -1,3 +1,3 @@
-export function promoteToTopLayer(node: HTMLElement) {
-  node.showPopover();
+export function promoteToTopLayer(element: HTMLElement) {
+  element.showPopover();
 }

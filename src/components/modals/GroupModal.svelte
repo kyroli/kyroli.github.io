@@ -17,6 +17,7 @@ const modalTitle = $derived(
   groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW
 );
 
+// svelte-ignore state_referenced_locally
 let name = $state(group?.name ?? '');
 let error = $state('');
 

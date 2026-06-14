@@ -126,7 +126,7 @@ const toastClass = $derived(
 
   {#if appState.toast}
     <div 
-      use:promoteToTopLayer
+      {@attach promoteToTopLayer}
       popover="manual"
       transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
       class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 pointer-events-none bg-transparent m-0 p-0 border-none outline-none z-[10000]"

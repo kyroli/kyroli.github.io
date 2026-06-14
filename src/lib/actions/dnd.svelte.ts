@@ -463,59 +463,71 @@ class DndEngine {
 
 export const dndState = new DndEngine();
 
-export function draggable(
-  node: HTMLElement,
-  params: { type: 'group' | 'site'; id: string; groupId: string | null }
-) {
-  function onDown(e: PointerEvent) {
-    dndState.init(e, params.type, params.id, params.groupId, node);
-  }
-
-  function onClick(e: MouseEvent) {
-    if (dndState.hasDragged) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
+export function draggable(params: { type: 'group' | 'site'; id: string; groupId: string | null }) {
+  return (element: HTMLElement) => {
+    function onDown(e: PointerEvent) {
+      dndState.init(e, params.type, params.id, params.groupId, element);
     }
-  }
 
-  function onContextMenu(e: Event) {
-    if (appState.isEditMode) {
-      e.preventDefault();
-      e.stopPropagation();
+    function onClick(e: MouseEvent) {
+      if (dndState.hasDragged) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
     }
-  }
 
-  function updateTouchAction() {
-    if (appState.isEditMode && window.innerWidth >= 768) {
-      node.style.touchAction = 'none';
-    } else {
-      node.style.touchAction = '';
+    function onContextMenu(e: Event) {
+      if (appState.isEditMode) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
-  }
 
-  $effect(() => {
-    if (appState.isEditMode) {
-      node.style.cursor = params.type === 'group' ? 'grab' : 'move';
-      node.style.userSelect = 'none';
+    function updateTouchAction() {
+      if (appState.isEditMode && window.innerWidth >= 768) {
+        element.style.touchAction = 'none';
+      } else {
+        element.style.touchAction = '';
+      }
+    }
+
+    let isBound = false;
+
+    const cleanup = () => {
+      if (!isBound) return;
+      element.style.cursor = '';
+      element.style.touchAction = '';
+      element.style.userSelect = '';
+
+      window.removeEventListener('resize', updateTouchAction);
+      element.removeEventListener('pointerdown', onDown);
+      element.removeEventListener('click', onClick, { capture: true });
+      element.removeEventListener('contextmenu', onContextMenu);
+      isBound = false;
+    };
+
+    const setup = () => {
+      element.style.cursor = params.type === 'group' ? 'grab' : 'move';
+      element.style.userSelect = 'none';
 
       updateTouchAction();
       window.addEventListener('resize', updateTouchAction);
 
-      node.addEventListener('pointerdown', onDown);
-      node.addEventListener('click', onClick, { capture: true });
-      node.addEventListener('contextmenu', onContextMenu);
+      element.addEventListener('pointerdown', onDown);
+      element.addEventListener('click', onClick, { capture: true });
+      element.addEventListener('contextmenu', onContextMenu);
+      isBound = true;
+    };
 
-      return () => {
-        node.style.cursor = '';
-        node.style.touchAction = '';
-        node.style.userSelect = '';
+    $effect(() => {
+      if (appState.isEditMode) {
+        setup();
+        return cleanup;
+      }
+      cleanup();
+    });
 
-        window.removeEventListener('resize', updateTouchAction);
-        node.removeEventListener('pointerdown', onDown);
-        node.removeEventListener('click', onClick, { capture: true });
-        node.removeEventListener('contextmenu', onContextMenu);
-      };
-    }
-  });
+    return cleanup;
+  };
 }

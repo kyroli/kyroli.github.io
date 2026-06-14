@@ -47,7 +47,7 @@ const buttonClass = $derived(cn(baseStyles, variants[variant], sizes[size], clas
   class={buttonClass}
   {onclick}
   {disabled}
-  use:tooltip={title}
+  {@attach tooltip(title)}
   {...rest}
 >
   {@render children()}

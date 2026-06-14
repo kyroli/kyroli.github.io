@@ -37,25 +37,32 @@ function switchEngine(id: string) {
   showEngineMenu = false;
 }
 
-function clickOutside(node: HTMLElement) {
+function clickOutside(element: HTMLElement) {
   const handleClick = (event: MouseEvent) => {
-    if (!node.contains(event.target as Node)) {
+    if (!element.contains(event.target as Node)) {
       showEngineMenu = false;
     }
   };
   document.addEventListener('click', handleClick, true);
-  return {
-    destroy() {
-      document.removeEventListener('click', handleClick, true);
-    }
+  return () => {
+    document.removeEventListener('click', handleClick, true);
   };
 }
 </script>
 
-<div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20" use:clickOutside>
+<div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20" {@attach clickOutside}>
   <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${showEngineMenu ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
-    <button onclick={() => showEngineMenu = !showEngineMenu} class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn" use:tooltip={MESSAGES.UI.TIP_SWITCH_ENGINE}>
-      <img src={activeEngine.icon} alt={activeEngine.name} class={`w-5 h-5 object-contain transition-transform duration-200 ${showEngineMenu ? 'rotate-12 scale-110' : 'group-hover/btn:scale-110'} ${appState.isDark ? 'invert' : ''}`} />
+    <button onclick={() => showEngineMenu = !showEngineMenu} class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active:scale-95 shrink-0 gap-2 group/btn" {@attach tooltip(MESSAGES.UI.TIP_SWITCH_ENGINE)}>
+      <div class="relative w-5 h-5 overflow-hidden shrink-0 flex items-center justify-center transition-transform duration-200 group-hover/btn:scale-110">
+        {#key currentEngineId}
+          <img 
+            in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} 
+            src={activeEngine.icon} 
+            alt={activeEngine.name} 
+            class={`absolute inset-0 w-full h-full object-contain ${appState.isDark ? 'invert' : ''}`} 
+          />
+        {/key}
+      </div>
       <div class={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-200 ${showEngineMenu ? 'rotate-180' : ''}`}></div>
     </button>
 
@@ -64,7 +71,7 @@ function clickOutside(node: HTMLElement) {
     <Input bind:value={search} name="search" autocomplete="off" onkeydown={e => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
 
     {#if search.trim().length > 0}
-      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active:scale-95 cursor-pointer" use:tooltip={MESSAGES.UI.SEARCH}>
+      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active:scale-95 cursor-pointer" {@attach tooltip(MESSAGES.UI.SEARCH)}>
         <Search class="w-4 h-4" />
       </button>
     {/if}

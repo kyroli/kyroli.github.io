@@ -66,7 +66,7 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
           <button 
             onclick={() => dialog?.close()}
             class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
-            use:tooltip={MESSAGES.UI.CANCEL}
+            {@attach tooltip(MESSAGES.UI.CANCEL)}
           >
             <X class="w-5 h-5" />
           </button>
@@ -80,7 +80,7 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
         <button 
           onclick={() => dialog?.close()}
           class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
-          use:tooltip={MESSAGES.UI.CANCEL}
+          {@attach tooltip(MESSAGES.UI.CANCEL)}
         >
           <X class="w-5 h-5" />
         </button>

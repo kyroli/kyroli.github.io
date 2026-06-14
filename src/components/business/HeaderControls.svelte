@@ -111,18 +111,18 @@ function handleReset() {
 
 <div class="justify-self-end flex items-center justify-end">
   <div class="flex items-center gap-3 h-10">
-    <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-surface border border-border/50" use:tooltip={syncStatusConfig.title}>
+    <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-surface border border-border/50" {@attach tooltip(syncStatusConfig.title)}>
       <StatusIcon class={`w-4 h-4 ${syncStatusConfig.color}`} />
     </div>
 
     <div class="grid">
       {#if appState.isEditMode}
         <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="col-start-1 row-start-1 flex gap-3 items-center">
-          <Button variant="outline" size="icon" onclick={appState.toggleEditMode} title={MESSAGES.UI.TIP_EXIT_EDIT}>
+          <Button variant="outline" size="icon" onclick={appState.toggleEditMode} title={MESSAGES.UI.TIP_EXIT_EDIT} class="tap-target hover-spin">
             <X class="w-5 h-5" />
           </Button>
 
-          <Button variant="primary" size="icon" onclick={handleSync} title={isSyncing ? MESSAGES.UI.SYNCING : MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing}>
+          <Button variant="primary" size="icon" onclick={handleSync} title={isSyncing ? MESSAGES.UI.SYNCING : MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing} class="tap-target">
             {#if isSyncing}
               <Loader2 class="w-5 h-5 animate-spin" />
             {:else}
@@ -130,7 +130,7 @@ function handleReset() {
             {/if}
           </Button>
 
-          <Button variant="danger" size="icon" onclick={handleReset} title={MESSAGES.UI.RESET}>
+          <Button variant="danger" size="icon" onclick={handleReset} title={MESSAGES.UI.RESET} class="tap-target hover-spin">
             <RotateCcw class="w-5 h-5" />
           </Button>
         </div>
@@ -139,15 +139,18 @@ function handleReset() {
           <ThemeSwitch />
           
           <div class="relative">
-            <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT}>
+            <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT} class="tap-target hover-wiggle">
               <Pencil class="w-5 h-5" />
             </Button>
           </div>
 
           <div class="relative">
-            <Button variant="outline" size="icon" onclick={appState.openConfig} title={!dataState.hasToken ? MESSAGES.UI.TIP_CONFIG_TOKEN : MESSAGES.MODAL.CONFIG_TITLE}>
-               <Settings class={`w-5 h-5 ${!dataState.hasToken ? 'text-text-dim' : ''}`} />
+            <Button variant="outline" size="icon" onclick={appState.openConfig} title={!dataState.hasToken ? MESSAGES.UI.TIP_CONFIG_TOKEN : MESSAGES.MODAL.CONFIG_TITLE} class="tap-target hover-spin">
+               <Settings class="w-5 h-5" />
             </Button>
+            {#if !dataState.hasToken}
+              <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary animate-pulse pointer-events-none"></span>
+            {/if}
           </div>
         </div>
       {/if}

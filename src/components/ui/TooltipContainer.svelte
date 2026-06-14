@@ -7,7 +7,7 @@ import { appState } from '$lib/core/app.svelte';
 
 {#if appState.tooltip && appState.tooltip.visible}
   <div
-    use:promoteToTopLayer
+    {@attach promoteToTopLayer}
     popover="manual"
     class="fixed m-0 p-0 border-none outline-none bg-transparent pointer-events-none z-[10000] overflow-visible"
     style="

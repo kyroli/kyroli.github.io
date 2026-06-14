@@ -149,10 +149,10 @@ const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
   
 <div class={footerClass}>
     <div class="flex gap-4">
-      <button type="button" onclick={handleExport} class={actionBtnClass} use:tooltip={MESSAGES.MODAL.EXPORT_TITLE}>{MESSAGES.MODAL.EXPORT_DATA}</button>
+      <button type="button" onclick={handleExport} class={actionBtnClass} {@attach tooltip(MESSAGES.MODAL.EXPORT_TITLE)}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>
       
-      <label class={actionBtnClass} use:tooltip={MESSAGES.MODAL.IMPORT_TITLE}>
+      <label class={actionBtnClass} {@attach tooltip(MESSAGES.MODAL.IMPORT_TITLE)}>
         {MESSAGES.MODAL.IMPORT_DATA}
         <input type="file" accept=".json" class="hidden" onchange={handleFileImport} />
       </label>

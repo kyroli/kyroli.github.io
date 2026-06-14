@@ -28,12 +28,12 @@ const finalClass = $derived(
 </script>
 
 {#if href}
-  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} use:tilt={() => ({ disabled: appState.isEditMode })} {...rest}>
+  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {@attach tilt({ disabled: appState.isEditMode })} {...rest}>
     {@render children()}
     <div class="tilt-shine"></div>
   </a>
 {:else}
-  <div {onclick} class={finalClass} {role} use:tilt={() => ({ disabled: appState.isEditMode })} {...rest}>
+  <div {onclick} class={finalClass} {role} {@attach tilt({ disabled: appState.isEditMode })} {...rest}>
     {@render children()}
     <div class="tilt-shine"></div>
   </div>

@@ -159,3 +159,69 @@
   transition: opacity 0.3s ease;
   z-index: 5;
 }
+
+@utility shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--bg) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.tap-target {
+  position: relative;
+}
+
+.tap-target::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  cursor: pointer;
+}
+
+.hover-spin {
+  & svg {
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  &:hover svg {
+    transform: rotate(90deg);
+  }
+}
+
+.hover-wiggle {
+  &:hover svg {
+    animation: wiggle 0.4s ease-in-out infinite;
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
