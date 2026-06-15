@@ -50,7 +50,7 @@ function clickOutside(element: HTMLElement) {
 }
 </script>
 
-<div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none z-20" {@attach clickOutside}>
+<div class={`relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none ${showEngineMenu ? 'z-40' : 'z-20'}`} {@attach clickOutside}>
   <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${showEngineMenu ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
     <button onclick={() => showEngineMenu = !showEngineMenu} class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active-press-icon shrink-0 gap-2 group/btn" {@attach tooltip(MESSAGES.UI.TIP_SWITCH_ENGINE)}>
       <div class="relative w-5 h-5 overflow-hidden shrink-0 flex items-center justify-center transition-transform duration-200 group-hover/btn:scale-110">
