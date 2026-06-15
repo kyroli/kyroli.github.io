@@ -150,8 +150,8 @@ function registerButton(node: HTMLButtonElement, id: string) {
   <!-- Mobile/narrow viewport horizontal scroll sticky navigation -->
   <nav
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class={`sticky top-0 z-30 w-full flex 2xl:hidden bg-bg overflow-x-auto no-scrollbar transition-all duration-200 ${
-      scrollY > 10 ? 'border-b border-border py-2 px-5' : 'py-3.5 px-5'
+    class={`sticky top-0 z-30 w-full flex 2xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200 ${
+      scrollY > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
     }`}
   >
     <div class="flex gap-2.5 mx-auto md:mx-0">

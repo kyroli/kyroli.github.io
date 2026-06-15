@@ -28,7 +28,7 @@ let { group, onDelete } = $props<{
     appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
   }`}>
     <div 
-      class="cursor-grab text-text-dim hover:text-primary active:scale-95 transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
+      class="cursor-grab text-text-dim hover:text-primary active-press-icon transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
       {@attach draggable({ type: 'group', id: group.id, groupId: null })}
       {@attach tooltip(MESSAGES.UI.TIP_DRAG_SORT)}
     >

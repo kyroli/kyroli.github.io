@@ -30,7 +30,7 @@ function handleMousedown(e: MouseEvent) {
 
 function handleMouseup(e: MouseEvent) {
   if (interactStart === dialog && e.target === dialog) {
-    dialog?.close();
+    onClose();
   }
   interactStart = null;
 }
@@ -39,7 +39,7 @@ const dialogStyles = cn(
   'm-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8',
   'max-h-[90vh] overflow-y-auto',
   'bg-surface text-text',
-  'border border-border shadow-2xl shadow-black/20',
+  'border border-border shadow-float',
   'outline-none',
   'backdrop:bg-black/40 backdrop:transition-opacity backdrop:backdrop-blur-[1px]'
 );
@@ -51,6 +51,10 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
   bind:this={dialog} 
   class={dialogStyles}
   onclose={() => onClose()}
+  oncancel={(e) => {
+    e.preventDefault();
+    onClose();
+  }}
   onmousedown={handleMousedown}
   onmouseup={handleMouseup}
   transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
@@ -64,7 +68,7 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
             {@render headerExtra()}
           {/if}
           <button 
-            onclick={() => dialog?.close()}
+            onclick={onClose}
             class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
             {@attach tooltip(MESSAGES.UI.CANCEL)}
           >
@@ -78,7 +82,7 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
           {@render headerExtra()}
         {/if}
         <button 
-          onclick={() => dialog?.close()}
+          onclick={onClose}
           class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
           {@attach tooltip(MESSAGES.UI.CANCEL)}
         >

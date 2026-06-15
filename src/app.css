@@ -137,7 +137,7 @@
 
 .tilt-card {
   transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale3d(var(--scale, 1), var(--scale, 1), 1);
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
   position: relative;
 }
 
@@ -193,7 +193,7 @@
 
 .hover-spin {
   & svg {
-    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
   &:hover svg {
     transform: rotate(90deg);
