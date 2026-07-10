@@ -113,7 +113,7 @@ function registerButton(node: HTMLButtonElement, id: string) {
   <!-- Desktop left sidebar navigation -->
   <aside 
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class="fixed left-12 top-1/2 -translate-y-1/2 hidden 2xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
+    class="fixed left-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
   >
     <div class="absolute left-[9.5px] top-10 bottom-10 w-px bg-border/40 -z-10"></div>
 
@@ -150,7 +150,7 @@ function registerButton(node: HTMLButtonElement, id: string) {
   <!-- Mobile/narrow viewport horizontal scroll sticky navigation -->
   <nav
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class={`sticky top-0 z-30 w-full flex 2xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200 ${
+    class={`sticky top-0 z-30 w-full flex xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200 ${
       scrollY > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
     }`}
   >
