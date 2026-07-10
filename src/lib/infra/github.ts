@@ -40,7 +40,7 @@ export class GithubClient {
     return res.json() as Promise<T>;
   }
 
-  async getFile(path: string = 'bookmarks.json'): Promise<RemoteFile | null> {
+  async getFile(path: string = 'profile.json'): Promise<RemoteFile | null> {
     try {
       return await this.request<RemoteFile>(`/contents/${path}`);
     } catch (e: unknown) {

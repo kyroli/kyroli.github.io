@@ -62,7 +62,7 @@ class SyncService {
 
     try {
       const { sha } = await this.client.updateFile(
-        'bookmarks.json',
+        'profile.json',
         { groups: dataState.groups },
         dataState.lastSha || undefined
       );
@@ -91,7 +91,7 @@ class SyncService {
       const baseSha = remote ? remote.sha : undefined;
 
       const { sha } = await this.client.updateFile(
-        'bookmarks.json',
+        'profile.json',
         { groups: dataState.groups },
         baseSha
       );
