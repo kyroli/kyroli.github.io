@@ -17,6 +17,7 @@ A personal browser startpage and bookmark manager.
 - **Cloud Sync**: Sync configurations and layouts to a dedicated GitHub repository.
 - **Theme**: Support dark and light modes.
 - **Responsive Catalog**: Interactive, scroll-active vertical sidebar for desktop and auto-centering horizontal scroll tabs for mobile layouts.
+- **Keyboard Shortcuts**: Quickly focus the search bar with `/` or `Ctrl/Cmd + K`.
 
 ## Data Storage & Sync
 

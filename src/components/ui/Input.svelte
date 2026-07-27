@@ -6,6 +6,7 @@ import { cn } from '$lib/utils';
 
 let {
   value = $bindable(),
+  ref = $bindable<HTMLInputElement | null>(null),
   label,
   error,
   class: className = '',
@@ -15,6 +16,7 @@ let {
 } = $props<
   {
     value: string;
+    ref?: HTMLInputElement | null;
     label?: string;
     error?: string;
     class?: string;
@@ -40,7 +42,7 @@ const errorClass = 'text-[10px] font-bold text-danger ml-1';
     <label for={id} class={labelClass}>{label}</label>
   {/if}
 
-  <input {id} {type} bind:value class={inputClass} {...rest} />
+  <input {id} {type} bind:this={ref} bind:value class={inputClass} {...rest} />
 
   {#if error}
     <span in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorClass}>

@@ -10,6 +10,7 @@ import Input from '../ui/Input.svelte';
 
 let search = $state('');
 let initialEngineId = DEFAULT_ENGINE_ID;
+let inputEl = $state<HTMLInputElement | null>(null);
 
 if (typeof window !== 'undefined') {
   const savedId = localStorage.getItem('nav_engine');
@@ -48,7 +49,32 @@ function clickOutside(element: HTMLElement) {
     document.removeEventListener('click', handleClick, true);
   };
 }
+
+function handleWindowKeydown(e: KeyboardEvent) {
+  if (appState.activeModal) return;
+
+  const target = e.target as HTMLElement | null;
+  const isInputTarget =
+    target &&
+    (target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
+      target.isContentEditable);
+
+  if (
+    (e.key === '/' && !isInputTarget) ||
+    ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')
+  ) {
+    e.preventDefault();
+    inputEl?.focus();
+    inputEl?.select();
+  } else if (e.key === 'Escape' && document.activeElement === inputEl) {
+    inputEl?.blur();
+  }
+}
 </script>
+
+<svelte:window onkeydown={handleWindowKeydown} />
 
 <div class={`relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none ${showEngineMenu ? 'z-40' : 'z-20'}`} {@attach clickOutside}>
   <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${showEngineMenu ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
@@ -68,7 +94,7 @@ function clickOutside(element: HTMLElement) {
 
     <div class="h-5 w-[1px] bg-border/60 shrink-0"></div>
 
-    <Input bind:value={search} name="search" autocomplete="off" onkeydown={e => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
+    <Input bind:ref={inputEl} bind:value={search} name="search" autocomplete="off" onkeydown={e => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
 
     {#if search.trim().length > 0}
       <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer" {@attach tooltip(MESSAGES.UI.SEARCH)}>
