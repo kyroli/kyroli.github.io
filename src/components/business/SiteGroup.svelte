@@ -17,7 +17,7 @@ let { group, onDeleteGroup } = $props<{
 }>();
 </script>
 
-<div class="group-item flex flex-col gap-4 relative">
+<div class="group-item flex flex-col gap-4 relative @container">
   <GroupHeader {group} onDelete={onDeleteGroup} />
 
   <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">

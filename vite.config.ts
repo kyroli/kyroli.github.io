@@ -14,7 +14,11 @@ export default defineConfig({
   server: {
     host: true
   },
+  css: {
+    transformer: 'lightningcss'
+  },
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    cssMinify: 'lightningcss'
   }
 });
