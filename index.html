@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="简单的个人书签/起始页/网址导航" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="A personal browser startpage and bookmark manager." />
+    <meta name="theme-color" content="#ffffff" />
     
     <link rel="icon" type="image/svg+xml" href="/src/assets/globe.svg" />
     <link rel="preconnect" href="https://api.github.com" crossorigin />
@@ -18,6 +17,7 @@
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (saved === 'dark' || (!saved && isDark)) {
         document.documentElement.classList.add('dark');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#09090b');
       }
     </script>
   </head>

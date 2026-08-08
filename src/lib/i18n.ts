@@ -36,7 +36,8 @@ const MESSAGES_EN = {
     STATUS_SYNCING: 'Syncing...',
     STATUS_UNSAVED: 'Unsaved changes',
     STATUS_SAVED: 'Data synced',
-    BACK_TO_TOP: 'Back to Top'
+    BACK_TO_TOP: 'Back to Top',
+    DESCRIPTION: 'A personal browser startpage and bookmark manager.'
   },
 
   MODAL: {
@@ -144,7 +145,8 @@ const MESSAGES_ZH = {
     STATUS_SYNCING: '同步中...',
     STATUS_UNSAVED: '未保存的更改',
     STATUS_SAVED: '数据已同步',
-    BACK_TO_TOP: '回到顶部'
+    BACK_TO_TOP: '回到顶部',
+    DESCRIPTION: '简单的个人书签/起始页/网址导航'
   },
 
   MODAL: {

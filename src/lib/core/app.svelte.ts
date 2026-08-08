@@ -1,5 +1,6 @@
 import { tick } from 'svelte';
 import { APP_TIMEOUTS } from '../constants';
+import { MESSAGES } from '../i18n';
 import { storage } from '../infra/storage';
 
 type ToastType = 'info' | 'success' | 'error';
@@ -56,9 +57,22 @@ class AppCore {
   }
 
   init() {
+    const isZh = navigator.language.toLowerCase().startsWith('zh');
+    document.documentElement.lang = isZh ? 'zh-CN' : 'en';
+
+    const descMeta = document.querySelector('meta[name="description"]');
+    if (descMeta) {
+      descMeta.setAttribute('content', MESSAGES.UI.DESCRIPTION);
+    }
+
     $effect(() => {
       document.documentElement.classList.toggle('dark', this.isDark);
       storage.theme = this.isDark ? 'dark' : 'light';
+
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) {
+        themeMeta.setAttribute('content', this.isDark ? '#09090b' : '#ffffff');
+      }
     });
   }
 
