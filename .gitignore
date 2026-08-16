@@ -43,8 +43,9 @@ desktop.ini
 dist/
 dist-ssr/
 
-# SvelteKit (If used in the future)
+# SvelteKit & Svelte-check
 .svelte-kit/
+.svelte-check/
 
 # Editor directories and files
 .vscode/*

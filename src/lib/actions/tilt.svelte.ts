@@ -1,12 +1,12 @@
 interface TiltOptions {
   disabled?: boolean;
-  maxRotate?: number; // 最大旋转角度
-  scale?: number; // 悬停缩放大小
+  maxRotate?: number; // Maximum rotation angle
+  scale?: number; // Hover scale factor
 }
 
 export function tilt(options: TiltOptions = {}) {
   return (element: HTMLElement) => {
-    // 仅在有 hover 能力的指针设备上启用
+    // Only enable on pointer devices with hover capability
     const isHoverable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     let rect: DOMRect | null = null;
@@ -37,7 +37,7 @@ export function tilt(options: TiltOptions = {}) {
       const w = rect.width;
       const h = rect.height;
 
-      // 映射到 [-1, 1] 区间
+      // Map to [-1, 1] range
       const dx = (x - w / 2) / (w / 2);
       const dy = (y - h / 2) / (h / 2);
 
