@@ -7,11 +7,10 @@ import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
 import { cn } from '$lib/utils';
 
-let { children, onClose, title, headerExtra } = $props<{
+let { children, onClose, title } = $props<{
   children: Snippet;
   onClose: () => void;
   title?: string;
-  headerExtra?: Snippet;
 }>();
 
 let dialog = $state<HTMLDialogElement>();
@@ -47,6 +46,18 @@ const dialogStyles = cn(
 const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 </script>
 
+{#snippet actionButtons()}
+  <div class="flex items-center gap-1 -mr-2">
+    <button 
+      onclick={onClose}
+      class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
+      {@attach tooltip(MESSAGES.UI.CANCEL)}
+    >
+      <X class="w-5 h-5" />
+    </button>
+  </div>
+{/snippet}
+
 <dialog 
   bind:this={dialog} 
   class={dialogStyles}
@@ -63,31 +74,11 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
     {#if title}
       <div class="flex items-center justify-between">
         <h2 class={titleClass}>{title}</h2>
-        <div class="flex items-center gap-1 -mr-2">
-          {#if headerExtra}
-            {@render headerExtra()}
-          {/if}
-          <button 
-            onclick={onClose}
-            class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
-            {@attach tooltip(MESSAGES.UI.CANCEL)}
-          >
-            <X class="w-5 h-5" />
-          </button>
-        </div>
+        {@render actionButtons()}
       </div>
     {:else}
-      <div class="absolute top-0 right-0 flex items-center gap-1 -mt-2 -mr-2 z-10">
-        {#if headerExtra}
-          {@render headerExtra()}
-        {/if}
-        <button 
-          onclick={onClose}
-          class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
-          {@attach tooltip(MESSAGES.UI.CANCEL)}
-        >
-          <X class="w-5 h-5" />
-        </button>
+      <div class="absolute top-0 right-0 z-10 -mt-2">
+        {@render actionButtons()}
       </div>
     {/if}
     

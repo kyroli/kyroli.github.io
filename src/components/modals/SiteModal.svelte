@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Contrast } from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
@@ -29,8 +28,6 @@ let name = $state(site?.name ?? '');
 let url = $state(site?.url ?? '');
 // svelte-ignore state_referenced_locally
 let icon = $state(site?.icon ?? '');
-// svelte-ignore state_referenced_locally
-let invert = $state(site?.invert ?? false);
 let error = $state('');
 
 function handleSave() {
@@ -45,12 +42,7 @@ function handleSave() {
   }
 
   if (siteId && site) {
-    if (
-      trimmedName === site.name &&
-      trimmedUrl === site.url &&
-      trimmedIcon === (site.icon || '') &&
-      invert === !!site.invert
-    ) {
+    if (trimmedName === site.name && trimmedUrl === site.url && trimmedIcon === (site.icon || '')) {
       onClose();
       return;
     }
@@ -61,8 +53,7 @@ function handleSave() {
       id: siteId,
       name: trimmedName,
       url: trimmedUrl,
-      icon: trimmedIcon,
-      invert
+      icon: trimmedIcon
     });
 
     appState.showToast(MESSAGES.TOAST.SITE_SAVED, 'success');
@@ -76,19 +67,7 @@ const errorBannerClass =
   'bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold';
 </script>
 
-{#snippet headerExtra()}
-  <Button 
-    variant={invert ? 'primary' : 'ghost'} 
-    onclick={() => invert = !invert} 
-    type="button"
-    class="!p-1.5 !rounded-lg border-none {invert ? '' : 'text-text-dim'}"
-    title={MESSAGES.UI.TIP_INVERT_ICON}
-  >
-    <Contrast class="w-5 h-5" />
-  </Button>
-{/snippet}
-
-<Modal {onClose} title={modalTitle} {headerExtra}>
+<Modal {onClose} title={modalTitle}>
   {#if error}
     <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>⚠️ {error}</div>
   {/if}

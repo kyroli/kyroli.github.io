@@ -3,7 +3,6 @@ export interface Site {
   name: string;
   url: string;
   icon: string;
-  invert?: boolean;
 }
 
 export interface Group {

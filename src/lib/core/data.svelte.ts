@@ -33,10 +33,13 @@ class DataCore {
 
   private sanitizeGroups(groups: Group[]): Group[] {
     return groups.map((g) => ({
-      ...g,
+      id: g.id,
+      name: g.name,
       sites: g.sites.map((s) => ({
-        ...s,
-        url: s.url.trim()
+        id: s.id,
+        name: s.name,
+        url: s.url.trim(),
+        icon: s.icon || ''
       }))
     }));
   }

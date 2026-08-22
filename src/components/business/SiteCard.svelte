@@ -27,19 +27,12 @@ const cardClass = $derived(
   }`
 );
 
-let hasImageError = $state(false);
-
-const imgClass = $derived(
-  `w-full h-full object-contain pointer-events-none transition-all duration-200 ${
-    appState.isDark && site.invert && !hasImageError ? 'invert' : ''
-  }`
-);
+const imgClass = 'w-full h-full object-contain pointer-events-none transition-all duration-200';
 
 function handleImageError(e: Event) {
   const img = e.currentTarget as HTMLImageElement;
   if (img.src !== DEFAULT_ICON) {
     img.src = DEFAULT_ICON;
-    hasImageError = true;
   }
 }
 

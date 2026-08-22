@@ -82,11 +82,8 @@ class DataManager {
     }
   }
 
-  saveSite(
-    groupId: string,
-    siteData: { id?: string; name: string; url: string; icon: string; invert?: boolean }
-  ) {
-    const { name, url, icon, id, invert } = siteData;
+  saveSite(groupId: string, siteData: { id?: string; name: string; url: string; icon: string }) {
+    const { name, url, icon, id } = siteData;
     if (!name?.trim() || !url?.trim()) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
 
     const cleanUrl = url.trim();
@@ -105,15 +102,13 @@ class DataManager {
         site.name = name.trim();
         site.url = cleanUrl;
         site.icon = icon?.trim() || '';
-        site.invert = invert ?? false;
       }
     } else {
       group.sites.push({
         id: crypto.randomUUID(),
         name: name.trim(),
         url: cleanUrl,
-        icon: icon?.trim() || '',
-        invert: invert ?? false
+        icon: icon?.trim() || ''
       });
     }
   }

@@ -25,7 +25,7 @@ let {
 }>();
 
 const baseStyles =
-  'flex items-center justify-center rounded-xl transition-colors transition-transform transition-opacity duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border';
+  'flex items-center justify-center rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border';
 
 const variants: Record<string, string> = {
   primary: 'bg-primary text-white border-primary hover:opacity-90 shadow-xs',

@@ -30,7 +30,7 @@ export const getIcon = (url: string, custom?: string): string => {
   try {
     const domain = new URL(url).hostname;
     const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;
-    return `https://wsrv.nl/?url=${originalUrl}&w=80&h=80&output=webp&q=85&il`;
+    return `https://wsrv.nl/?url=${originalUrl}&w=80&h=80&output=webp&q=85`;
   } catch (e) {
     return assets.globe || '';
   }

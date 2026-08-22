@@ -24,7 +24,7 @@ let {
 >();
 
 const baseStyles =
-  'w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition-colors transition-shadow duration-200 placeholder:text-text-dim/60';
+  'w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition duration-200 placeholder:text-text-dim/60';
 const stateStyles = $derived(
   error
     ? 'border-danger/50 focus:border-danger text-danger placeholder:text-danger/40 focus:ring-2 focus:ring-danger/20'

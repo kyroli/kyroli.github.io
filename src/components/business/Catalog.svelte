@@ -94,8 +94,7 @@ function scrollToGroup(id: string) {
   const el = document.querySelector(`[data-dnd-group-id="${id}"]`);
   if (el) {
     const rect = el.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const targetY = rect.top + scrollTop - 100;
+    const targetY = rect.top + window.scrollY - 100;
 
     window.scrollTo({
       top: targetY,
@@ -215,14 +214,6 @@ function registerButton(node: HTMLButtonElement, id: string) {
 {/if}
 
 <style>
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
   .ease-out-expo {
     transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   }

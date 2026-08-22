@@ -76,18 +76,33 @@ class AppCore {
     });
   }
 
+  private activeThemeTransition: ViewTransition | null = null;
+
   toggleTheme = async () => {
+    if (this.activeThemeTransition) {
+      this.activeThemeTransition.skipTransition();
+    }
+
     if (!document.startViewTransition) {
       this.isDark = !this.isDark;
       await tick();
       return;
     }
 
-    const transition = document.startViewTransition(async () => {
-      this.isDark = !this.isDark;
-      await tick();
-    });
-    await transition.finished;
+    document.documentElement.classList.add('theme-syncing');
+
+    try {
+      this.activeThemeTransition = document.startViewTransition(async () => {
+        this.isDark = !this.isDark;
+        await tick();
+      });
+      await this.activeThemeTransition.finished;
+    } catch {
+      // Ignore transition aborts
+    } finally {
+      document.documentElement.classList.remove('theme-syncing');
+      this.activeThemeTransition = null;
+    }
   };
 
   toggleEditMode = () => {

@@ -14,20 +14,20 @@
     "lint": "biome check ."
   },
   "dependencies": {
-    "@lucide/svelte": "^1.31.0",
+    "@lucide/svelte": "^1.33.0",
     "clsx": "^2.1.1",
-    "svelte": "^5.56.9",
+    "svelte": "^5.56.10",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.8",
+    "@biomejs/biome": "2.5.9",
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.2.0",
     "@typescript/native": "npm:typescript@7.0.2",
     "svelte-check": "^4.7.6",
     "typescript": "^6.0.3",
-    "vite": "^8.2.1"
+    "vite": "^8.2.2"
   }
 }

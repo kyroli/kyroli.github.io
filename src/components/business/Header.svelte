@@ -22,7 +22,7 @@ const logoHref = $derived(
         class={`flex items-center gap-3 transition-opacity active-press group ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
       >
         <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-solid group-hover:rotate-6 transition-transform">K</div>
-        <div class="flex flex-col hidden sm:flex justify-center">
+        <div class="hidden sm:flex flex-col justify-center">
           <h1 class="font-bold text-xl tracking-tighter text-text leading-tight mb-0.5">{MESSAGES.UI.APP_NAME}</h1>
           <span class="text-[10px] font-bold tracking-widest text-text-dim/50 uppercase leading-tight">{MESSAGES.UI.SUBTITLE}</span>
         </div>

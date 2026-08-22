@@ -9,8 +9,7 @@ export const UI_CONSTANTS = {
   /** Uniform height for site cards and loading skeletons */
   CARD_HEIGHT: 'h-[72px]',
   /** Responsive grid layout classes */
-  GRID_LAYOUT:
-    'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6'
+  GRID_LAYOUT: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6'
 } as const;
 
 /**
