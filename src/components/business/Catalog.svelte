@@ -103,13 +103,13 @@ function scrollToGroup(id: string) {
   }
 }
 
-// Action to register elements in the map
-function registerButton(node: HTMLButtonElement, id: string) {
-  buttonEls.set(id, node);
-  return {
-    destroy() {
+// Attachment to register button elements in the map
+function registerButton(id: string) {
+  return (node: HTMLButtonElement) => {
+    buttonEls.set(id, node);
+    return () => {
       buttonEls.delete(id);
-    }
+    };
   };
 }
 </script>
@@ -202,7 +202,7 @@ function registerButton(node: HTMLButtonElement, id: string) {
           : ''}
 
         <button
-          use:registerButton={group.id}
+          {@attach registerButton(group.id)}
           onclick={() => scrollToGroup(group.id)}
           class={`flex items-center justify-center h-9 px-3.5 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon ${roundedClass} ${styleClass} ${mrClass}`}
         >
@@ -212,9 +212,3 @@ function registerButton(node: HTMLButtonElement, id: string) {
     </div>
   </nav>
 {/if}
-
-<style>
-  .ease-out-expo {
-    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
-  }
-</style>

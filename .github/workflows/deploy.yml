@@ -22,17 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup pnpm & Node
+        uses: pnpm/setup@v3
         with:
-          version: 11
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
+          runtime: node@24
+          install: false
           
       - name: Install dependencies
         run: pnpm install
@@ -47,13 +43,13 @@ jobs:
         run: pnpm build
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: './dist'
 
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

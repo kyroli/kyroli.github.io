@@ -18,6 +18,8 @@
   --tracking-normal: 0em;
   --tracking-wide: 0.02em;
   --tracking-widest: 0.08em;
+
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 @utility active-press {
@@ -222,6 +224,5 @@
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;
   scrollbar-width: none;
 }
