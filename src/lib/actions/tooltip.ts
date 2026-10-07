@@ -25,7 +25,8 @@ export function tooltip(msg?: string | null) {
     }
 
     // Register the element as an anchor
-    element.style.anchorName = tooltipId;
+    const prevAnchor = element.style.anchorName;
+    element.style.anchorName = prevAnchor ? `${prevAnchor}, ${tooltipId}` : tooltipId;
     applyA11y(msg);
 
     const forceHide = () => {
@@ -68,7 +69,7 @@ export function tooltip(msg?: string | null) {
 
     return () => {
       forceHide();
-      element.style.anchorName = '';
+      element.style.anchorName = prevAnchor;
       element.removeEventListener('mouseenter', onMouseEnter);
       element.removeEventListener('mouseleave', onMouseLeave);
       element.removeEventListener('focus', onFocus);

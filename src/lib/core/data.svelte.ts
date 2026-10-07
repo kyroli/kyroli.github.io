@@ -1,4 +1,4 @@
-import { storage } from '../infra/storage';
+import { STORAGE_KEYS, storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
 function trackDeep(obj: unknown) {
@@ -78,30 +78,28 @@ class DataCore {
       storage.sha = this.lastSha;
     });
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', (e) => {
-        if (e.key === 'nav_data' && e.newValue) {
-          try {
-            const parsed = JSON.parse(e.newValue);
-            if (Array.isArray(parsed.groups)) {
-              this.skipDirtyCheck = true;
-              this.groups = this.sanitizeGroups(parsed.groups);
-            }
-          } catch (err) {
-            console.error('Cross-tab sync error:', err);
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEYS.DATA && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed.groups)) {
+            this.skipDirtyCheck = true;
+            this.groups = this.sanitizeGroups(parsed.groups);
           }
+        } catch (err) {
+          console.error('Cross-tab sync error:', err);
         }
+      }
 
-        if (e.key === 'nav_cfg' && e.newValue) {
-          try {
-            const parsed = JSON.parse(e.newValue);
-            this.config = parsed;
-          } catch (err) {
-            console.error('Cross-tab config sync error:', err);
-          }
+      if (e.key === STORAGE_KEYS.CONFIG && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          this.config = parsed;
+        } catch (err) {
+          console.error('Cross-tab config sync error:', err);
         }
-      });
-    }
+      }
+    });
   }
 
   setGroups(newGroups: Group[]) {

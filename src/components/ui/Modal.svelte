@@ -1,7 +1,7 @@
 <script lang="ts">
 import { X } from '@lucide/svelte';
 import type { Snippet } from 'svelte';
-import { fade } from 'svelte/transition';
+import { type FadeParams, fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
@@ -14,33 +14,29 @@ let { children, onClose, title } = $props<{
 }>();
 
 let dialog = $state<HTMLDialogElement>();
-let interactStart = $state<EventTarget | null>(null);
 
 $effect(() => {
   if (dialog) {
-    dialog?.showModal();
+    dialog.showModal();
     return () => dialog?.close();
   }
 });
 
-function handleMousedown(e: MouseEvent) {
-  interactStart = e.target;
-}
-
-function handleMouseup(e: MouseEvent) {
-  if (interactStart === dialog && e.target === dialog) {
-    onClose();
+function modalFade(node: Element, params?: FadeParams) {
+  if (node instanceof HTMLDialogElement && node.open) {
+    node.close();
   }
-  interactStart = null;
+  return fade(node, params);
 }
 
 const dialogStyles = cn(
+  'modal-dialog',
   'm-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8',
   'max-h-[90vh] overflow-y-auto',
   'bg-surface text-text',
   'border border-border shadow-float',
   'outline-none',
-  'backdrop:bg-black/40 backdrop:transition-opacity backdrop:backdrop-blur-[1px]'
+  'backdrop:bg-black/40 backdrop:backdrop-blur-[1px]'
 );
 
 const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
@@ -48,8 +44,9 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 
 {#snippet actionButtons()}
   <div class="flex items-center gap-1 -mr-2">
-    <button 
-      onclick={onClose}
+    <button
+      type="button"
+      onclick={() => dialog?.close()}
       class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
       {@attach tooltip(MESSAGES.UI.CANCEL)}
     >
@@ -58,17 +55,13 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
   </div>
 {/snippet}
 
-<dialog 
-  bind:this={dialog} 
+<dialog
+  bind:this={dialog}
+  closedby="any"
   class={dialogStyles}
   onclose={() => onClose()}
-  oncancel={(e) => {
-    e.preventDefault();
-    onClose();
-  }}
-  onmousedown={handleMousedown}
-  onmouseup={handleMouseup}
-  transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+  in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+  out:modalFade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
 >
   <div class="flex flex-col gap-6 relative">
     {#if title}

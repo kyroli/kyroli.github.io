@@ -8,6 +8,7 @@ minimumReleaseAgeExclude:
   - '@biomejs/cli-linux-x64@2.5.15'
   - '@biomejs/cli-win32-arm64@2.5.15'
   - '@biomejs/cli-win32-x64@2.5.15'
-  - '@lucide/svelte@1.49.0'
+  - '@lucide/svelte@1.52.0'
+  - svelte@5.57.2
 onlyBuiltDependencies:
   - '@biomejs/biome'

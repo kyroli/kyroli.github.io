@@ -226,3 +226,42 @@
 .no-scrollbar {
   scrollbar-width: none;
 }
+
+.engine-popover {
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+              display 0.15s allow-discrete,
+              overlay 0.15s allow-discrete;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+}
+
+.engine-popover:popover-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.modal-dialog {
+  transition: display 0.2s allow-discrete,
+              overlay 0.2s allow-discrete;
+}
+
+.modal-dialog::backdrop {
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              display 0.2s allow-discrete,
+              overlay 0.2s allow-discrete;
+  opacity: 0;
+}
+
+.modal-dialog[open]::backdrop {
+  opacity: 1;
+
+  @starting-style {
+    opacity: 0;
+  }
+}

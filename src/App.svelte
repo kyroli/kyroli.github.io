@@ -129,7 +129,7 @@ const toastClass = $derived(
       {@attach promoteToTopLayer}
       popover="manual"
       transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
-      class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 pointer-events-none bg-transparent m-0 p-0 border-none outline-none z-[10000]"
+      class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 pointer-events-none bg-transparent m-0 p-0 border-none outline-none"
     >
       <div class={`px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border ${toastClass}`}>
         {appState.toast.msg}

@@ -30,7 +30,6 @@ const buttonEls = new Map<string, HTMLButtonElement>();
 
 $effect(() => {
   groupIds;
-  if (typeof window === 'undefined') return;
 
   const timer = setTimeout(() => {
     setupObserver();

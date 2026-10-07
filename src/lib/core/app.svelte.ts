@@ -46,14 +46,12 @@ class AppCore {
   visibleGroupIds = $state<string[]>([]);
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
-        this.isOnline = true;
-      });
-      window.addEventListener('offline', () => {
-        this.isOnline = false;
-      });
-    }
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+    });
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+    });
   }
 
   init() {
