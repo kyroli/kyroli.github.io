@@ -13,14 +13,11 @@ let { children, onClose, title } = $props<{
   title?: string;
 }>();
 
-let dialog = $state<HTMLDialogElement>();
-
-$effect(() => {
-  if (dialog) {
-    dialog.showModal();
-    return () => dialog?.close();
+function showModal(node: HTMLDialogElement) {
+  if (!node.open) {
+    node.showModal();
   }
-});
+}
 
 function modalFade(node: Element, params?: FadeParams) {
   if (node instanceof HTMLDialogElement && node.open) {
@@ -46,7 +43,7 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
   <div class="flex items-center gap-1 -mr-2">
     <button
       type="button"
-      onclick={() => dialog?.close()}
+      onclick={onClose}
       class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
       {@attach tooltip(MESSAGES.UI.CANCEL)}
     >
@@ -56,12 +53,12 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 {/snippet}
 
 <dialog
-  bind:this={dialog}
+  {@attach showModal}
   closedby="any"
   class={dialogStyles}
-  onclose={() => onClose()}
-  in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
-  out:modalFade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+  onclose={(e) => !e.currentTarget.inert && onClose()}
+  in:fade|global={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+  out:modalFade|global={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
 >
   <div class="flex flex-col gap-6 relative">
     {#if title}

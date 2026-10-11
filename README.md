@@ -15,6 +15,7 @@ A personal browser startpage and bookmark manager.
 
 - **Tech Stack**: Svelte 5 (Runes) + Vite 8 + Tailwind CSS v4 + TypeScript 7.
 - **Modern Browsers Only**: Target ESNext standards without legacy polyfills.
+- **Modern Standards**: Employs native HTML dialogs, Popover API, and CSS Anchor Positioning without external UI runtime bloat.
 - **Architecture**: Zero-backend static client communicating directly with browser APIs and GitHub REST API.
 - **Tooling**: Code formatting and linting enforced by Biome.
 
@@ -33,7 +34,7 @@ A personal browser startpage and bookmark manager.
 ## Data Storage & Sync
 
 - **Local Storage**: Bookmark structures, custom preferences, and theme choices are stored locally in the browser and synchronized across tabs via the Storage API.
-- **GitHub Sync**: Synchronizes configuration directly to a user-designated GitHub repository using a locally stored Fine-grained Personal Access Token (PAT).
+- **GitHub Sync**: Synchronizes configuration (defaults to `profile.json`) directly to a user-designated GitHub repository using a locally stored Fine-grained Personal Access Token (PAT).
   * ⚠️ **Security**: Use a **Fine-grained PAT** with permissions restricted strictly to the designated repository (`Contents: Read and write`).
 - **Conflict Resolution**: Verifies file commit SHAs before writes. Prompts to resolve conflicts via **Force Push** (overwrite remote) or **Reset to Remote** (overwrite local).
 - **Data Export/Import**: Provides JSON serialization for offline backups and migration.
@@ -53,6 +54,8 @@ src/
 │   ├── core/            # Reactive global state stores (Svelte Runes)
 │   ├── infra/           # Infrastructure adapters (GitHub client, LocalStorage adapter)
 │   ├── services/        # Service managers (sync orchestrator, data layer manager)
+│   ├── constants.ts     # Global system and animation constants
+│   ├── i18n.ts          # Localization dictionaries and language detection
 │   ├── types.ts         # Global TypeScript definitions
 │   └── utils.ts         # Generic utilities
 ├── App.svelte           # Root application component
@@ -64,7 +67,7 @@ src/
 
 ### Prerequisites
 - Node.js >= 22.0.0
-- pnpm >= 10.0.0
+- pnpm >= 11.0.0
 
 ### Local Development
 

@@ -15,6 +15,7 @@
 
 - **技术栈**：Svelte 5 (Runes) + Vite 8 + Tailwind CSS v4 + TypeScript 7。
 - **现代浏览器**：仅面向支持 ESNext 标准的现代浏览器，不包含任何旧版 Polyfill。
+- **原生 Web 标准**：采用原生 HTML Dialog、Popover API 及 CSS Anchor Positioning 等标准，避免外部 UI 运行时开销。
 - **架构模式**：无后端静态客户端，直接与浏览器 API 及 GitHub REST API 交互。
 - **代码规范**：由 Biome 执行代码格式化与静态检查。
 
@@ -33,7 +34,7 @@
 ## 数据存储与同步
 
 - **本地存储 (LocalStorage)**：书签结构、偏好配置与主题设置保存在浏览器本地，并通过 Storage API 在多个打开的标签页间同步。
-- **GitHub 同步**：使用保存在本地的 Fine-grained PAT 直接同步至指定的专用 GitHub 仓库。
+- **GitHub 同步**：使用保存在本地的 Fine-grained PAT 直接同步配置（默认文件为 `profile.json`）至指定的专用 GitHub 仓库。
   * ⚠️ **安全说明**：请使用 **Fine-grained PAT**，并将权限严格限定在存放数据的仓库（`Contents: Read and write`）。
 - **冲突处理**：在写入前比对提交 SHA。检测到冲突时提供 **Force Push**（覆盖云端）或 **Reset to Remote**（拉取云端覆盖本地）选项。
 - **数据导入与导出**：支持标准 JSON 格式的序列化导出与解析导入，便于离线备份与迁移。
@@ -53,6 +54,8 @@ src/
 │   ├── core/            # 响应式全局状态管理（Svelte Runes）
 │   ├── infra/           # 基础设施层（GitHub API 客户端、本地存储适配器）
 │   ├── services/        # 核心业务服务（同步调度器、数据管理器）
+│   ├── constants.ts     # 系统交互与动画全局常量定义
+│   ├── i18n.ts          # 国际化多语言字典及语言环境适配
 │   ├── types.ts         # TypeScript 类型定义
 │   └── utils.ts         # 辅助工具函数
 ├── App.svelte           # 应用入口组件
@@ -64,7 +67,7 @@ src/
 
 ### 开发要求
 - Node.js >= 22.0.0
-- pnpm >= 10.0.0
+- pnpm >= 11.0.0
 
 ### 本地开发
 
