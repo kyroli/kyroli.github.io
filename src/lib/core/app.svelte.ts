@@ -1,4 +1,3 @@
-import { tick } from 'svelte';
 import { APP_TIMEOUTS } from '../constants';
 import { MESSAGES } from '../i18n';
 import { storage } from '../infra/storage';
@@ -54,6 +53,13 @@ class AppCore {
     });
   }
 
+  private updateThemeMeta(isDark: boolean) {
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
+    }
+  }
+
   init() {
     const isZh = navigator.language.toLowerCase().startsWith('zh');
     document.documentElement.lang = isZh ? 'zh-CN' : 'en';
@@ -66,41 +72,12 @@ class AppCore {
     $effect(() => {
       document.documentElement.classList.toggle('dark', this.isDark);
       storage.theme = this.isDark ? 'dark' : 'light';
-
-      const themeMeta = document.querySelector('meta[name="theme-color"]');
-      if (themeMeta) {
-        themeMeta.setAttribute('content', this.isDark ? '#09090b' : '#ffffff');
-      }
+      this.updateThemeMeta(this.isDark);
     });
   }
 
-  private activeThemeTransition: ViewTransition | null = null;
-
-  toggleTheme = async () => {
-    if (this.activeThemeTransition) {
-      this.activeThemeTransition.skipTransition();
-    }
-
-    if (!document.startViewTransition) {
-      this.isDark = !this.isDark;
-      await tick();
-      return;
-    }
-
-    document.documentElement.classList.add('theme-syncing');
-
-    try {
-      this.activeThemeTransition = document.startViewTransition(async () => {
-        this.isDark = !this.isDark;
-        await tick();
-      });
-      await this.activeThemeTransition.finished;
-    } catch {
-      // Ignore transition aborts
-    } finally {
-      document.documentElement.classList.remove('theme-syncing');
-      this.activeThemeTransition = null;
-    }
+  toggleTheme = () => {
+    this.isDark = !this.isDark;
   };
 
   toggleEditMode = () => {

@@ -44,7 +44,7 @@ const toastClass = $derived(
   <title>{MESSAGES.UI.APP_NAME} - {MESSAGES.UI.SUBTITLE}</title>
 </svelte:head>
 
-<div class="min-h-screen w-full bg-bg text-text pb-20">
+<div class="min-h-dvh w-full bg-bg text-text pb-20">
   <div class="w-full max-w-[1800px] mx-auto px-6 lg:px-12 xl:pl-[240px] xl:pr-12 transition-[padding] duration-300">
     <Header />
     <Catalog />
