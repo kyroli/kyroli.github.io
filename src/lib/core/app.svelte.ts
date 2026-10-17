@@ -131,12 +131,6 @@ class AppCore {
       this.tooltip.visible = false;
     }
   };
-
-  updateTooltip = (msg: string, anchorName: string) => {
-    if (this.tooltip?.visible) {
-      this.tooltip = { visible: true, msg, anchorName };
-    }
-  };
 }
 
 export const appState = new AppCore();

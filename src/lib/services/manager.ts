@@ -87,6 +87,7 @@ class DataManager {
     if (!name?.trim() || !url?.trim()) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
 
     const cleanUrl = url.trim();
+    if (!URL.canParse(cleanUrl)) throw new Error(MESSAGES.TOAST.SITE_URL_ERROR);
     const parsedUrl = new URL(cleanUrl);
 
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
@@ -156,14 +157,14 @@ class DataManager {
   }
 
   async importData(file: File) {
+    let json: any;
     try {
-      const text = await file.text();
-      const json = JSON.parse(text);
-      if (!Array.isArray(json.groups)) throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
-      dataState.setGroups(json.groups);
-    } catch (e) {
+      json = JSON.parse(await file.text());
+    } catch {
       throw new Error(MESSAGES.TOAST.IMPORT_FAIL_FORMAT);
     }
+    if (!Array.isArray(json?.groups)) throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
+    dataState.setGroups(json.groups);
   }
 }
 

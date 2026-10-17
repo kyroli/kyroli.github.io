@@ -25,7 +25,7 @@ A personal browser startpage and bookmark manager.
 - **Drag & Drop**: Reorder bookmark groups and site links in Edit Mode, featuring FLIP animations and edge scroll detection.
 - **Card Micro-interactions**: Pointer-driven 3D perspective tilt and surface shine on site cards.
 - **Responsive Navigation**: Desktop scroll-spy vertical sidebar and mobile sticky horizontal tabs with auto-centering.
-- **Theme Support**: Dark and light themes with system color-scheme detection and View Transitions.
+- **Theme Support**: Dark and light themes with system color-scheme detection.
 - **Localization**: Automatic interface localization for English and Simplified Chinese based on browser language settings.
 - **Local Storage**: Data persistence via LocalStorage with cross-tab synchronization.
 - **GitHub Sync**: Remote synchronization via GitHub REST API with SHA-based conflict detection.
