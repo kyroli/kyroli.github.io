@@ -13,16 +13,16 @@
 
 ## 技术选型
 
-- **技术栈**：Svelte 5 (Runes) + Vite 8 + Tailwind CSS v4 + TypeScript 7。
+- **技术栈**：Svelte 5 (Runes & Attachments) + Vite + Tailwind CSS + TypeScript。
 - **现代浏览器**：仅面向支持 ESNext 标准的现代浏览器，不包含任何旧版 Polyfill。
-- **原生 Web 标准**：采用原生 HTML Dialog、Popover API 及 CSS Anchor Positioning 等标准，避免外部 UI 运行时开销。
+- **原生 Web 标准**：采用原生 HTML Dialog、Popover API、CSS Anchor Positioning 及 CSS `light-dark()` 主题函数等标准，避免外部 UI 运行时开销。
 - **架构模式**：无后端静态客户端，直接与浏览器 API 及 GitHub REST API 交互。
-- **代码规范**：由 Biome 执行代码格式化与静态检查。
+- **代码规范**：由 Biome 与 `svelte-check` (`tsgo`) 执行代码格式化、静态检查与类型校验。
 
 ## 核心特性
 
 - **多引擎搜索**：预置 Bing、Google、DuckDuckGo 与 Yandex 搜索引擎切换。支持 `/` 或 `Ctrl/Cmd + K` 聚焦搜索框，按 `Escape` 失焦。
-- **拖拽重排**：在编辑模式下支持对分组与站点链接进行拖拽排序，具备 FLIP 过渡动画与边缘滚动检测。
+- **拖拽重排**：在编辑模式下支持对分组与站点链接进行拖拽排序，具备 FLIP 过渡动画、边缘滚动检测及按 `Escape` 取消拖拽。
 - **卡片微交互**：基于鼠标指针位置的站点卡片 3D 悬浮透视与高光反射效果。
 - **响应式导航**：桌面端提供滚动联动的侧边栏目录；移动端采用吸顶横向滚动分类条，支持高亮项自动滑动居中。
 - **主题模式**：支持深色/浅色模式切换，适配系统偏好（`prefers-color-scheme`）。
@@ -49,7 +49,7 @@ src/
 │   ├── modals/          # 弹窗与设置模态框
 │   └── ui/              # 无状态的复用基础组件
 ├── lib/                 # 逻辑层 (Core Logic)
-│   ├── actions/         # Svelte 自定义指令（如拖拽、3D 倾斜、提示框等）
+│   ├── actions/         # Svelte 附件函数（基于 {@attach} 的拖拽、3D 倾斜、提示框等）
 │   ├── config/          # 系统配置与预设（搜索引擎配置、默认数据等）
 │   ├── core/            # 响应式全局状态管理（Svelte Runes）
 │   ├── infra/           # 基础设施层（GitHub API 客户端、本地存储适配器）
@@ -66,8 +66,8 @@ src/
 ## 快速开始
 
 ### 开发要求
-- Node.js >= 22.0.0
-- pnpm >= 11.0.0
+- Node.js (Current / LTS)
+- pnpm
 
 ### 本地开发
 
@@ -81,13 +81,13 @@ pnpm dev
 # 3. 生产环境构建
 pnpm build
 
-# 4. 校验与格式化
+# 4. 格式化、静态检查与类型校验
 pnpm format
 pnpm lint
 pnpm check
 ```
 
-*注意：CI/CD 部署流程基于 GitHub Actions 运行，若未通过 Biome 的格式化与静态检查，构建流程将会被拦截。*
+*注意：CI/CD 部署流程基于 GitHub Actions 运行，若未通过 Biome 检查或类型校验，构建流程将会被拦截。*
 
 ## 开源协议
 

@@ -13,16 +13,16 @@ A personal browser startpage and bookmark manager.
 
 ## Tech Choices
 
-- **Tech Stack**: Svelte 5 (Runes) + Vite 8 + Tailwind CSS v4 + TypeScript 7.
+- **Tech Stack**: Svelte 5 (Runes & Attachments) + Vite + Tailwind CSS + TypeScript.
 - **Modern Browsers Only**: Target ESNext standards without legacy polyfills.
-- **Modern Standards**: Employs native HTML dialogs, Popover API, and CSS Anchor Positioning without external UI runtime bloat.
+- **Modern Standards**: Employs native HTML dialogs, Popover API, CSS Anchor Positioning, and CSS `light-dark()` theming without external UI runtime bloat.
 - **Architecture**: Zero-backend static client communicating directly with browser APIs and GitHub REST API.
-- **Tooling**: Code formatting and linting enforced by Biome.
+- **Tooling**: Code formatting, linting, and static type checking enforced by Biome and `svelte-check` (`tsgo`).
 
 ## Features
 
 - **Search**: Multi-engine search supporting Bing, Google, DuckDuckGo, and Yandex. Quick focus via `/` or `Ctrl/Cmd + K`, and blur via `Escape`.
-- **Drag & Drop**: Reorder bookmark groups and site links in Edit Mode, featuring FLIP animations and edge scroll detection.
+- **Drag & Drop**: Reorder bookmark groups and site links in Edit Mode, featuring FLIP animations, edge scroll detection, and `Escape` to cancel.
 - **Card Micro-interactions**: Pointer-driven 3D perspective tilt and surface shine on site cards.
 - **Responsive Navigation**: Desktop scroll-spy vertical sidebar and mobile sticky horizontal tabs with auto-centering.
 - **Theme Support**: Dark and light themes with system color-scheme detection.
@@ -49,7 +49,7 @@ src/
 │   ├── modals/          # Configuration dialogs and settings modals
 │   └── ui/              # Reusable, stateless primitives
 ├── lib/                 # Core Logical Layer
-│   ├── actions/         # Svelte actions (e.g., drag-and-drop, tilt, tooltip)
+│   ├── actions/         # Svelte attachments ({@attach} for drag-and-drop, tilt, tooltip)
 │   ├── config/          # Preset configs (search engines, defaults)
 │   ├── core/            # Reactive global state stores (Svelte Runes)
 │   ├── infra/           # Infrastructure adapters (GitHub client, LocalStorage adapter)
@@ -66,8 +66,8 @@ src/
 ## Getting Started
 
 ### Prerequisites
-- Node.js >= 22.0.0
-- pnpm >= 11.0.0
+- Node.js (Current / LTS)
+- pnpm
 
 ### Local Development
 
@@ -81,13 +81,13 @@ pnpm dev
 # 3. Build for production
 pnpm build
 
-# 4. Format & Lint
+# 4. Format, Lint & Type Check
 pnpm format
 pnpm lint
 pnpm check
 ```
 
-*Note: Pushing code that fails Biome lint/format checks will cause the CI/CD build pipeline to fail.*
+*Note: Pushing code that fails Biome lint/format or type checks will cause the CI/CD build pipeline to fail.*
 
 ## License
 

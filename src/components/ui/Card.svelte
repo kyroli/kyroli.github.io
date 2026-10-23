@@ -1,38 +1,43 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import { cn } from '$lib/utils';
+import type { HTMLAttributes } from 'svelte/elements';
 import { tilt } from '$lib/actions/tilt';
-import { appState } from '$lib/core/app.svelte';
+import { UI_CONSTANTS } from '$lib/constants';
+import { cn } from '$lib/utils';
 
 let {
   children,
   class: className = '',
   onclick,
   href,
+  interactive = true,
   ...rest
-} = $props<{
-  children: Snippet;
-  class?: string;
-  onclick?: (e: MouseEvent) => void;
-  href?: string;
-}>();
+} = $props<
+  HTMLAttributes<HTMLElement> & {
+    children: Snippet;
+    class?: string;
+    onclick?: (e: MouseEvent) => void;
+    href?: string;
+    interactive?: boolean;
+  }
+>();
 
 const role = $derived(onclick ? 'button' : undefined);
 
-const baseStyles = 'block bg-surface border border-border rounded-xl tilt-card';
+const baseStyles = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface border border-border rounded-xl tilt-card`;
 
 const finalClass = $derived(
-  cn(baseStyles, appState.isEditMode ? 'overflow-visible' : 'overflow-hidden', className)
+  cn(baseStyles, interactive ? 'overflow-hidden' : 'overflow-visible', className)
 );
 </script>
 
 {#if href}
-  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {@attach tilt({ disabled: appState.isEditMode })} {...rest}>
+  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {@attach tilt({ disabled: !interactive })} {...rest}>
     {@render children()}
     <div class="tilt-shine"></div>
   </a>
 {:else}
-  <div {onclick} class={finalClass} {role} {@attach tilt({ disabled: appState.isEditMode })} {...rest}>
+  <div {onclick} class={finalClass} {role} {@attach tilt({ disabled: !interactive })} {...rest}>
     {@render children()}
     <div class="tilt-shine"></div>
   </div>

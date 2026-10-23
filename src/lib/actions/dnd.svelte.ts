@@ -1,6 +1,10 @@
+import type { Attachment } from 'svelte/attachments';
+import { on } from 'svelte/events';
 import { DND_CONSTANTS } from '../constants';
 import { appState } from '../core/app.svelte';
+import { dataState } from '../core/data.svelte';
 import type { DndPayload } from '../types';
+import { isDesktop } from '../utils';
 
 interface GroupMeta {
   id: string;
@@ -37,6 +41,8 @@ class DndEngine {
   #currentY = 0;
   #offsetX = 0;
   #offsetY = 0;
+  #stdW = 0;
+  #stdH = 0;
 
   #lastCollisionX = -1;
   #lastCollisionY = -1;
@@ -46,6 +52,7 @@ class DndEngine {
   #pointerId: number | null = null;
   #rafId: number | null = null;
   #lastFrameTime = 0;
+  #cleanupListeners: (() => void)[] = [];
 
   onDropCallback: ((payload: DndPayload) => void) | null = null;
 
@@ -87,12 +94,20 @@ class DndEngine {
     this.#offsetX = e.clientX - rect.left;
     this.#offsetY = e.clientY - rect.top;
 
+    const nodeRect = node.getBoundingClientRect();
+    this.#stdW = nodeRect.width;
+    this.#stdH = nodeRect.height;
+
     this.sourceHeight = rect.height;
 
-    window.addEventListener('pointermove', this.#onInput, { passive: true });
-    window.addEventListener('pointerup', this.#onUp);
-    window.addEventListener('pointercancel', this.#onUp);
-    window.addEventListener('resize', this.#onResize);
+    this.#cleanupListeners = [
+      on(window, 'pointermove', this.#onInput, { passive: true }),
+      on(window, 'pointerup', this.#onUp),
+      on(window, 'pointercancel', this.#onCancel),
+      on(window, 'blur', this.#onCancel),
+      on(window, 'keydown', this.#onKeyDown),
+      on(window, 'resize', this.#onResize)
+    ];
   }
 
   #onInput = (e: PointerEvent) => {
@@ -110,24 +125,14 @@ class DndEngine {
   };
 
   #startEngine() {
-    if (!this.#dragNode || !this.#pointerId) return;
-    this.isDragging = true;
-    this.hasDragged = true;
+    if (!this.#dragNode || this.#pointerId === null) return;
     document.body.classList.add('cursor-grabbing');
-
-    let captureTarget = this.#dragNode;
-    if (this.type === 'group') {
-      const groupItem = this.#dragNode.closest('.group-item') as HTMLElement;
-      if (groupItem) captureTarget = groupItem;
-    }
-    try {
-      captureTarget.setPointerCapture(this.#pointerId);
-    } catch (e) {
-      console.warn('Pointer capture failed:', e);
-    }
 
     this.#captureSnapshots();
     this.#createGhost(this.#dragNode);
+
+    this.isDragging = true;
+    this.hasDragged = true;
 
     this.#lastFrameTime = performance.now();
     this.#loop();
@@ -298,10 +303,9 @@ class DndEngine {
     const sX = window.scrollX;
     const sY = window.scrollY;
 
-    if (!this.#dragNode) return;
-    const stdRect = this.#dragNode.getBoundingClientRect();
-    const stdW = stdRect.width;
-    const stdH = stdRect.height;
+    const stdW = this.#stdW;
+    const stdH = this.#stdH;
+    if (stdW <= 0 || stdH <= 0) return;
 
     const groupEls = document.querySelectorAll('[data-dnd-group-id]');
 
@@ -342,8 +346,8 @@ class DndEngine {
         cols = Math.floor((contentWidth + gap + 1) / cellW);
         if (cols < 1) cols = 1;
 
-        const siteEls = gridEl.querySelectorAll('[data-dnd-site-id]');
-        itemCount = siteEls.length;
+        const groupData = dataState.groups.find((g) => g.id === id);
+        itemCount = groupData ? groupData.sites.length : 0;
 
         if (id === this.sourceGroupId && this.type === 'site') {
           itemCount = Math.max(0, itemCount - 1);
@@ -387,6 +391,21 @@ class DndEngine {
     this.#reset();
   };
 
+  #onCancel = () => {
+    if (this.#rafId) {
+      cancelAnimationFrame(this.#rafId);
+      this.#rafId = null;
+    }
+    this.#reset();
+  };
+
+  #onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this.isDragging) {
+      e.preventDefault();
+      this.#onCancel();
+    }
+  };
+
   #onResize = () => {
     if (this.isDragging) {
       this.#onUp();
@@ -405,6 +424,8 @@ class DndEngine {
     this.hoverGroupId = null;
     this.hoverIndex = null;
     this.sourceHeight = 0;
+    this.#stdW = 0;
+    this.#stdH = 0;
     this.#dragNode = null;
     this.#pointerId = null;
     this.#groupMetas = [];
@@ -417,10 +438,8 @@ class DndEngine {
     }
     document.body.classList.remove('cursor-grabbing');
 
-    window.removeEventListener('pointermove', this.#onInput);
-    window.removeEventListener('pointerup', this.#onUp);
-    window.removeEventListener('pointercancel', this.#onUp);
-    window.removeEventListener('resize', this.#onResize);
+    for (const off of this.#cleanupListeners) off();
+    this.#cleanupListeners = [];
   }
 
   #createGhost(src: HTMLElement) {
@@ -432,6 +451,13 @@ class DndEngine {
 
     const rect = target.getBoundingClientRect();
     this.#ghostEl = target.cloneNode(true) as HTMLElement;
+
+    this.#ghostEl.removeAttribute('data-dnd-group-id');
+    this.#ghostEl.removeAttribute('data-dnd-site-id');
+    for (const el of this.#ghostEl.querySelectorAll('[data-dnd-group-id], [data-dnd-site-id]')) {
+      el.removeAttribute('data-dnd-group-id');
+      el.removeAttribute('data-dnd-site-id');
+    }
 
     Object.assign(this.#ghostEl.style, {
       position: 'fixed',
@@ -463,71 +489,47 @@ class DndEngine {
 
 export const dndState = new DndEngine();
 
-export function draggable(params: { type: 'group' | 'site'; id: string; groupId: string | null }) {
+export function draggable(params: {
+  type: 'group' | 'site';
+  id: string;
+  groupId: string | null;
+}): Attachment<HTMLElement> {
   return (element: HTMLElement) => {
-    function onDown(e: PointerEvent) {
-      dndState.init(e, params.type, params.id, params.groupId, element);
-    }
+    if (!appState.isEditMode) return;
 
-    function onClick(e: MouseEvent) {
-      if (dndState.hasDragged) {
+    const desktop = isDesktop.current;
+    element.style.cursor = params.type === 'group' ? 'grab' : 'move';
+    element.style.userSelect = 'none';
+    element.style.touchAction = desktop ? 'none' : '';
+
+    const offs = [
+      on(element, 'pointerdown', (e) =>
+        dndState.init(e, params.type, params.id, params.groupId, element)
+      ),
+      on(
+        element,
+        'click',
+        (e) => {
+          if (dndState.hasDragged) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+          }
+        },
+        { capture: true }
+      ),
+      on(element, 'contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
-    }
+      })
+    ];
 
-    function onContextMenu(e: Event) {
-      if (appState.isEditMode) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-
-    function updateTouchAction() {
-      if (appState.isEditMode && window.innerWidth >= 768) {
-        element.style.touchAction = 'none';
-      } else {
-        element.style.touchAction = '';
-      }
-    }
-
-    let isBound = false;
-
-    const cleanup = () => {
-      if (!isBound) return;
+    return () => {
       element.style.cursor = '';
       element.style.touchAction = '';
       element.style.userSelect = '';
 
-      window.removeEventListener('resize', updateTouchAction);
-      element.removeEventListener('pointerdown', onDown);
-      element.removeEventListener('click', onClick, { capture: true });
-      element.removeEventListener('contextmenu', onContextMenu);
-      isBound = false;
+      for (const off of offs) off();
     };
-
-    const setup = () => {
-      element.style.cursor = params.type === 'group' ? 'grab' : 'move';
-      element.style.userSelect = 'none';
-
-      updateTouchAction();
-      window.addEventListener('resize', updateTouchAction);
-
-      element.addEventListener('pointerdown', onDown);
-      element.addEventListener('click', onClick, { capture: true });
-      element.addEventListener('contextmenu', onContextMenu);
-      isBound = true;
-    };
-
-    $effect(() => {
-      if (appState.isEditMode) {
-        setup();
-        return cleanup;
-      }
-      cleanup();
-    });
-
-    return cleanup;
   };
 }

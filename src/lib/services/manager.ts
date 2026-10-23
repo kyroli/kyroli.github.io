@@ -1,5 +1,6 @@
 import { dataState } from '../core/data.svelte';
 import { MESSAGES } from '../i18n';
+import type { NavData } from '../types';
 
 class DataManager {
   addGroup(name: string) {
@@ -10,6 +11,7 @@ class DataManager {
       name: name.trim(),
       sites: []
     });
+    dataState.markDirty();
   }
 
   renameGroup(groupId: string, newName: string) {
@@ -18,6 +20,7 @@ class DataManager {
     const group = dataState.groups.find((g) => g.id === groupId);
     if (group) {
       group.name = newName.trim();
+      dataState.markDirty();
     }
   }
 
@@ -25,60 +28,34 @@ class DataManager {
     const index = dataState.groups.findIndex((g) => g.id === groupId);
     if (index !== -1) {
       dataState.groups.splice(index, 1);
+      dataState.markDirty();
     }
   }
 
-  moveGroup(sourceId: string, targetId: string | null) {
-    if (sourceId === targetId) return;
-
+  moveGroup(sourceId: string, targetIndex: number) {
     const srcIdx = dataState.groups.findIndex((g) => g.id === sourceId);
-    if (srcIdx === -1) return;
+    if (srcIdx === -1 || srcIdx === targetIndex) return;
 
     const [group] = dataState.groups.splice(srcIdx, 1);
-
-    if (targetId) {
-      const tgtIdx = dataState.groups.findIndex((g) => g.id === targetId);
-      if (tgtIdx !== -1) {
-        dataState.groups.splice(tgtIdx, 0, group);
-      } else {
-        dataState.groups.push(group);
-      }
-    } else {
-      dataState.groups.push(group);
-    }
+    const clampedIdx = Math.max(0, Math.min(targetIndex, dataState.groups.length));
+    dataState.groups.splice(clampedIdx, 0, group);
+    dataState.markDirty();
   }
 
-  moveSite(sourceId: string, targetId: string | null, targetGroupId: string) {
-    let sourceGroup: (typeof dataState.groups)[0] | undefined;
-    let sourceSite: (typeof dataState.groups)[0]['sites'][0] | undefined;
-    let sourceSiteIdx = -1;
-
-    for (const group of dataState.groups) {
-      const idx = group.sites.findIndex((s) => s.id === sourceId);
-      if (idx !== -1) {
-        sourceGroup = group;
-        sourceSiteIdx = idx;
-        sourceSite = group.sites[idx];
-        break;
-      }
-    }
-
-    if (!sourceSite || !sourceGroup) return;
-
+  moveSite(sourceId: string, targetGroupId: string, targetIndex: number) {
     const targetGroup = dataState.groups.find((g) => g.id === targetGroupId);
     if (!targetGroup) return;
 
-    sourceGroup.sites.splice(sourceSiteIdx, 1);
-
-    if (targetId) {
-      const targetSiteIdx = targetGroup.sites.findIndex((s) => s.id === targetId);
-      if (targetSiteIdx !== -1) {
-        targetGroup.sites.splice(targetSiteIdx, 0, sourceSite);
-      } else {
-        targetGroup.sites.push(sourceSite);
+    for (const group of dataState.groups) {
+      const srcIdx = group.sites.findIndex((s) => s.id === sourceId);
+      if (srcIdx !== -1) {
+        if (group.id === targetGroupId && srcIdx === targetIndex) return;
+        const [site] = group.sites.splice(srcIdx, 1);
+        const clampedIdx = Math.max(0, Math.min(targetIndex, targetGroup.sites.length));
+        targetGroup.sites.splice(clampedIdx, 0, site);
+        dataState.markDirty();
+        return;
       }
-    } else {
-      targetGroup.sites.push(sourceSite);
     }
   }
 
@@ -103,6 +80,7 @@ class DataManager {
         site.name = name.trim();
         site.url = cleanUrl;
         site.icon = icon?.trim() || '';
+        dataState.markDirty();
       }
     } else {
       group.sites.push({
@@ -111,6 +89,7 @@ class DataManager {
         url: cleanUrl,
         icon: icon?.trim() || ''
       });
+      dataState.markDirty();
     }
   }
 
@@ -120,6 +99,7 @@ class DataManager {
       const idx = group.sites.findIndex((s) => s.id === siteId);
       if (idx !== -1) {
         group.sites.splice(idx, 1);
+        dataState.markDirty();
       }
     }
   }
@@ -157,14 +137,16 @@ class DataManager {
   }
 
   async importData(file: File) {
-    let json: any;
+    let json: unknown;
     try {
       json = JSON.parse(await file.text());
     } catch {
       throw new Error(MESSAGES.TOAST.IMPORT_FAIL_FORMAT);
     }
-    if (!Array.isArray(json?.groups)) throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
-    dataState.setGroups(json.groups);
+    if (!json || typeof json !== 'object' || !Array.isArray((json as NavData).groups)) {
+      throw new Error(MESSAGES.TOAST.INVALID_BACKUP);
+    }
+    dataState.setGroups((json as NavData).groups);
   }
 }
 

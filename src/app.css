@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-primary: var(--primary);
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-text: var(--text);
-  --color-text-dim: var(--text-dim);
-  --color-icon-bg: var(--icon-bg);
-  --color-danger: var(--danger);
-  --shadow-solid: var(--shadow-solid);
-  --shadow-float: var(--shadow-float);
+  --color-primary: light-dark(oklch(65% 0.2 30), oklch(55% 0.2 30));
+  --color-bg: light-dark(oklch(96.7% 0.001 286.4), oklch(14.1% 0.005 285.8));
+  --color-surface: light-dark(oklch(100% 0 0), oklch(18.3% 0.004 286));
+  --color-border: light-dark(oklch(92% 0.004 286.3), oklch(100% 0 0 / 0.15));
+  --color-text: light-dark(oklch(21% 0.006 285.9), oklch(98.5% 0 0));
+  --color-text-dim: light-dark(oklch(55.2% 0.016 285.9), oklch(70.5% 0.015 286.1));
+  --color-icon-bg: light-dark(oklch(98.5% 0 0), oklch(27.4% 0.006 286));
+  --color-danger: light-dark(oklch(57.7% 0.245 27.3), oklch(63.7% 0.237 25.3));
+  --color-shine: light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.08));
+  --shadow-solid: 0 1px 2px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
+  --shadow-float: 0 10px 30px -5px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)), 0 4px 6px -2px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
 
   --font-sans: "Segoe UI", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
@@ -34,54 +37,25 @@
 
 @layer base {
   :root {
-    -webkit-user-select: none;
     user-select: none;
     cursor: default;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     font-size-adjust: from-font;
     color-scheme: light;
-
-    --primary: oklch(65% 0.2 30);
-    --bg: oklch(96.7% 0.001 286.4); 
-    --surface: oklch(100% 0 0);
-    --border: oklch(92% 0.004 286.3);
-    --text: oklch(21% 0.006 285.9);
-    --text-dim: oklch(55.2% 0.016 285.9);
-    --icon-bg: oklch(98.5% 0 0);
-    --danger: oklch(57.7% 0.245 27.3);
-    --shine-color: rgba(0, 0, 0, 0.04);
-    
-    --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-float: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-
-  * {
-    user-select: inherit;
-    -webkit-user-select: inherit;
-    outline: none !important;
-  }
-
-  input {
-    -webkit-user-select: text;
-    user-select: text;
-    cursor: text;
   }
 
   :root.dark {
     color-scheme: dark;
-    --primary: oklch(55% 0.2 30);
-    --bg: oklch(14.1% 0.005 285.8);
-    --surface: oklch(18.3% 0.004 286);
-    --border: oklch(100% 0 0 / 0.15);
-    --text: oklch(98.5% 0 0);
-    --text-dim: oklch(70.5% 0.015 286.1);
-    --icon-bg: oklch(27.4% 0.006 286);
-    --danger: oklch(63.7% 0.237 25.3);
-    --shine-color: rgba(255, 255, 255, 0.08);
-    
-    --shadow-solid: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-    --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -2px rgba(0, 0, 0, 0.2);
+  }
+
+  * {
+    user-select: inherit;
+    outline: none !important;
+  }
+
+  input {
+    user-select: text;
+    cursor: text;
   }
 
   html {
@@ -90,8 +64,8 @@
 
   body {
     min-height: 100dvh;
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: var(--color-bg);
+    color: var(--color-text);
     font-family: var(--font-sans);
     line-height: 1.5;
     position: relative;
@@ -133,7 +107,7 @@
   pointer-events: none;
   background: radial-gradient(
     circle 150px at var(--mx, 50%) var(--my, 50%),
-    var(--shine-color),
+    var(--color-shine),
     transparent
   );
   opacity: var(--shine-opacity, 0);
@@ -144,9 +118,9 @@
 @utility shimmer {
   background: linear-gradient(
     90deg,
-    var(--border) 25%,
-    var(--bg) 50%,
-    var(--border) 75%
+    var(--color-border) 25%,
+    var(--color-bg) 50%,
+    var(--color-border) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
@@ -199,10 +173,7 @@
   }
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
+@utility no-scrollbar {
   scrollbar-width: none;
 }
 
@@ -226,8 +197,22 @@
 }
 
 .modal-dialog {
-  transition: display 0.2s allow-discrete,
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              display 0.2s allow-discrete,
               overlay 0.2s allow-discrete;
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.modal-dialog[open] {
+  opacity: 1;
+  transform: scale(1);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.98);
+  }
 }
 
 .modal-dialog::backdrop {

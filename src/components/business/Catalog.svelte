@@ -1,29 +1,27 @@
 <script lang="ts">
+import type { Attachment } from 'svelte/attachments';
+import { SvelteSet } from 'svelte/reactivity';
+import { scrollY } from 'svelte/reactivity/window';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
-import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 
 let observer: IntersectionObserver | null = null;
-let scrollY = $state(0);
+let navEl = $state<HTMLElement | null>(null);
 
+const visibleGroupIds = new SvelteSet<string>();
 const groupIds = $derived(dataState.groups.map((g) => g.id).join(','));
 
-// Set of currently active group IDs
-const activeGroupSet = $derived.by(() => {
-  if (appState.visibleGroupIds.length > 0) {
-    return new Set(appState.visibleGroupIds);
-  }
-  return new Set(dataState.groups[0] ? [dataState.groups[0].id] : []);
-});
+function isGroupActive(id: string): boolean {
+  return visibleGroupIds.size > 0 ? visibleGroupIds.has(id) : dataState.groups[0]?.id === id;
+}
 
 // Calculate the first active group ID for mobile auto-centering
-const firstActiveGroupId = $derived.by(() => {
-  if (appState.visibleGroupIds.length > 0) {
-    return appState.visibleGroupIds[0];
-  }
-  return dataState.groups[0]?.id || '';
-});
+const firstActiveGroupId = $derived(
+  visibleGroupIds.size > 0
+    ? (dataState.groups.find((g) => visibleGroupIds.has(g.id))?.id ?? '')
+    : (dataState.groups[0]?.id ?? '')
+);
 
 // Map to store mobile nav button elements for auto-centering
 const buttonEls = new Map<string, HTMLButtonElement>();
@@ -46,13 +44,13 @@ $effect(() => {
 
 // Auto-center the first active category in the horizontal scrollbar on mobile
 $effect(() => {
-  if (firstActiveGroupId) {
+  if (firstActiveGroupId && navEl && navEl.offsetWidth > 0) {
     const btn = buttonEls.get(firstActiveGroupId);
     if (btn) {
-      btn.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
+      const targetLeft = btn.offsetLeft - navEl.clientWidth / 2 + btn.clientWidth / 2;
+      navEl.scrollTo({
+        left: targetLeft,
+        behavior: 'smooth'
       });
     }
   }
@@ -62,21 +60,19 @@ function setupObserver() {
   if (observer) {
     observer.disconnect();
   }
-
-  const visibilityMap = new Map<string, boolean>();
+  visibleGroupIds.clear();
 
   observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
+      for (const entry of entries) {
         const id = entry.target.getAttribute('data-dnd-group-id');
-        if (id) {
-          visibilityMap.set(id, entry.isIntersecting);
+        if (!id) continue;
+        if (entry.isIntersecting) {
+          visibleGroupIds.add(id);
+        } else {
+          visibleGroupIds.delete(id);
         }
-      });
-
-      appState.visibleGroupIds = Array.from(visibilityMap.entries())
-        .filter(([_, visible]) => visible)
-        .map(([id]) => id);
+      }
     },
     {
       threshold: [0, 0.1, 0.5, 0.9, 1.0],
@@ -103,7 +99,7 @@ function scrollToGroup(id: string) {
 }
 
 // Attachment to register button elements in the map
-function registerButton(id: string) {
+function registerButton(id: string): Attachment<HTMLButtonElement> {
   return (node: HTMLButtonElement) => {
     buttonEls.set(id, node);
     return () => {
@@ -112,8 +108,6 @@ function registerButton(id: string) {
   };
 }
 </script>
-
-<svelte:window bind:scrollY={scrollY} />
 
 {#if dataState.groups.length > 0}
   <!-- Desktop left sidebar navigation -->
@@ -126,8 +120,8 @@ function registerButton(id: string) {
       <div class="absolute left-[9.5px] top-3 bottom-3 w-px bg-border/40 -z-10"></div>
 
       {#each dataState.groups as group, i (group.id)}
-        {@const isActive = activeGroupSet.has(group.id)}
-        {@const nextActive = i < dataState.groups.length - 1 && activeGroupSet.has(dataState.groups[i + 1].id)}
+        {@const isActive = isGroupActive(group.id)}
+        {@const nextActive = i < dataState.groups.length - 1 && isGroupActive(dataState.groups[i + 1].id)}
 
         <div class="relative flex flex-col">
           <button
@@ -171,16 +165,17 @@ function registerButton(id: string) {
 
   <!-- Mobile/narrow viewport horizontal scroll sticky navigation -->
   <nav
+    bind:this={navEl}
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
     class={`sticky top-0 z-30 w-full flex xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200 ${
-      scrollY > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
+      (scrollY.current ?? 0) > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
     }`}
   >
     <div class="flex items-center mx-auto md:mx-0 py-0.5">
       {#each dataState.groups as group, i (group.id)}
-        {@const isActive = activeGroupSet.has(group.id)}
-        {@const prevActive = i > 0 && activeGroupSet.has(dataState.groups[i - 1].id)}
-        {@const nextActive = i < dataState.groups.length - 1 && activeGroupSet.has(dataState.groups[i + 1].id)}
+        {@const isActive = isGroupActive(group.id)}
+        {@const prevActive = i > 0 && isGroupActive(dataState.groups[i - 1].id)}
+        {@const nextActive = i < dataState.groups.length - 1 && isGroupActive(dataState.groups[i + 1].id)}
 
         {@const roundedClass = isActive
           ? prevActive && nextActive

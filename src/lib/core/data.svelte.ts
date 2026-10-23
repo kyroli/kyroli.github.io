@@ -1,10 +1,16 @@
+import { on } from 'svelte/events';
 import { STORAGE_KEYS, storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
-function trackDeep(obj: unknown) {
-  if (obj && typeof obj === 'object') {
-    for (const key in obj) {
-      trackDeep((obj as Record<string, unknown>)[key]);
+function trackGroups(groups: Group[]) {
+  for (const group of groups) {
+    group.id;
+    group.name;
+    for (const site of group.sites) {
+      site.id;
+      site.name;
+      site.url;
+      site.icon;
     }
   }
 }
@@ -16,8 +22,6 @@ class DataCore {
   lastSha = $state('');
   isDirty = $state(false);
 
-  private skipDirtyCheck = false;
-
   syncStatus = $state<SyncStatus>('idle');
   syncError = $state<string | undefined>(undefined);
 
@@ -25,81 +29,96 @@ class DataCore {
   isReady = $derived(this.groups.length > 0 || this.syncStatus !== 'checking');
 
   constructor() {
-    const rawGroups = storage.data.groups;
-    this.groups = this.sanitizeGroups(rawGroups);
+    this.groups = this.sanitizeGroups(storage.data.groups);
     this.config = storage.config;
     this.lastSha = storage.sha;
-  }
 
-  private sanitizeGroups(groups: Group[]): Group[] {
-    return groups.map((g) => ({
-      id: g.id,
-      name: g.name,
-      sites: g.sites.map((s) => ({
-        id: s.id,
-        name: s.name,
-        url: s.url.trim(),
-        icon: s.icon || ''
-      }))
-    }));
-  }
+    $effect.root(() => {
+      let isFirstRun = true;
+      let timer: number;
 
-  init() {
-    let isFirstRun = true;
-    let timer: number;
+      $effect(() => {
+        // Read to track dependency — snapshot is deferred to the write callback
+        trackGroups(this.groups);
 
-    $effect(() => {
-      // Read to track dependency — snapshot is deferred to the write callback
-      trackDeep(this.groups);
-
-      if (isFirstRun) {
-        isFirstRun = false;
-        return;
-      }
-
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        storage.data = { groups: $state.snapshot(this.groups) };
-        if (this.skipDirtyCheck) {
-          this.skipDirtyCheck = false;
+        if (isFirstRun) {
+          isFirstRun = false;
           return;
         }
-        this.isDirty = true;
-      }, 500) as unknown as number;
 
-      return () => clearTimeout(timer);
-    });
+        clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          storage.data = { groups: $state.snapshot(this.groups) };
+        }, 500);
 
-    $effect(() => {
-      storage.config = this.config;
-    });
+        return () => clearTimeout(timer);
+      });
 
-    $effect(() => {
-      storage.sha = this.lastSha;
-    });
+      $effect(() => {
+        storage.config = this.config;
+      });
 
-    window.addEventListener('storage', (e) => {
-      if (e.key === STORAGE_KEYS.DATA && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed.groups)) {
-            this.skipDirtyCheck = true;
-            this.groups = this.sanitizeGroups(parsed.groups);
+      $effect(() => {
+        storage.sha = this.lastSha;
+      });
+
+      $effect(() =>
+        on(window, 'storage', (e) => {
+          if (e.key === STORAGE_KEYS.DATA && e.newValue) {
+            try {
+              const parsed = JSON.parse(e.newValue);
+              if (Array.isArray(parsed.groups)) {
+                this.groups = this.sanitizeGroups(parsed.groups);
+              }
+            } catch (err) {
+              console.error('Cross-tab sync error:', err);
+            }
           }
-        } catch (err) {
-          console.error('Cross-tab sync error:', err);
-        }
-      }
 
-      if (e.key === STORAGE_KEYS.CONFIG && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          this.config = parsed;
-        } catch (err) {
-          console.error('Cross-tab config sync error:', err);
-        }
-      }
+          if (e.key === STORAGE_KEYS.CONFIG && e.newValue) {
+            try {
+              this.config = JSON.parse(e.newValue);
+            } catch (err) {
+              console.error('Cross-tab config sync error:', err);
+            }
+          }
+        })
+      );
     });
+  }
+
+  private isValidHttpUrl(rawUrl: string): boolean {
+    if (!URL.canParse(rawUrl)) return false;
+    const parsed = new URL(rawUrl);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  }
+
+  private sanitizeGroups(groups: unknown): Group[] {
+    if (!Array.isArray(groups)) return [];
+    return groups
+      .filter((g): g is Record<string, unknown> => !!g && typeof g === 'object')
+      .map((g) => ({
+        id: typeof g.id === 'string' && g.id.trim() ? g.id : crypto.randomUUID(),
+        name: typeof g.name === 'string' && g.name.trim() ? g.name.trim() : 'Untitled',
+        sites: Array.isArray(g.sites)
+          ? g.sites
+              .filter((s): s is Record<string, unknown> => {
+                if (!s || typeof s !== 'object') return false;
+                if (typeof s.url !== 'string' || typeof s.name !== 'string') return false;
+                return this.isValidHttpUrl(s.url.trim());
+              })
+              .map((s) => ({
+                id: typeof s.id === 'string' && s.id.trim() ? s.id : crypto.randomUUID(),
+                name: (s.name as string).trim(),
+                url: (s.url as string).trim(),
+                icon: typeof s.icon === 'string' ? s.icon.trim() : ''
+              }))
+          : []
+      }));
+  }
+
+  markDirty() {
+    this.isDirty = true;
   }
 
   setGroups(newGroups: Group[]) {
@@ -123,7 +142,6 @@ class DataCore {
   }
 
   replaceData(newData: NavData, newSha: string) {
-    this.skipDirtyCheck = true;
     this.groups = this.sanitizeGroups(newData.groups);
     this.lastSha = newSha;
     this.syncStatus = 'success';

@@ -34,7 +34,7 @@ function switchEngine(id: string) {
 }
 
 function handleWindowKeydown(e: KeyboardEvent) {
-  if (appState.activeModal) return;
+  if (appState.modal) return;
 
   const target = e.target as HTMLElement | null;
   const isInputTarget =
@@ -74,7 +74,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
             in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} 
             src={activeEngine.icon} 
             alt={activeEngine.name} 
-            class={`absolute inset-0 w-full h-full object-contain ${appState.isDark ? 'invert' : ''}`} 
+            class="absolute inset-0 w-full h-full object-contain dark:invert" 
           />
         {/key}
       </div>
@@ -107,7 +107,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
   >
     {#each Object.values(SEARCH_ENGINES) as engine}
       <button type="button" onclick={() => switchEngine(engine.id)} class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 w-full text-left text-text hover:bg-bg active-press-icon">
-        <img src={engine.icon} alt={engine.name} class={`w-4 h-4 object-contain ${appState.isDark ? 'invert' : ''}`} />
+        <img src={engine.icon} alt={engine.name} class="w-4 h-4 object-contain dark:invert" />
         <span class="flex-1">{engine.name}</span>
         {#if currentEngineId === engine.id}
           <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>

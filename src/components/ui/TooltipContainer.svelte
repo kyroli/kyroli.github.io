@@ -1,8 +1,8 @@
 <script lang="ts">
 import { fade } from 'svelte/transition';
-import { promoteToTopLayer } from '$lib/actions/popover';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
+import { promoteToTopLayer } from '$lib/utils';
 </script>
 
 {#if appState.tooltip && appState.tooltip.visible}

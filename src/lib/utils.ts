@@ -1,5 +1,14 @@
 import { type ClassValue, clsx } from 'clsx';
+import type { Attachment } from 'svelte/attachments';
+import { MediaQuery } from 'svelte/reactivity';
 import { twMerge } from 'tailwind-merge';
+
+export const isHoverable = new MediaQuery('(hover: hover) and (pointer: fine)');
+export const isDesktop = new MediaQuery('(width >= 768px)');
+
+export const promoteToTopLayer: Attachment<HTMLElement> = (element) => {
+  element.showPopover();
+};
 
 interface AssetModule {
   default?: string;
@@ -31,7 +40,7 @@ export const getIcon = (url: string, custom?: string): string => {
     const domain = new URL(url).hostname;
     const originalUrl = `icons.bitwarden.net/${domain}/icon.png`;
     return `https://wsrv.nl/?url=${originalUrl}&w=80&h=80&output=webp&q=85`;
-  } catch (e) {
+  } catch {
     return assets.globe || '';
   }
 };

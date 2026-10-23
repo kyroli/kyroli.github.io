@@ -6,7 +6,7 @@ import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
 import type { Site } from '$lib/types';
 import { DEFAULT_ICON, getIcon } from '$lib/utils';
-import CardBase from './CardBase.svelte';
+import Card from '../ui/Card.svelte';
 
 let { site, groupId } = $props<{ site: Site; groupId: string }>();
 
@@ -18,6 +18,7 @@ const displayHostname = $derived.by(() => {
   }
 });
 const safeHref = $derived(!appState.isEditMode ? site.url : undefined);
+const iconSrc = $derived(getIcon(site.url, site.icon));
 
 const cardClass = $derived(
   `group relative transition-all duration-200 border active-press ${
@@ -58,15 +59,14 @@ function handleClick(e: MouseEvent) {
 </script>
 
 <div class="site-card relative h-full" data-id={site.id}>
-  <CardBase href={safeHref as string | undefined} onclick={handleClick} class={cardClass}>
+  <Card href={safeHref} onclick={handleClick} interactive={!appState.isEditMode} class={cardClass}>
     <div class="shrink-0 w-10 h-10 rounded-xl bg-icon-bg flex items-center justify-center overflow-hidden border border-border/50 transition-transform duration-200 group-hover:scale-105 p-2">
       <img 
-        src={getIcon(site.url, site.icon)} 
+        src={iconSrc} 
         onerror={handleImageError}
         class={imgClass}
         loading="lazy" 
         decoding="async" 
-        fetchpriority="low"
         alt={site.name} 
       />
     </div>
@@ -85,5 +85,5 @@ function handleClick(e: MouseEvent) {
         <Trash2 class="w-3.5 h-3.5" />
       </button>
     {/if}
-  </CardBase>
+  </Card>
 </div>

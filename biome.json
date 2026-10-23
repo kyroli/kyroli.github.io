@@ -21,14 +21,14 @@
     "rules": {
       "preset": "recommended",
       "correctness": {
-        "noUnusedVariables": "off",
-        "noUnusedImports": "off"
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error"
       },
       "style": {
         "useConst": "error"
       },
       "suspicious": {
-        "noExplicitAny": "off"
+        "noExplicitAny": "error"
       }
     }
   },
@@ -54,9 +54,13 @@
   },
   "overrides": [
     {
-      "includes": ["*.svelte"],
+      "includes": ["**/*.svelte"],
       "linter": {
         "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          },
           "style": {
             "useConst": "off"
           }

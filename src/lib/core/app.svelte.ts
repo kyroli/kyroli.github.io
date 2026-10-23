@@ -1,3 +1,4 @@
+import { online } from 'svelte/reactivity/window';
 import { APP_TIMEOUTS } from '../constants';
 import { MESSAGES } from '../i18n';
 import { storage } from '../infra/storage';
@@ -9,13 +10,18 @@ interface ToastState {
   type: ToastType;
 }
 
-interface ConfirmPayload {
+export interface ConfirmPayload {
   msg: string;
   onConfirm: () => void;
   isDestructive?: boolean;
 }
 
-type ModalType = 'config' | 'site' | 'group' | 'confirm' | null;
+export type ModalState =
+  | { type: 'config' }
+  | { type: 'group'; groupId?: string }
+  | { type: 'site'; groupId: string; siteId?: string }
+  | ({ type: 'confirm' } & ConfirmPayload)
+  | null;
 
 interface TooltipState {
   visible: boolean;
@@ -25,42 +31,24 @@ interface TooltipState {
 
 class AppCore {
   isDark = $state(
-    storage.theme === 'dark' ||
+    document.documentElement.classList.contains('dark') ||
+      storage.theme === 'dark' ||
       (!storage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
   );
-  isOnline = $state(navigator.onLine);
+
+  get isOnline() {
+    return online.current ?? true;
+  }
 
   isEditMode = $state(false);
-
-  activeModal = $state<ModalType>(null);
-  editingGroupId = $state<string | undefined>(undefined);
-  editingSiteId = $state<string | undefined>(undefined);
-  confirmPayload = $state<ConfirmPayload | null>(null);
+  modal = $state<ModalState>(null);
 
   toast = $state<ToastState | null>(null);
   private toastTimer: number | null = null;
 
   tooltip = $state<TooltipState | null>(null);
 
-  visibleGroupIds = $state<string[]>([]);
-
   constructor() {
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-    });
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-    });
-  }
-
-  private updateThemeMeta(isDark: boolean) {
-    const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) {
-      themeMeta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
-    }
-  }
-
-  init() {
     const isZh = navigator.language.toLowerCase().startsWith('zh');
     document.documentElement.lang = isZh ? 'zh-CN' : 'en';
 
@@ -69,11 +57,20 @@ class AppCore {
       descMeta.setAttribute('content', MESSAGES.UI.DESCRIPTION);
     }
 
-    $effect(() => {
-      document.documentElement.classList.toggle('dark', this.isDark);
-      storage.theme = this.isDark ? 'dark' : 'light';
-      this.updateThemeMeta(this.isDark);
+    $effect.root(() => {
+      $effect(() => {
+        document.documentElement.classList.toggle('dark', this.isDark);
+        storage.theme = this.isDark ? 'dark' : 'light';
+        this.updateThemeMeta(this.isDark);
+      });
     });
+  }
+
+  private updateThemeMeta(isDark: boolean) {
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', isDark ? '#09090b' : '#ffffff');
+    }
   }
 
   toggleTheme = () => {
@@ -88,30 +85,23 @@ class AppCore {
   };
 
   openConfig = () => {
-    this.activeModal = 'config';
+    this.modal = { type: 'config' };
   };
 
   openGroupModal = (groupId?: string) => {
-    this.editingGroupId = groupId;
-    this.activeModal = 'group';
+    this.modal = { type: 'group', groupId };
   };
 
   openSiteModal = (groupId: string, siteId?: string) => {
-    this.editingGroupId = groupId;
-    this.editingSiteId = siteId;
-    this.activeModal = 'site';
+    this.modal = { type: 'site', groupId, siteId };
   };
 
   openConfirm = (payload: ConfirmPayload) => {
-    this.confirmPayload = payload;
-    this.activeModal = 'confirm';
+    this.modal = { type: 'confirm', ...payload };
   };
 
   closeModal = () => {
-    this.activeModal = null;
-    this.editingGroupId = undefined;
-    this.editingSiteId = undefined;
-    this.confirmPayload = null;
+    this.modal = null;
   };
 
   showToast = (msg: string, type: ToastType = 'info') => {
@@ -126,8 +116,8 @@ class AppCore {
     this.tooltip = { visible: true, msg, anchorName };
   };
 
-  hideTooltip = () => {
-    if (this.tooltip) {
+  hideTooltip = (anchorName?: string) => {
+    if (this.tooltip && (!anchorName || this.tooltip.anchorName === anchorName)) {
       this.tooltip.visible = false;
     }
   };

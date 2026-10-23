@@ -1,12 +1,12 @@
 <script lang="ts">
 import { onMount } from 'svelte';
 import { fade } from 'svelte/transition';
-import { promoteToTopLayer } from '$lib/actions/popover';
 import { ANIMATION_SPEED, APP_TIMEOUTS } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { sync } from '$lib/services/sync';
+import { promoteToTopLayer } from '$lib/utils';
 import Catalog from './components/business/Catalog.svelte';
 
 import Header from './components/business/Header.svelte';
@@ -16,13 +16,9 @@ import Button from './components/ui/Button.svelte';
 import Modal from './components/ui/Modal.svelte';
 import TooltipContainer from './components/ui/TooltipContainer.svelte';
 
-dataState.init();
-appState.init();
-let isMounted = $state(false);
 let showSkeleton = $state(false);
 
 onMount(() => {
-  isMounted = true;
   sync.init();
 
   const timer = setTimeout(() => {
@@ -50,67 +46,68 @@ const toastClass = $derived(
     <Catalog />
 
     <main>
-      {#if isMounted}
-        {#if dataState.isReady}
-          <div in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW, delay: ANIMATION_SPEED.DELAY_SHORT }}>
-            {#if !dataState.hasToken && appState.activeModal !== 'config'}
-              <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim">
-                <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
-              </div>
-            {/if}
-            <SiteGrid />
-          </div>
-        {:else if dataState.syncError}
-          <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-20 text-danger font-bold">
-            <p>Error: {dataState.syncError}</p>
-            <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
-          </div>
-        {:else if showSkeleton}
-          <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}>
-            <LoadingSkeleton />
-          </div>
-        {/if}
+      {#if dataState.isReady}
+        <div in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}>
+          {#if !dataState.hasToken && appState.modal?.type !== 'config'}
+            <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-10 opacity-50 text-text-dim">
+              <p class="font-bold">{MESSAGES.UI.TIP_CONFIG_GITHUB}</p>
+            </div>
+          {/if}
+          <SiteGrid />
+        </div>
+      {:else if dataState.syncError}
+        <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-20 text-danger font-bold">
+          <p>Error: {dataState.syncError}</p>
+          <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
+        </div>
+      {:else if showSkeleton}
+        <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}>
+          <LoadingSkeleton />
+        </div>
       {/if}
     </main>
   </div>
   
-  {#if appState.activeModal === 'config'}
+  {#if appState.modal?.type === 'config'}
     {#await import('./components/modals/ConfigModal.svelte') then { default: ConfigModal }}
       <ConfigModal onClose={appState.closeModal} />
     {/await}
   {/if}
 
-  {#if appState.activeModal === 'site' && appState.editingGroupId}
+  {#if appState.modal?.type === 'site'}
+    {@const { groupId, siteId } = appState.modal}
     {#await import('./components/modals/SiteModal.svelte') then { default: SiteModal }}
       <SiteModal 
-        groupId={appState.editingGroupId} 
-        siteId={appState.editingSiteId} 
+        {groupId} 
+        {siteId} 
         onClose={appState.closeModal} 
       />
     {/await}
   {/if}
 
-  {#if appState.activeModal === 'group'}
+  {#if appState.modal?.type === 'group'}
+    {@const { groupId } = appState.modal}
     {#await import('./components/modals/GroupModal.svelte') then { default: GroupModal }}
       <GroupModal 
-        groupId={appState.editingGroupId}
+        {groupId}
         onClose={appState.closeModal}
       />
     {/await}
   {/if}
 
-  {#if appState.activeModal === 'confirm' && appState.confirmPayload}
+  {#if appState.modal?.type === 'confirm'}
+    {@const { msg, isDestructive, onConfirm } = appState.modal}
     <Modal onClose={appState.closeModal} title={MESSAGES.UI.CONFIRM_ACTION}>
       <div class="space-y-6 pt-2">
          <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line">
-            {appState.confirmPayload.msg}
+            {msg}
          </p>
         <div class="flex gap-3">
           <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
           <Button 
-            variant={appState.confirmPayload.isDestructive ? 'danger' : 'primary'} 
+            variant={isDestructive ? 'danger' : 'primary'} 
             onclick={() => { 
-              appState.confirmPayload?.onConfirm();
+              onConfirm();
               appState.closeModal(); 
             }} 
             class="flex-1"

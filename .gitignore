@@ -67,4 +67,4 @@ bun.lockb
 
 # Agent environments
 .gemini/
-GEMINI.md
+AGENTS.md

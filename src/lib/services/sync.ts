@@ -29,6 +29,9 @@ class SyncService {
 
       if (!remote) {
         dataState.updateSyncState('success');
+        if (dataState.groups.length > 0) {
+          dataState.markDirty();
+        }
         return;
       }
 
@@ -44,7 +47,11 @@ class SyncService {
           dataState.replaceData(remoteContent, remote.sha);
         }
       } else {
+        const wasDirty = dataState.isDirty;
         dataState.updateSyncState('success');
+        if (wasDirty) {
+          dataState.markDirty();
+        }
       }
     } catch (e: unknown) {
       console.error('Init sync failed:', e);
@@ -125,6 +132,20 @@ class SyncService {
   async updateConfig(config: GithubConfig) {
     dataState.updateConfig(config);
     await this.init();
+  }
+
+  async connectRepository(repoPath: string, token: string) {
+    let parsed: { owner: string; repo: string };
+    try {
+      parsed = GithubClient.parseRepoPath(repoPath);
+    } catch {
+      throw new Error(MESSAGES.TOAST.CONFIG_FORMAT_ERROR);
+    }
+    await this.updateConfig({
+      owner: parsed.owner,
+      repo: parsed.repo,
+      token
+    });
   }
 
   private formatError(e: unknown): string {

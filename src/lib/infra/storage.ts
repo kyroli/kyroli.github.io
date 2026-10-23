@@ -8,14 +8,19 @@ export const STORAGE_KEYS = {
   ENGINE: 'nav_engine'
 } as const;
 
+function readJson<T>(key: string, fallback: T): T {
+  const raw = localStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export const storage = {
   get config(): GithubConfig {
-    const raw = localStorage.getItem(STORAGE_KEYS.CONFIG);
-    try {
-      return raw ? JSON.parse(raw) : { owner: '', repo: '', token: '' };
-    } catch {
-      return { owner: '', repo: '', token: '' };
-    }
+    return readJson(STORAGE_KEYS.CONFIG, { owner: '', repo: '', token: '' });
   },
 
   set config(v: GithubConfig) {
@@ -23,12 +28,7 @@ export const storage = {
   },
 
   get data(): NavData {
-    const raw = localStorage.getItem(STORAGE_KEYS.DATA);
-    try {
-      return raw ? JSON.parse(raw) : { groups: [] };
-    } catch {
-      return { groups: [] };
-    }
+    return readJson(STORAGE_KEYS.DATA, { groups: [] });
   },
 
   set data(v: NavData) {

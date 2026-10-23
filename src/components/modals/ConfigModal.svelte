@@ -5,7 +5,6 @@ import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
-import { GithubClient } from '$lib/infra/github';
 import { manager } from '$lib/services/manager';
 import { sync } from '$lib/services/sync';
 import Button from '../ui/Button.svelte';
@@ -44,30 +43,20 @@ async function handleSave() {
   }
 
   try {
-    const { owner, repo } = GithubClient.parseRepoPath(trimmedRepo);
-
     isSaving = true;
 
-    await sync.updateConfig({
-      owner,
-      repo,
-      token: trimmedToken
-    });
+    await sync.connectRepository(trimmedRepo, trimmedToken);
 
     if (dataState.syncStatus === 'error') {
       globalError = dataState.syncError || MESSAGES.TOAST.UNKNOWN_ERROR;
     } else {
       appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
-      if (appState.activeModal === 'config') {
+      if (appState.modal?.type === 'config') {
         onClose();
       }
     }
   } catch (e: unknown) {
-    if (e instanceof Error && e.message === 'Invalid repository format') {
-      globalError = MESSAGES.TOAST.CONFIG_FORMAT_ERROR;
-    } else {
-      globalError = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
-    }
+    globalError = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
   } finally {
     isSaving = false;
   }

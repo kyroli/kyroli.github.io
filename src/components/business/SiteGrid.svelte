@@ -76,32 +76,11 @@ const visualGroups = $derived.by<VisualGroup[]>(() => {
   return groupsCopy;
 });
 
-dndState.setOnDrop((payload: DndPayload) => {
-  const { type, srcId, targetGroupId, targetIndex } = payload;
-
+dndState.setOnDrop(({ type, srcId, targetGroupId, targetIndex }: DndPayload) => {
   if (type === 'group') {
-    const groupsWithoutSrc = dataState.groups.filter((g) => g.id !== srcId);
-    const targetGroup = groupsWithoutSrc[targetIndex];
-    const targetId = targetGroup ? targetGroup.id : null;
-    manager.moveGroup(srcId, targetId);
-  } else if (type === 'site') {
-    if (!targetGroupId) return;
-
-    const targetGroup = dataState.groups.find((g) => g.id === targetGroupId);
-    if (targetGroup) {
-      let sitesWithoutSrc = targetGroup.sites;
-
-      const srcGroupIdx = dataState.groups.findIndex((g) => g.sites.some((s) => s.id === srcId));
-      const isSameGroup = dataState.groups[srcGroupIdx]?.id === targetGroupId;
-
-      if (isSameGroup) {
-        sitesWithoutSrc = targetGroup.sites.filter((s) => s.id !== srcId);
-      }
-
-      const targetSite = sitesWithoutSrc[targetIndex];
-      const targetId = targetSite ? targetSite.id : null;
-      manager.moveSite(srcId, targetId, targetGroupId);
-    }
+    manager.moveGroup(srcId, targetIndex);
+  } else if (type === 'site' && targetGroupId) {
+    manager.moveSite(srcId, targetGroupId, targetIndex);
   }
 });
 

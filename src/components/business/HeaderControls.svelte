@@ -78,10 +78,10 @@ function handleSync() {
   appState.openConfirm({
     msg: MESSAGES.CONFIRM.SYNC_CHANGES,
     onConfirm: async () => {
-      appState.toggleEditMode();
       try {
         await sync.push();
         if (dataState.syncStatus === 'success') {
+          appState.toggleEditMode();
           appState.showToast(MESSAGES.TOAST.SYNC_SUCCESS, 'success');
         }
       } catch (e: unknown) {
@@ -100,7 +100,7 @@ function handleReset() {
         await sync.resetToRemote();
         appState.toggleEditMode();
         appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
-      } catch (e: unknown) {
+      } catch {
         appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
       }
     },

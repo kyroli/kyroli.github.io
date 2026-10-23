@@ -1,9 +1,12 @@
+import type { Attachment } from 'svelte/attachments';
+import { on } from 'svelte/events';
 import { APP_TIMEOUTS } from '../constants';
 import { appState } from '../core/app.svelte';
+import { isHoverable } from '../utils';
 
 let tooltipIdCounter = 0;
 
-export function tooltip(msg?: string | null) {
+export function tooltip(msg?: string | null): Attachment<HTMLElement> {
   return (element: HTMLElement) => {
     if (!msg) return;
 
@@ -18,8 +21,7 @@ export function tooltip(msg?: string | null) {
       }
     }
 
-    const isHoverable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (!isHoverable) {
+    if (!isHoverable.current) {
       applyA11y(msg);
       return;
     }
@@ -32,7 +34,7 @@ export function tooltip(msg?: string | null) {
     const forceHide = () => {
       if (hoverTimeout) clearTimeout(hoverTimeout);
       if (isVisible) {
-        appState.hideTooltip();
+        appState.hideTooltip(tooltipId);
         isVisible = false;
       }
     };
@@ -50,32 +52,25 @@ export function tooltip(msg?: string | null) {
     const onFocus = () => {
       try {
         if (!element.matches(':focus-visible')) return;
-      } catch (e) {}
+      } catch {}
       onMouseEnter();
     };
 
-    const onMouseLeave = () => forceHide();
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isVisible) forceHide();
-    };
-
-    element.addEventListener('mouseenter', onMouseEnter);
-    element.addEventListener('mouseleave', onMouseLeave);
-    element.addEventListener('focus', onFocus);
-    element.addEventListener('blur', onMouseLeave);
-    element.addEventListener('mousedown', forceHide);
-    element.addEventListener('keydown', onKeyDown);
+    const offs = [
+      on(element, 'mouseenter', onMouseEnter),
+      on(element, 'mouseleave', forceHide),
+      on(element, 'focus', onFocus),
+      on(element, 'blur', forceHide),
+      on(element, 'mousedown', forceHide),
+      on(element, 'keydown', (e) => {
+        if (e.key === 'Escape' && isVisible) forceHide();
+      })
+    ];
 
     return () => {
       forceHide();
       element.style.anchorName = prevAnchor;
-      element.removeEventListener('mouseenter', onMouseEnter);
-      element.removeEventListener('mouseleave', onMouseLeave);
-      element.removeEventListener('focus', onFocus);
-      element.removeEventListener('blur', onMouseLeave);
-      element.removeEventListener('mousedown', forceHide);
-      element.removeEventListener('keydown', onKeyDown);
+      for (const off of offs) off();
     };
   };
 }

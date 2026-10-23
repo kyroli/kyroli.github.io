@@ -4,7 +4,8 @@ import type { GithubConfig, NavData, RemoteFile } from '../types';
 export const GITHUB_ERRORS = {
   TOKEN_INVALID: 'TOKEN_INVALID',
   NOT_FOUND: 'NOT_FOUND',
-  CONFLICT: 'CONFLICT'
+  CONFLICT: 'CONFLICT',
+  INVALID_REPO_FORMAT: 'INVALID_REPO_FORMAT'
 } as const;
 
 const API_BASE = 'https://api.github.com/repos';
@@ -15,7 +16,7 @@ export class GithubClient {
   static parseRepoPath(path: string): { owner: string; repo: string } {
     const parts = path.split('/');
     if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
-      throw new Error('Invalid repository format');
+      throw new Error(GITHUB_ERRORS.INVALID_REPO_FORMAT);
     }
     return { owner: parts[0].trim(), repo: parts[1].trim() };
   }

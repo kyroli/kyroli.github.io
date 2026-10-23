@@ -1,13 +1,17 @@
+import type { Attachment } from 'svelte/attachments';
+import { on } from 'svelte/events';
+import { isHoverable } from '../utils';
+
 interface TiltOptions {
   disabled?: boolean;
   maxRotate?: number; // Maximum rotation angle
   scale?: number; // Hover scale factor
 }
 
-export function tilt(options: TiltOptions = {}) {
+export function tilt(options: TiltOptions = {}): Attachment<HTMLElement> {
   return (element: HTMLElement) => {
     // Only enable on pointer devices with hover capability
-    const isHoverable = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (options.disabled || !isHoverable.current) return;
 
     let rect: DOMRect | null = null;
     let isInside = false;
@@ -16,7 +20,6 @@ export function tilt(options: TiltOptions = {}) {
     let latestEvent: MouseEvent | null = null;
 
     function handleMouseEnter() {
-      if (options.disabled || !isHoverable) return;
       rect = element.getBoundingClientRect();
       isInside = true;
       element.style.setProperty('--scale', String(options.scale ?? 1.02));
@@ -25,7 +28,7 @@ export function tilt(options: TiltOptions = {}) {
     }
 
     function updateTilt() {
-      if (!latestEvent || options.disabled || !isHoverable || !isInside) {
+      if (!latestEvent || !isInside) {
         rafId = null;
         return;
       }
@@ -54,7 +57,7 @@ export function tilt(options: TiltOptions = {}) {
     }
 
     function handleMouseMove(e: MouseEvent) {
-      if (options.disabled || !isHoverable || !isInside) return;
+      if (!isInside) return;
       latestEvent = e;
       if (rafId === null) {
         rafId = requestAnimationFrame(updateTilt);
@@ -76,22 +79,15 @@ export function tilt(options: TiltOptions = {}) {
       element.style.willChange = '';
     }
 
-    element.addEventListener('mouseenter', handleMouseEnter);
-    element.addEventListener('mousemove', handleMouseMove);
-    element.addEventListener('mouseleave', handleMouseLeave);
+    const offs = [
+      on(element, 'mouseenter', handleMouseEnter),
+      on(element, 'mousemove', handleMouseMove),
+      on(element, 'mouseleave', handleMouseLeave)
+    ];
 
     return () => {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-      }
-      element.style.setProperty('--rx', '0deg');
-      element.style.setProperty('--ry', '0deg');
-      element.style.setProperty('--scale', '1');
-      element.style.setProperty('--shine-opacity', '0');
-      element.style.willChange = '';
-      element.removeEventListener('mouseenter', handleMouseEnter);
-      element.removeEventListener('mousemove', handleMouseMove);
-      element.removeEventListener('mouseleave', handleMouseLeave);
+      handleMouseLeave();
+      for (const off of offs) off();
     };
   };
 }
