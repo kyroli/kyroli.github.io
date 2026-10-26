@@ -5,10 +5,13 @@ import { MESSAGES } from '$lib/i18n';
 import { draggable } from '$lib/actions/dnd.svelte';
 import { tooltip } from '$lib/actions/tooltip';
 
-let { group, onDelete } = $props<{
+let {
+  group,
+  onDelete
+}: {
   group: { id: string; name: string };
   onDelete: (name: string, id: string) => void;
-}>();
+} = $props();
 </script>
 
 <div class="flex items-center gap-3 pb-2 h-11 border-b border-border/40 group/header justify-between">

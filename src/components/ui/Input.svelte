@@ -4,8 +4,16 @@ import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { cn } from '$lib/utils';
 
+type Props = {
+  value?: string;
+  ref?: HTMLInputElement | null;
+  label?: string;
+  error?: string;
+  class?: string;
+} & HTMLInputAttributes;
+
 let {
-  value = $bindable(),
+  value = $bindable(''),
   ref = $bindable<HTMLInputElement | null>(null),
   label,
   error,
@@ -13,15 +21,7 @@ let {
   type = 'text',
   id,
   ...rest
-} = $props<
-  {
-    value: string;
-    ref?: HTMLInputElement | null;
-    label?: string;
-    error?: string;
-    class?: string;
-  } & HTMLInputAttributes
->();
+}: Props = $props();
 
 const baseStyles =
   'w-full bg-bg border rounded-xl px-4 py-3 text-sm text-text outline-none transition duration-200 placeholder:text-text-dim/60';

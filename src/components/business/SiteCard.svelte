@@ -8,7 +8,7 @@ import type { Site } from '$lib/types';
 import { DEFAULT_ICON, getIcon } from '$lib/utils';
 import Card from '../ui/Card.svelte';
 
-let { site, groupId } = $props<{ site: Site; groupId: string }>();
+let { site, groupId }: { site: Site; groupId: string } = $props();
 
 const displayHostname = $derived.by(() => {
   try {

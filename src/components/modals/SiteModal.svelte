@@ -9,11 +9,15 @@ import Button from '../ui/Button.svelte';
 import Input from '../ui/Input.svelte';
 import Modal from '../ui/Modal.svelte';
 
-let { groupId, siteId, onClose } = $props<{
+let {
+  groupId,
+  siteId,
+  onClose
+}: {
   groupId: string;
   siteId?: string;
   onClose: () => void;
-}>();
+} = $props();
 
 const group = $derived(dataState.groups.find((g) => g.id === groupId));
 const site = $derived(siteId ? group?.sites.find((s) => s.id === siteId) : null);

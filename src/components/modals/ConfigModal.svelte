@@ -11,7 +11,7 @@ import Button from '../ui/Button.svelte';
 import Input from '../ui/Input.svelte';
 import Modal from '../ui/Modal.svelte';
 
-let { onClose } = $props<{ onClose: () => void }>();
+let { onClose }: { onClose: () => void } = $props();
 
 let repoPath = $state(
   dataState.config.owner ? `${dataState.config.owner}/${dataState.config.repo}` : ''

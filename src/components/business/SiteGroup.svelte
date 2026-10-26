@@ -11,10 +11,13 @@ import type { VisualGroup } from '$lib/types';
 import GroupHeader from './GroupHeader.svelte';
 import SiteCard from './SiteCard.svelte';
 
-let { group, onDeleteGroup } = $props<{
+let {
+  group,
+  onDeleteGroup
+}: {
   group: VisualGroup;
   onDeleteGroup: (name: string, id: string) => void;
-}>();
+} = $props();
 </script>
 
 <div class="group-item flex flex-col gap-4 relative @container">

@@ -5,6 +5,14 @@ import { tilt } from '$lib/actions/tilt';
 import { UI_CONSTANTS } from '$lib/constants';
 import { cn } from '$lib/utils';
 
+type Props = HTMLAttributes<HTMLElement> & {
+  children: Snippet;
+  class?: string;
+  onclick?: (e: MouseEvent) => void;
+  href?: string;
+  interactive?: boolean;
+};
+
 let {
   children,
   class: className = '',
@@ -12,15 +20,7 @@ let {
   href,
   interactive = true,
   ...rest
-} = $props<
-  HTMLAttributes<HTMLElement> & {
-    children: Snippet;
-    class?: string;
-    onclick?: (e: MouseEvent) => void;
-    href?: string;
-    interactive?: boolean;
-  }
->();
+}: Props = $props();
 
 const role = $derived(onclick ? 'button' : undefined);
 

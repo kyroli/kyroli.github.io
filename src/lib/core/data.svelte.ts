@@ -2,19 +2,6 @@ import { on } from 'svelte/events';
 import { STORAGE_KEYS, storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
 
-function trackGroups(groups: Group[]) {
-  for (const group of groups) {
-    group.id;
-    group.name;
-    for (const site of group.sites) {
-      site.id;
-      site.name;
-      site.url;
-      site.icon;
-    }
-  }
-}
-
 class DataCore {
   groups = $state<Group[]>([]);
   config = $state<GithubConfig>({ owner: '', repo: '', token: '' });
@@ -38,8 +25,8 @@ class DataCore {
       let timer: number;
 
       $effect(() => {
-        // Read to track dependency — snapshot is deferred to the write callback
-        trackGroups(this.groups);
+        // Read snapshot synchronously to track all deep reactive dependencies
+        const snapshot = $state.snapshot(this.groups);
 
         if (isFirstRun) {
           isFirstRun = false;
@@ -48,7 +35,7 @@ class DataCore {
 
         clearTimeout(timer);
         timer = window.setTimeout(() => {
-          storage.data = { groups: $state.snapshot(this.groups) };
+          storage.data = { groups: snapshot };
         }, 500);
 
         return () => clearTimeout(timer);

@@ -3,6 +3,17 @@ import type { Snippet } from 'svelte';
 import { tooltip } from '$lib/actions/tooltip';
 import { cn } from '$lib/utils';
 
+interface Props {
+  children: Snippet;
+  onclick?: (e: MouseEvent) => void;
+  variant?: 'primary' | 'outline' | 'ghost' | 'danger';
+  size?: 'default' | 'icon';
+  class?: string;
+  disabled?: boolean;
+  title?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
 let {
   children,
   onclick,
@@ -13,16 +24,7 @@ let {
   title = '',
   type = 'button',
   ...rest
-} = $props<{
-  children: Snippet;
-  onclick?: (e: MouseEvent) => void;
-  variant?: 'primary' | 'outline' | 'ghost' | 'danger';
-  size?: 'default' | 'icon';
-  class?: string;
-  disabled?: boolean;
-  title?: string;
-  type?: 'button' | 'submit' | 'reset';
-}>();
+}: Props = $props();
 
 const baseStyles =
   'flex items-center justify-center rounded-xl transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active-press font-bold text-sm tracking-wide border';

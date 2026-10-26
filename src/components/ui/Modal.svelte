@@ -7,11 +7,15 @@ import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
 import { cn } from '$lib/utils';
 
-let { children, onClose, title } = $props<{
+let {
+  children,
+  onClose,
+  title
+}: {
   children: Snippet;
   onClose: () => void;
   title?: string;
-}>();
+} = $props();
 
 function showModal(node: HTMLDialogElement) {
   if (!node.open) {

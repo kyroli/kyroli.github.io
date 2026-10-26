@@ -7,10 +7,13 @@ import Button from '../ui/Button.svelte';
 import Input from '../ui/Input.svelte';
 import Modal from '../ui/Modal.svelte';
 
-let { onClose, groupId } = $props<{
+let {
+  onClose,
+  groupId
+}: {
   onClose: () => void;
   groupId?: string;
-}>();
+} = $props();
 
 const group = $derived(groupId ? dataState.groups.find((g) => g.id === groupId) : null);
 const modalTitle = $derived(
