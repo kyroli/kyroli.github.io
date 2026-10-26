@@ -35,7 +35,7 @@
 
 - **本地存储 (LocalStorage)**：书签结构、偏好配置与主题设置保存在浏览器本地，并通过 Storage API 在多个打开的标签页间同步。
 - **GitHub 同步**：使用保存在本地的 Fine-grained PAT 直接同步配置（默认文件为 `profile.json`）至指定的专用 GitHub 仓库。
-  * ⚠️ **安全说明**：请使用 **Fine-grained PAT**，并将权限严格限定在存放数据的仓库（`Contents: Read and write`）。
+  - ⚠️ **安全说明**：请使用 **Fine-grained PAT**，并将权限严格限定在存放数据的仓库（`Contents: Read and write`）。
 - **冲突处理**：在写入前比对提交 SHA。检测到冲突时提供 **Force Push**（覆盖云端）或 **Reset to Remote**（拉取云端覆盖本地）选项。
 - **数据导入与导出**：支持标准 JSON 格式的序列化导出与解析导入，便于离线备份与迁移。
 
@@ -66,6 +66,7 @@ src/
 ## 快速开始
 
 ### 开发要求
+
 - Node.js (Current / LTS)
 - pnpm
 
@@ -87,7 +88,7 @@ pnpm lint
 pnpm check
 ```
 
-*注意：CI/CD 部署流程基于 GitHub Actions 运行，若未通过 Biome 检查或类型校验，构建流程将会被拦截。*
+_注意：CI/CD 部署流程基于 GitHub Actions 运行，若未通过 Biome 检查或类型校验，构建流程将会被拦截。_
 
 ## 开源协议
 

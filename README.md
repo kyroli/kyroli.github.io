@@ -35,7 +35,7 @@ A personal browser startpage and bookmark manager.
 
 - **Local Storage**: Bookmark structures, custom preferences, and theme choices are stored locally in the browser and synchronized across tabs via the Storage API.
 - **GitHub Sync**: Synchronizes configuration (defaults to `profile.json`) directly to a user-designated GitHub repository using a locally stored Fine-grained Personal Access Token (PAT).
-  * ⚠️ **Security**: Use a **Fine-grained PAT** with permissions restricted strictly to the designated repository (`Contents: Read and write`).
+  - ⚠️ **Security**: Use a **Fine-grained PAT** with permissions restricted strictly to the designated repository (`Contents: Read and write`).
 - **Conflict Resolution**: Verifies file commit SHAs before writes. Prompts to resolve conflicts via **Force Push** (overwrite remote) or **Reset to Remote** (overwrite local).
 - **Data Export/Import**: Provides JSON serialization for offline backups and migration.
 
@@ -66,6 +66,7 @@ src/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (Current / LTS)
 - pnpm
 
@@ -87,7 +88,7 @@ pnpm lint
 pnpm check
 ```
 
-*Note: Pushing code that fails Biome lint/format or type checks will cause the CI/CD build pipeline to fail.*
+_Note: Pushing code that fails Biome lint/format or type checks will cause the CI/CD build pipeline to fail._
 
 ## License
 

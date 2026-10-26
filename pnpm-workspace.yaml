@@ -1,14 +1,14 @@
 minimumReleaseAgeExclude:
-  - '@biomejs/biome@2.5.15'
-  - '@biomejs/cli-darwin-arm64@2.5.15'
-  - '@biomejs/cli-darwin-x64@2.5.15'
-  - '@biomejs/cli-linux-arm64-musl@2.5.15'
-  - '@biomejs/cli-linux-arm64@2.5.15'
-  - '@biomejs/cli-linux-x64-musl@2.5.15'
-  - '@biomejs/cli-linux-x64@2.5.15'
-  - '@biomejs/cli-win32-arm64@2.5.15'
-  - '@biomejs/cli-win32-x64@2.5.15'
-  - '@lucide/svelte@1.52.0'
+  - "@biomejs/biome@2.6.3"
+  - "@biomejs/cli-darwin-arm64@2.6.3"
+  - "@biomejs/cli-darwin-x64@2.6.3"
+  - "@biomejs/cli-linux-arm64-musl@2.6.3"
+  - "@biomejs/cli-linux-arm64@2.6.3"
+  - "@biomejs/cli-linux-x64-musl@2.6.3"
+  - "@biomejs/cli-linux-x64@2.6.3"
+  - "@biomejs/cli-win32-arm64@2.6.3"
+  - "@biomejs/cli-win32-x64@2.6.3"
+  - "@lucide/svelte@1.61.0"
   - svelte@5.57.2
 onlyBuiltDependencies:
-  - '@biomejs/biome'
+  - "@biomejs/biome"
