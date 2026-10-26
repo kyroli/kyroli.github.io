@@ -1,4 +1,5 @@
 import { online } from 'svelte/reactivity/window';
+import { DEFAULT_ENGINE_ID, SEARCH_ENGINES } from '../config/search';
 import { APP_TIMEOUTS } from '../constants';
 import { MESSAGES } from '../i18n';
 import { storage } from '../infra/storage';
@@ -47,6 +48,10 @@ class AppCore {
   private toastTimer: number | null = null;
 
   tooltip = $state<TooltipState | null>(null);
+
+  currentEngineId = $state(
+    storage.engine && SEARCH_ENGINES[storage.engine] ? storage.engine : DEFAULT_ENGINE_ID
+  );
 
   constructor() {
     const isZh = navigator.language.toLowerCase().startsWith('zh');
@@ -120,6 +125,11 @@ class AppCore {
     if (this.tooltip && (!anchorName || this.tooltip.anchorName === anchorName)) {
       this.tooltip.visible = false;
     }
+  };
+
+  setEngine = (id: string) => {
+    this.currentEngineId = id;
+    storage.engine = id;
   };
 }
 

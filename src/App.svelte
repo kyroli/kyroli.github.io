@@ -14,7 +14,7 @@ import LoadingSkeleton from './components/business/LoadingSkeleton.svelte';
 import SiteGrid from './components/business/SiteGrid.svelte';
 import Button from './components/ui/Button.svelte';
 import Modal from './components/ui/Modal.svelte';
-import TooltipContainer from './components/ui/TooltipContainer.svelte';
+import TooltipContainer from './components/business/TooltipContainer.svelte';
 
 let showSkeleton = $state(false);
 

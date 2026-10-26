@@ -20,7 +20,7 @@ import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { sync } from '$lib/services/sync';
 import Button from '../ui/Button.svelte';
-import ThemeSwitch from '../ui/ThemeSwitch.svelte';
+import ThemeSwitch from './ThemeSwitch.svelte';
 
 const isSyncing = $derived(
   dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking'

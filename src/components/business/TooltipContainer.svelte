@@ -12,7 +12,7 @@ import { promoteToTopLayer } from '$lib/utils';
     class="fixed m-0 p-0 border-none outline-none bg-transparent pointer-events-none overflow-visible"
     style="
       position-anchor: {appState.tooltip.anchorName};
-      position-area: top;
+      position-area: block-start;
       position-try-fallbacks: flip-block;
       margin-block-end: 8px;
     "

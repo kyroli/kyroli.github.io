@@ -2,24 +2,19 @@
 import { Search } from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
-import { DEFAULT_ENGINE_ID, SEARCH_ENGINES } from '$lib/config/search';
+import { SEARCH_ENGINES } from '$lib/config/search';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
-import { storage } from '$lib/infra/storage';
 import Input from '../ui/Input.svelte';
 
 let search = $state('');
 let inputEl = $state<HTMLInputElement | null>(null);
 let menuEl = $state<HTMLElement | null>(null);
 
-const savedEngine = storage.engine;
-let currentEngineId = $state(
-  savedEngine && SEARCH_ENGINES[savedEngine] ? savedEngine : DEFAULT_ENGINE_ID
-);
 let isMenuOpen = $state(false);
 
-const activeEngine = $derived(SEARCH_ENGINES[currentEngineId]);
+const activeEngine = $derived(SEARCH_ENGINES[appState.currentEngineId]);
 
 function handleSearch() {
   if (!search.trim()) return;
@@ -28,8 +23,7 @@ function handleSearch() {
 }
 
 function switchEngine(id: string) {
-  currentEngineId = id;
-  storage.engine = id;
+  appState.setEngine(id);
   menuEl?.hidePopover();
 }
 
@@ -69,7 +63,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
       {@attach tooltip(isMenuOpen ? null : MESSAGES.UI.TIP_SWITCH_ENGINE)}
     >
       <div class="relative w-5 h-5 overflow-hidden shrink-0 flex items-center justify-center transition-transform duration-200 group-hover/btn:scale-110">
-        {#key currentEngineId}
+        {#key appState.currentEngineId}
           <img 
             in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} 
             src={activeEngine.icon} 
@@ -83,7 +77,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
 
     <div class="h-5 w-[1px] bg-border/60 shrink-0"></div>
 
-    <Input bind:ref={inputEl} bind:value={search} name="search" autocomplete="off" onkeydown={e => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
+    <Input bind:ref={inputEl} bind:value={search} name="search" autocomplete="off" onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
 
     {#if search.trim().length > 0}
       <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer" {@attach tooltip(MESSAGES.UI.SEARCH)}>
@@ -100,7 +94,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
     class="engine-popover m-0 p-2 w-48 bg-surface border border-border rounded-xl shadow-float flex flex-col gap-1 overflow-visible"
     style="
       position-anchor: --search-engine-anchor;
-      position-area: bottom span-right;
+      position-area: block-end span-inline-end;
       position-try-fallbacks: flip-block;
       margin-block-start: 8px;
     "
@@ -109,7 +103,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
       <button type="button" onclick={() => switchEngine(engine.id)} class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 w-full text-left text-text hover:bg-bg active-press-icon">
         <img src={engine.icon} alt={engine.name} class="w-4 h-4 object-contain dark:invert" />
         <span class="flex-1">{engine.name}</span>
-        {#if currentEngineId === engine.id}
+        {#if appState.currentEngineId === engine.id}
           <div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
         {/if}
       </button>

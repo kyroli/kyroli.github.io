@@ -2,7 +2,7 @@
 import { Moon, Sun } from '@lucide/svelte';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
-import Button from './Button.svelte';
+import Button from '../ui/Button.svelte';
 
 function handleToggle(e: MouseEvent) {
   if (e.currentTarget instanceof HTMLElement) {
