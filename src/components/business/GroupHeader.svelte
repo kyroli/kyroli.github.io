@@ -1,9 +1,9 @@
 <script lang="ts">
-import { GripVertical, Trash2 } from '@lucide/svelte';
-import { appState } from '$lib/core/app.svelte';
-import { MESSAGES } from '$lib/i18n';
 import { draggable } from '$lib/actions/dnd.svelte';
 import { tooltip } from '$lib/actions/tooltip';
+import { appState } from '$lib/core/app.svelte';
+import { MESSAGES } from '$lib/i18n';
+import Icon from '../ui/Icon.svelte';
 
 let {
   group,
@@ -35,7 +35,7 @@ let {
       {@attach draggable({ type: 'group', id: group.id, groupId: null })}
       {@attach tooltip(MESSAGES.UI.TIP_DRAG_SORT)}
     >
-      <GripVertical class="w-5 h-5" />
+      <Icon name="grip-vertical" class="w-5 h-5" />
     </div>
 
     <button 
@@ -43,7 +43,7 @@ let {
       class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50 active-press-icon" 
       {@attach tooltip(MESSAGES.UI.TIP_DELETE_GROUP)}
     >
-      <Trash2 class="w-5 h-5" />
+      <Icon name="trash" class="w-5 h-5" />
     </button>
   </div>
 </div>

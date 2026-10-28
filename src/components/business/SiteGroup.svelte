@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Plus } from '@lucide/svelte';
 import { flip } from 'svelte/animate';
 import { cubicOut } from 'svelte/easing';
 import { dndState, draggable } from '$lib/actions/dnd.svelte';
@@ -8,6 +7,7 @@ import { ANIMATION_SPEED, UI_CONSTANTS } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import type { VisualGroup } from '$lib/types';
+import Icon from '../ui/Icon.svelte';
 import GroupHeader from './GroupHeader.svelte';
 import SiteCard from './SiteCard.svelte';
 
@@ -52,7 +52,7 @@ let {
         class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active-press`}
         {@attach tooltip(MESSAGES.UI.NEW_SITE)}
       >
-        <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+        <Icon name="plus" class="w-5 h-5 group-hover:scale-110 transition-transform" />
       </button>
     {/if}
   </div>

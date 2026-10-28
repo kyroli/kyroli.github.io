@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Plus } from '@lucide/svelte';
 import { flip } from 'svelte/animate';
 import { cubicOut } from 'svelte/easing';
 import { fade } from 'svelte/transition';
@@ -10,6 +9,7 @@ import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
 import type { DndPayload, VisualGroup, VisualSite } from '$lib/types';
+import Icon from '../ui/Icon.svelte';
 import SiteGroup from './SiteGroup.svelte';
 
 const visualGroups = $derived.by<VisualGroup[]>(() => {
@@ -116,7 +116,7 @@ function handleDeleteGroup(groupName: string, groupId: string) {
 
   {#if appState.isEditMode}
     <button in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
-      <Plus class="w-5 h-5 group-hover:scale-110 transition-transform" />
+      <Icon name="plus" class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>
   {/if}

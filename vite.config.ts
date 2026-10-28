@@ -19,6 +19,7 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    cssMinify: 'lightningcss'
+    cssMinify: 'lightningcss',
+    assetsInlineLimit: (filePath) => (filePath.endsWith('.webp') ? false : undefined)
   }
 });

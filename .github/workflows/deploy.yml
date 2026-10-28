@@ -24,10 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup pnpm & Node
+      - name: Setup pnpm
         uses: pnpm/setup@v3
         with:
-          runtime: node@24
           install: false
 
       - name: Install dependencies

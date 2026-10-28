@@ -56,7 +56,7 @@ function handleSave() {
 </script>
 
 <Modal {onClose} title={modalTitle}>
-  <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-3">
+  <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
     <Input 
       bind:value={name} 
       error={error}
@@ -66,8 +66,8 @@ function handleSave() {
       autofocus
     />
     
-    <div class="flex gap-2 pt-4">
-      <Button variant="ghost" type="button" onclick={onClose} class="flex-1 font-bold text-text-dim">{MESSAGES.UI.CANCEL}</Button>
+    <div class="flex gap-3 pt-2">
+      <Button variant="ghost" type="button" onclick={onClose} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
       <Button type="submit" class="flex-1">{MESSAGES.UI.COMPLETE}</Button>
     </div>
   </form>

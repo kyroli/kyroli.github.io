@@ -1,17 +1,4 @@
 <script lang="ts">
-import {
-  Check,
-  Cloud,
-  CloudAlert,
-  CloudOff,
-  Loader2,
-  Pencil,
-  RotateCcw,
-  Save,
-  Settings,
-  WifiOff,
-  X
-} from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED } from '$lib/constants';
@@ -20,26 +7,29 @@ import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { sync } from '$lib/services/sync';
 import Button from '../ui/Button.svelte';
+import Icon, { type IconName } from '../ui/Icon.svelte';
 import ThemeSwitch from './ThemeSwitch.svelte';
 
 const isSyncing = $derived(
   dataState.syncStatus === 'syncing' || dataState.syncStatus === 'checking'
 );
-const syncStatusConfig = $derived.by(() => {
+const syncStatusConfig = $derived.by<{ icon: IconName; color: string; title: string }>(() => {
   if (!appState.isOnline)
-    return { icon: WifiOff, color: 'text-text-dim', title: MESSAGES.UI.STATUS_OFFLINE };
+    return { icon: 'wifi-off', color: 'text-text-dim', title: MESSAGES.UI.STATUS_OFFLINE };
   if (!dataState.hasToken)
-    return { icon: CloudOff, color: 'text-text-dim/30', title: MESSAGES.UI.STATUS_NO_CONFIG };
+    return { icon: 'cloud-off', color: 'text-text-dim/30', title: MESSAGES.UI.STATUS_NO_CONFIG };
   if (dataState.syncStatus === 'error' || dataState.syncStatus === 'conflict')
-    return { icon: CloudAlert, color: 'text-danger', title: MESSAGES.UI.STATUS_SYNC_ERROR };
+    return { icon: 'cloud-alert', color: 'text-danger', title: MESSAGES.UI.STATUS_SYNC_ERROR };
   if (isSyncing)
-    return { icon: Loader2, color: 'text-primary animate-spin', title: MESSAGES.UI.STATUS_SYNCING };
+    return {
+      icon: 'loader',
+      color: 'text-primary animate-spin',
+      title: MESSAGES.UI.STATUS_SYNCING
+    };
   if (dataState.isDirty)
-    return { icon: Cloud, color: 'text-primary', title: MESSAGES.UI.STATUS_UNSAVED };
-  return { icon: Check, color: 'text-text-dim/50', title: MESSAGES.UI.STATUS_SAVED };
+    return { icon: 'cloud', color: 'text-primary', title: MESSAGES.UI.STATUS_UNSAVED };
+  return { icon: 'check', color: 'text-text-dim/50', title: MESSAGES.UI.STATUS_SAVED };
 });
-
-const StatusIcon = $derived(syncStatusConfig.icon);
 
 $effect(() => {
   if (dataState.syncStatus === 'conflict') {
@@ -112,26 +102,26 @@ function handleReset() {
 <div class="justify-self-end flex items-center justify-end">
   <div class="flex items-center gap-3 h-10">
     <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-surface border border-border/50" {@attach tooltip(syncStatusConfig.title)}>
-      <StatusIcon class={`w-4 h-4 ${syncStatusConfig.color}`} />
+      <Icon name={syncStatusConfig.icon} class={`w-4 h-4 ${syncStatusConfig.color}`} />
     </div>
 
     <div class="grid">
       {#if appState.isEditMode}
         <div transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="col-start-1 row-start-1 flex gap-3 items-center">
-          <Button variant="outline" size="icon" onclick={appState.toggleEditMode} title={MESSAGES.UI.TIP_EXIT_EDIT} class="tap-target hover-spin">
-            <X class="w-5 h-5" />
+          <Button variant="outline" size="icon" onclick={appState.toggleEditMode} title={MESSAGES.UI.TIP_EXIT_EDIT} class="tap-target">
+            <Icon name="x" class="w-5 h-5" />
           </Button>
 
           <Button variant="primary" size="icon" onclick={handleSync} title={isSyncing ? MESSAGES.UI.SYNCING : MESSAGES.UI.SAVE_AND_SYNC} disabled={!dataState.isDirty || isSyncing} class="tap-target">
             {#if isSyncing}
-              <Loader2 class="w-5 h-5 animate-spin" />
+              <Icon name="loader" class="w-5 h-5 animate-spin" />
             {:else}
-              <Save class="w-5 h-5" />
+              <Icon name="save" class="w-5 h-5" />
             {/if}
           </Button>
 
-          <Button variant="danger" size="icon" onclick={handleReset} title={MESSAGES.UI.RESET} class="tap-target hover-spin">
-            <RotateCcw class="w-5 h-5" />
+          <Button variant="danger" size="icon" onclick={handleReset} title={MESSAGES.UI.RESET} class="tap-target">
+            <Icon name="rotate-ccw" class="w-5 h-5" />
           </Button>
         </div>
       {:else}
@@ -139,14 +129,14 @@ function handleReset() {
           <ThemeSwitch />
           
           <div class="relative">
-            <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT} class="tap-target hover-wiggle">
-              <Pencil class="w-5 h-5" />
+            <Button variant="outline" size="icon" onclick={handleEditClick} title={MESSAGES.UI.TIP_ENTER_EDIT} class="tap-target">
+              <Icon name="pencil" class="w-5 h-5" />
             </Button>
           </div>
 
           <div class="relative">
-            <Button variant="outline" size="icon" onclick={appState.openConfig} title={!dataState.hasToken ? MESSAGES.UI.TIP_CONFIG_TOKEN : MESSAGES.MODAL.CONFIG_TITLE} class="tap-target hover-spin">
-               <Settings class="w-5 h-5" />
+            <Button variant="outline" size="icon" onclick={appState.openConfig} title={!dataState.hasToken ? MESSAGES.UI.TIP_CONFIG_TOKEN : MESSAGES.MODAL.CONFIG_TITLE} class="tap-target">
+               <Icon name="settings" class="w-5 h-5" />
             </Button>
             {#if !dataState.hasToken}
               <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary animate-pulse pointer-events-none"></span>

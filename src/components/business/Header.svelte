@@ -19,13 +19,23 @@ const logoHref = $derived(
       <a 
         href={logoHref} 
         target="_blank" 
-        class={`flex items-center gap-3 transition-opacity active-press group ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
+        class={`h-10 flex items-center gap-2.5 transition-opacity active-press ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
       >
-        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow-solid group-hover:rotate-6 transition-transform">K</div>
-        <div class="hidden sm:flex flex-col justify-center">
-          <h1 class="font-bold text-xl tracking-tighter text-text leading-tight mb-0.5">{MESSAGES.UI.APP_NAME}</h1>
-          <span class="text-[10px] font-bold tracking-widest text-text-dim/50 uppercase leading-tight">{MESSAGES.UI.SUBTITLE}</span>
-        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="w-7 h-7 text-primary shrink-0"
+        >
+          <path d="M8 5v14M16 5l-6.5 7L16 19" />
+          <path d="M4.5 15.5c-1.8-1-2.5-2.8-1.5-4.5 1.5-2.6 7.5-4.2 13.4-3.5 3.6.4 5.6 2 4.8 3.8-.5 1.1-2.2 2-4.7 2.6" />
+        </svg>
+        <h1 class="font-bold text-xl tracking-tight text-text leading-none">{MESSAGES.UI.APP_NAME}</h1>
       </a>
     </div>
     

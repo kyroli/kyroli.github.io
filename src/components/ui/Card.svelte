@@ -1,9 +1,7 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import type { HTMLAttributes } from 'svelte/elements';
-import { tilt } from '$lib/actions/tilt';
 import { UI_CONSTANTS } from '$lib/constants';
-import { cn } from '$lib/utils';
 
 type Props = HTMLAttributes<HTMLElement> & {
   children: Snippet;
@@ -24,21 +22,22 @@ let {
 
 const role = $derived(onclick ? 'button' : undefined);
 
-const baseStyles = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface border border-border rounded-xl tilt-card`;
+const baseStyles = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface border rounded-xl relative`;
 
-const finalClass = $derived(
-  cn(baseStyles, interactive ? 'overflow-hidden' : 'overflow-visible', className)
-);
+const finalClass = $derived([
+  baseStyles,
+  interactive ? 'overflow-hidden' : 'overflow-visible',
+  !/\bborder-(transparent|border|primary|danger)\b/.test(className) && 'border-border',
+  className
+]);
 </script>
 
 {#if href}
-  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {@attach tilt({ disabled: !interactive })} {...rest}>
+  <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {...rest}>
     {@render children()}
-    <div class="tilt-shine"></div>
   </a>
 {:else}
-  <div {onclick} class={finalClass} {role} {@attach tilt({ disabled: !interactive })} {...rest}>
+  <div {onclick} class={finalClass} {role} {...rest}>
     {@render children()}
-    <div class="tilt-shine"></div>
   </div>
 {/if}

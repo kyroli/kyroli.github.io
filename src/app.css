@@ -11,7 +11,6 @@
   --color-text-dim: light-dark(oklch(55.2% 0.016 285.9), oklch(70.5% 0.015 286.1));
   --color-icon-bg: light-dark(oklch(98.5% 0 0), oklch(27.4% 0.006 286));
   --color-danger: light-dark(oklch(57.7% 0.245 27.3), oklch(63.7% 0.237 25.3));
-  --color-shine: light-dark(rgb(0 0 0 / 0.04), rgb(255 255 255 / 0.08));
   --shadow-solid: 0 1px 2px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
   --shadow-float: 0 10px 30px -5px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)), 0 4px 6px -2px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
 
@@ -21,8 +20,6 @@
   --tracking-normal: 0em;
   --tracking-wide: 0.02em;
   --tracking-widest: 0.08em;
-
-  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 @utility active-press {
@@ -90,31 +87,6 @@
 }
 
 
-.tilt-card {
-  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale3d(var(--scale, 1), var(--scale, 1), 1);
-  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
-  position: relative;
-}
-
-.tilt-card:hover {
-  transition: transform 0.1s ease-out, border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
-}
-
-.tilt-shine {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    circle 150px at var(--mx, 50%) var(--my, 50%),
-    var(--color-shine),
-    transparent
-  );
-  opacity: var(--shine-opacity, 0);
-  transition: opacity 0.3s ease;
-  z-index: 5;
-}
-
 @utility shimmer {
   background: linear-gradient(
     90deg,
@@ -144,33 +116,6 @@
   position: absolute;
   inset: -6px;
   cursor: pointer;
-}
-
-.hover-spin {
-  & svg {
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  }
-  &:hover svg {
-    transform: rotate(90deg);
-  }
-}
-
-.hover-wiggle {
-  &:hover svg {
-    animation: wiggle 0.4s ease-in-out infinite;
-  }
-}
-
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-8deg);
-  }
-  75% {
-    transform: rotate(8deg);
-  }
 }
 
 @utility no-scrollbar {

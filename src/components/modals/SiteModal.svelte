@@ -68,7 +68,7 @@ function handleSave() {
 }
 
 const errorBannerClass =
-  'bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold';
+  'bg-danger/10 border border-danger/20 rounded-xl p-3 text-danger text-xs font-bold';
 </script>
 
 <Modal {onClose} title={modalTitle}>
@@ -76,7 +76,7 @@ const errorBannerClass =
     <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>⚠️ {error}</div>
   {/if}
 
-  <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-3">
+  <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
     <Input 
       bind:value={name} 
       placeholder={MESSAGES.MODAL.SITE_NAME_PLACEHOLDER} 
@@ -95,8 +95,8 @@ const errorBannerClass =
       oninput={() => error = ''}
     />
     
-    <div class="flex gap-2 pt-4">
-      <Button variant="ghost" type="button" onclick={onClose} class="flex-1 font-bold text-text-dim">
+    <div class="flex gap-3 pt-2">
+      <Button variant="ghost" type="button" onclick={onClose} class="flex-1 text-text-dim">
         {MESSAGES.UI.CANCEL}
       </Button>
       <Button type="submit" class="flex-1">

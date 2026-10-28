@@ -93,9 +93,9 @@ function handleFileImport(e: Event) {
 }
 
 const errorBannerClass =
-  'bg-danger/10 border border-danger/20 rounded-lg p-3 text-danger text-xs font-bold';
+  'bg-danger/10 border border-danger/20 rounded-xl p-3 text-danger text-xs font-bold';
 const footerClass =
-  'mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs text-text-dim/60';
+  'mt-6 pt-5 border-t border-border/40 flex items-center justify-center text-xs font-bold text-text-dim/60';
 const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
 </script>
 
@@ -131,7 +131,7 @@ const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
       />
     </div>
      
-    <Button type="submit" disabled={isSaving} class="py-3.5 mt-6 w-full">
+    <Button type="submit" disabled={isSaving} class="mt-6 w-full">
       {saveBtnText}
     </Button>
   </form>

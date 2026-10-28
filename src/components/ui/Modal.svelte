@@ -1,11 +1,10 @@
 <script lang="ts">
-import { X } from '@lucide/svelte';
 import type { Snippet } from 'svelte';
 import { type FadeParams, fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
-import { cn } from '$lib/utils';
+import Icon from './Icon.svelte';
 
 let {
   children,
@@ -30,15 +29,8 @@ function modalFade(node: Element, params?: FadeParams) {
   return fade(node, params);
 }
 
-const dialogStyles = cn(
-  'modal-dialog',
-  'm-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8',
-  'max-h-[90vh] overflow-y-auto',
-  'bg-surface text-text',
-  'border border-border shadow-float',
-  'outline-none',
-  'backdrop:bg-black/40 backdrop:backdrop-blur-[1px]'
-);
+const dialogStyles =
+  'modal-dialog m-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto bg-surface text-text border border-border shadow-float outline-none backdrop:bg-black/40 backdrop:backdrop-blur-[1px]';
 
 const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 </script>
@@ -48,10 +40,10 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
     <button
       type="button"
       onclick={onClose}
-      class="p-1.5 text-text-dim hover:text-text hover:bg-surface rounded-lg transition-colors cursor-pointer active-press-icon"
+      class="p-1.5 text-text-dim hover:text-text hover:bg-bg rounded-lg transition-colors cursor-pointer active-press-icon"
       {@attach tooltip(MESSAGES.UI.CANCEL)}
     >
-      <X class="w-5 h-5" />
+      <Icon name="x" class="w-5 h-5" />
     </button>
   </div>
 {/snippet}

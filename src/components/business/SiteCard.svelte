@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Trash2 } from '@lucide/svelte';
 import { tooltip } from '$lib/actions/tooltip';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
@@ -7,6 +6,7 @@ import { manager } from '$lib/services/manager';
 import type { Site } from '$lib/types';
 import { DEFAULT_ICON, getIcon } from '$lib/utils';
 import Card from '../ui/Card.svelte';
+import Icon from '../ui/Icon.svelte';
 
 let { site, groupId }: { site: Site; groupId: string } = $props();
 
@@ -82,7 +82,7 @@ function handleClick(e: MouseEvent) {
         onclick={handleDelete} 
         {@attach tooltip(MESSAGES.UI.TIP_DELETE_SITE)}
       >
-        <Trash2 class="w-3.5 h-3.5" />
+        <Icon name="trash" class="w-3.5 h-3.5" />
       </button>
     {/if}
   </Card>

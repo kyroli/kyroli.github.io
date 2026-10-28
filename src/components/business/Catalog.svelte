@@ -115,50 +115,32 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
     class="fixed left-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
   >
-    <div class="relative flex flex-col">
-      <!-- Base vertical line -->
-      <div class="absolute left-[9.5px] top-3 bottom-3 w-px bg-border/40 -z-10"></div>
-
-      {#each dataState.groups as group, i (group.id)}
+    <div class="relative flex flex-col border-l border-border">
+      {#each dataState.groups as group (group.id)}
         {@const isActive = isGroupActive(group.id)}
-        {@const nextActive = i < dataState.groups.length - 1 && isGroupActive(dataState.groups[i + 1].id)}
 
-        <div class="relative flex flex-col">
-          <button
-            onclick={() => scrollToGroup(group.id)}
-            class="group relative flex items-center gap-4 py-3 outline-none cursor-pointer"
+        <button
+          onclick={() => scrollToGroup(group.id)}
+          class="group relative flex items-center h-9 pl-4 text-left outline-none cursor-pointer"
+        >
+          <span 
+            class={`absolute -left-px w-0.5 transition-all duration-200 ${
+              isActive 
+                ? 'inset-y-0 bg-primary' 
+                : 'top-1/2 -translate-y-1/2 h-0 bg-transparent group-hover:h-4 group-hover:bg-text-dim/40'
+            }`}
+          ></span>
+
+          <span 
+            class={`text-xs font-bold whitespace-nowrap transition-colors duration-200 ${
+              isActive 
+                ? 'text-text' 
+                : 'text-text-dim/40 group-hover:text-text-dim/80'
+            }`}
           >
-            <div class="relative flex items-center justify-center w-5 h-5 shrink-0">
-                <div class="absolute w-full h-full bg-bg z-0 rounded-full scale-[0.6] opacity-0 transition-opacity duration-300"></div>
-                <span 
-                    class={`relative z-10 rounded-full transition-all duration-500 ease-out-expo ${
-                    isActive 
-                        ? 'w-2.5 h-2.5 bg-primary shadow-sm ring-4 ring-primary/20' 
-                        : 'w-1.5 h-1.5 bg-border/80 group-hover:bg-text-dim/60 group-hover:scale-125'
-                    }`}
-                ></span>
-            </div>
-
-            <span 
-              class={`text-xs font-bold whitespace-nowrap transition-all duration-300 ease-out-expo ${
-                isActive 
-                  ? 'text-text translate-x-1' 
-                  : 'text-text-dim/40 group-hover:text-text-dim/80'
-              }`}
-            >
-              {group.name}
-            </span>
-          </button>
-
-          {#if i < dataState.groups.length - 1}
-            <!-- Active connector line segment between adjacent active dots -->
-            <div 
-              class={`absolute left-[9.5px] top-6 bottom-0 w-px -z-10 transition-all duration-500 ${
-                isActive && nextActive ? 'bg-primary w-0.5 -left-[0.25px]' : 'bg-transparent'
-              }`}
-            ></div>
-          {/if}
-        </div>
+            {group.name}
+          </span>
+        </button>
       {/each}
     </div>
   </aside>
@@ -188,8 +170,8 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
           : 'rounded-xl border-transparent z-0'}
 
         {@const styleClass = isActive
-          ? 'text-primary bg-surface border-border shadow-solid font-bold'
-          : 'text-text-dim hover:text-text bg-transparent font-medium'}
+          ? 'font-bold text-primary bg-surface border-border shadow-solid'
+          : 'font-bold text-text-dim/70 hover:text-text bg-transparent'}
 
         {@const mrClass = i < dataState.groups.length - 1
           ? isActive && nextActive ? '-mr-px' : 'mr-2'
@@ -198,7 +180,7 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
         <button
           {@attach registerButton(group.id)}
           onclick={() => scrollToGroup(group.id)}
-          class={`flex items-center justify-center h-9 px-3.5 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon ${roundedClass} ${styleClass} ${mrClass}`}
+          class={`px-4 py-2 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon ${roundedClass} ${styleClass} ${mrClass}`}
         >
           {group.name}
         </button>

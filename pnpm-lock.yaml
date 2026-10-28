@@ -7,18 +7,9 @@ settings:
 importers:
   .:
     dependencies:
-      "@lucide/svelte":
-        specifier: ^1.61.0
-        version: 1.61.0(svelte@5.57.2)
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
       svelte:
         specifier: ^5.57.2
         version: 5.57.2
-      tailwind-merge:
-        specifier: ^3.7.0
-        version: 3.7.0
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -187,14 +178,6 @@ packages:
       {
         integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==,
       }
-
-  "@lucide/svelte@1.61.0":
-    resolution:
-      {
-        integrity: sha512-Vwj4ADoKgVogLFpEbXv2PS2hh2fj+aAqPuiNydI88Zkyb1l7veL4fXgRrOX3tgpESHhIGneNkSSYhHupvCBshg==,
-      }
-    peerDependencies:
-      svelte: ^5
 
   "@oxc-project/types@0.155.0":
     resolution:
@@ -1158,12 +1141,6 @@ packages:
       }
     engines: { node: ">=18" }
 
-  tailwind-merge@3.7.0:
-    resolution:
-      {
-        integrity: sha512-XPPUyAc+cvspz3lHTcR/QgPfW2A0lv/xQNIjX3HGhLR+Nq2lHaLq5MtTesHn8GUr3W3DguT2KT5x3NVgRtYwmA==,
-      }
-
   tailwindcss@4.3.3:
     resolution:
       {
@@ -1333,10 +1310,6 @@ snapshots:
     dependencies:
       "@jridgewell/resolve-uri": 3.1.2
       "@jridgewell/sourcemap-codec": 1.6.0
-
-  "@lucide/svelte@1.61.0(svelte@5.57.2)":
-    dependencies:
-      svelte: 5.57.2
 
   "@oxc-project/types@0.155.0": {}
 
@@ -1767,8 +1740,6 @@ snapshots:
       zimmerframe: 1.1.4
     transitivePeerDependencies:
       - "@typescript-eslint/types"
-
-  tailwind-merge@3.7.0: {}
 
   tailwindcss@4.3.3: {}
 

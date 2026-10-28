@@ -98,11 +98,11 @@ const toastClass = $derived(
   {#if appState.modal?.type === 'confirm'}
     {@const { msg, isDestructive, onConfirm } = appState.modal}
     <Modal onClose={appState.closeModal} title={MESSAGES.UI.CONFIRM_ACTION}>
-      <div class="space-y-6 pt-2">
-         <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line">
+      <div class="space-y-5 pt-1">
+         <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line text-pretty">
             {msg}
          </p>
-        <div class="flex gap-3">
+        <div class="flex gap-3 pt-2">
           <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
           <Button 
             variant={isDestructive ? 'danger' : 'primary'} 

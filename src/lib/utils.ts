@@ -1,7 +1,5 @@
-import { type ClassValue, clsx } from 'clsx';
 import type { Attachment } from 'svelte/attachments';
 import { MediaQuery } from 'svelte/reactivity';
-import { twMerge } from 'tailwind-merge';
 
 export const isHoverable = new MediaQuery('(hover: hover) and (pointer: fine)');
 export const isDesktop = new MediaQuery('(width >= 768px)');
@@ -46,7 +44,3 @@ export const getIcon = (url: string, custom?: string): string => {
 };
 
 export const DEFAULT_ICON = assets.globe || '';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}

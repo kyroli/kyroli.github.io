@@ -1,12 +1,11 @@
 <script lang="ts">
-import { Search } from '@lucide/svelte';
 import { fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip';
 import { SEARCH_ENGINES } from '$lib/config/search';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
-import Input from '../ui/Input.svelte';
+import Icon from '../ui/Icon.svelte';
 
 let search = $state('');
 let inputEl = $state<HTMLInputElement | null>(null);
@@ -54,15 +53,15 @@ function handleWindowKeydown(e: KeyboardEvent) {
 <svelte:window onkeydown={handleWindowKeydown} />
 
 <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none">
-  <div class={`relative flex items-center w-full rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${isMenuOpen ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
+  <div class={`relative flex items-center w-full h-10 rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${isMenuOpen ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
     <button
       type="button"
       popovertarget="search-engine-menu"
       style="anchor-name: --search-engine-anchor;"
-      class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active-press-icon shrink-0 gap-2 group/btn"
+      class="flex items-center justify-center pl-3 pr-2 h-10 rounded-l-xl text-text-dim hover:text-primary transition-colors cursor-pointer active-press-icon shrink-0 gap-2"
       {@attach tooltip(isMenuOpen ? null : MESSAGES.UI.TIP_SWITCH_ENGINE)}
     >
-      <div class="relative w-5 h-5 overflow-hidden shrink-0 flex items-center justify-center transition-transform duration-200 group-hover/btn:scale-110">
+      <div class="relative w-5 h-5 overflow-hidden shrink-0 flex items-center justify-center">
         {#key appState.currentEngineId}
           <img 
             in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} 
@@ -77,11 +76,20 @@ function handleWindowKeydown(e: KeyboardEvent) {
 
     <div class="h-5 w-[1px] bg-border/60 shrink-0"></div>
 
-    <Input bind:ref={inputEl} bind:value={search} name="search" autocomplete="off" onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()} class="border-none shadow-none bg-transparent focus:border-none focus:ring-0 h-10 py-0 pl-3 pr-2 text-sm placeholder:text-text-dim/60" placeholder={activeEngine.placeholder} />
+    <input
+      bind:this={inputEl}
+      bind:value={search}
+      type="text"
+      name="search"
+      autocomplete="off"
+      onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && handleSearch()}
+      class="w-full h-full bg-transparent border-none outline-none pl-3 pr-2 text-sm text-text placeholder:text-text-dim/60"
+      placeholder={activeEngine.placeholder}
+    />
 
     {#if search.trim().length > 0}
-      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer" {@attach tooltip(MESSAGES.UI.SEARCH)}>
-        <Search class="w-4 h-4" />
+      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer shrink-0" {@attach tooltip(MESSAGES.UI.SEARCH)}>
+        <Icon name="search" class="w-4 h-4" />
       </button>
     {/if}
   </div>
@@ -100,7 +108,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
     "
   >
     {#each Object.values(SEARCH_ENGINES) as engine}
-      <button type="button" onclick={() => switchEngine(engine.id)} class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 w-full text-left text-text hover:bg-bg active-press-icon">
+      <button type="button" onclick={() => switchEngine(engine.id)} class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-bold transition-colors duration-200 w-full text-left text-text hover:bg-bg active-press-icon">
         <img src={engine.icon} alt={engine.name} class="w-4 h-4 object-contain dark:invert" />
         <span class="flex-1">{engine.name}</span>
         {#if appState.currentEngineId === engine.id}

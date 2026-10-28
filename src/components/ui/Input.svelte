@@ -2,7 +2,6 @@
 import type { HTMLInputAttributes } from 'svelte/elements';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
-import { cn } from '$lib/utils';
 
 type Props = {
   value?: string;
@@ -31,7 +30,7 @@ const stateStyles = $derived(
     : 'border-border focus-ring'
 );
 
-const inputClass = $derived(cn(baseStyles, stateStyles, className));
+const inputClass = $derived([baseStyles, stateStyles, className]);
 
 const labelClass = 'text-xs font-bold text-text-dim tracking-wide ml-1 select-none';
 const errorClass = 'text-[10px] font-bold text-danger ml-1';
