@@ -1,94 +1,90 @@
 # Kilonova
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
-[![Svelte 5](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
-[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
-[![TypeScript 7](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Biome](https://img.shields.io/badge/Linted_by-Biome-60A5FA?logo=biome&logoColor=white)](https://biomejs.dev/)
+[![Svelte](https://img.shields.io/badge/Svelte-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Biome](https://img.shields.io/badge/Biome-60A5FA?logo=biome&logoColor=white)](https://biomejs.dev/)
 
 [简体中文](./README_zh.md) | English
 
-A personal browser startpage and bookmark manager.
+A minimal personal browser startpage and bookmark manager.
 
-## Tech Choices
+## Architecture & Standards
 
-- **Tech Stack**: Svelte 5 (Runes & Attachments) + Vite + Tailwind CSS + TypeScript.
-- **Modern Browsers Only**: Target ESNext standards without legacy polyfills.
-- **Modern Standards**: Employs native HTML dialogs, Popover API, CSS Anchor Positioning, and CSS `light-dark()` theming without external UI runtime bloat.
-- **Architecture**: Zero-backend static client communicating directly with browser APIs and GitHub REST API.
-- **Tooling**: Code formatting, linting, and static type checking enforced by Biome and `svelte-check` (`tsgo`).
+- **Core Stack**: Built with Svelte (Runes, Attachments, and reactive primitives), Tailwind CSS, TypeScript, and Vite with Lightning CSS.
+- **Zero External UI Runtime**: Relies exclusively on framework primitives and native browser APIs without third-party UI component or state management libraries.
+- **Native Web Platform**:
+  - **Top Layer & Positioning**: Uses native `<dialog closedby="any">`, the Popover API (`popover`), and CSS Anchor Positioning (`anchor-name`, `position-anchor`, `position-area`) for modals, menus, tooltips, toasts, and drag ghosts.
+  - **Modern CSS**: Uses `oklch()` color tokens paired with native `light-dark()` and `@starting-style` discrete transitions.
+  - **ESNext & Web APIs**: Targets modern browsers using native `Uint8Array` Base64 encoding/decoding (`toBase64` / `fromBase64`), `URL.canParse`, and the File System Access API (`showSaveFilePicker`).
+- **Unidirectional Layering**: Enforces strict separation across stateless UI primitives (`ui/`), business views and lazy-loaded modals (`business/`, `modals/`), domain services (`services/`), reactive state stores (`core/`), and infrastructure adapters (`infra/`).
 
 ## Features
 
-- **Search**: Multi-engine search supporting Bing, Google, DuckDuckGo, and Yandex. Quick focus via `/` or `Ctrl/Cmd + K`, and blur via `Escape`.
-- **Drag & Drop**: Reorder bookmark groups and site links in Edit Mode, featuring FLIP animations, edge scroll detection, and `Escape` to cancel.
-- **Responsive Navigation**: Desktop scroll-spy vertical sidebar and mobile sticky horizontal tabs with auto-centering.
-- **Theme Support**: Dark and light themes with system color-scheme detection.
-- **Localization**: Automatic interface localization for English and Simplified Chinese based on browser language settings.
-- **Local Storage**: Data persistence via LocalStorage with cross-tab synchronization.
-- **GitHub Sync**: Remote synchronization via GitHub REST API with SHA-based conflict detection.
-- **Backup**: Export and restore bookmark data as standard JSON files.
+- **Multi-Engine Search**: Switch between Bing, Google, DuckDuckGo, and Yandex. Focus the search bar with `/` or `Ctrl/Cmd + K`, and dismiss with `Escape`.
+- **Pointer-Driven Drag & Drop**: Reorder groups and site shortcuts in Edit Mode via a custom pointer-event engine featuring collision detection, viewport edge auto-scrolling, FLIP animations, and `Escape` cancellation.
+- **Adaptive Navigation**: Scroll-spy vertical sidebar on desktop (`IntersectionObserver` attachment) and auto-centering sticky horizontal category bar on mobile viewports.
+- **Theme & Localization**: Light and dark mode with `prefers-color-scheme` detection, plus automatic English and Simplified Chinese interface adaptation based on browser locale.
 
 ## Data Storage & Sync
 
-- **Local Storage**: Bookmark structures, custom preferences, and theme choices are stored locally in the browser and synchronized across tabs via the Storage API.
-- **GitHub Sync**: Synchronizes configuration (defaults to `profile.json`) directly to a user-designated GitHub repository using a locally stored Fine-grained Personal Access Token (PAT).
-  - ⚠️ **Security**: Use a **Fine-grained PAT** with permissions restricted strictly to the designated repository (`Contents: Read and write`).
-- **Conflict Resolution**: Verifies file commit SHAs before writes. Prompts to resolve conflicts via **Force Push** (overwrite remote) or **Reset to Remote** (overwrite local).
-- **Data Export/Import**: Provides JSON serialization for offline backups and migration.
+- **Local Persistence**: Bookmark data and user preferences are persisted in `localStorage` and synchronized across open tabs via `storage` events.
+- **GitHub Cloud Sync**: Synchronizes bookmark data (`profile.json`) directly with a designated GitHub repository via the GitHub REST API.
+  - **Concurrency & Conflict Control**: Cancels stale in-flight requests via `AbortController` and verifies blob SHAs before writes. When remote and local states diverge, prompts to either **Force Push** (overwrite remote) or **Reset to Remote** (discard local changes).
+  - **Token Scope**: Use a **Fine-grained Personal Access Token (PAT)** scoped strictly to the target repository with `Contents: Read and write` permission.
+- **Offline Backup**: Export bookmarks to a formatted JSON file (via `showSaveFilePicker` with standard download fallback) and restore from JSON backups.
 
 ## Project Structure
 
 ```text
 src/
-├── assets/              # Static assets (images, icons)
-├── components/          # Component Layer (UI)
-│   ├── business/        # Stateful business-specific components
-│   ├── modals/          # Configuration dialogs and settings modals
-│   └── ui/              # Reusable, stateless primitives
-├── lib/                 # Core Logical Layer
-│   ├── actions/         # Svelte attachments ({@attach} for drag-and-drop and tooltip)
-│   ├── config/          # Preset configs (search engines, defaults)
-│   ├── core/            # Reactive global state stores (Svelte Runes)
-│   ├── infra/           # Infrastructure adapters (GitHub client, LocalStorage adapter)
-│   ├── services/        # Service managers (sync orchestrator, data layer manager)
-│   ├── constants.ts     # Global system and animation constants
-│   ├── i18n.ts          # Localization dictionaries and language detection
-│   ├── types.ts         # Global TypeScript definitions
-│   └── utils.ts         # Generic utilities
-├── App.svelte           # Root application component
-├── app.css              # Global styling entrypoint
-└── main.ts              # Application bootstrap entrypoint
+├── assets/              # Static icons and search engine assets
+├── components/
+│   ├── business/        # Stateful feature components (grid, header, catalog, search)
+│   ├── modals/          # On-demand dynamically imported dialog views
+│   └── ui/              # Stateless UI primitives (Button, Card, Icon, Input, Modal)
+├── lib/
+│   ├── actions/         # Reactive DOM attachments ({@attach} for drag-and-drop and tooltip)
+│   ├── config/          # Search engine presets
+│   ├── core/            # Global reactive state singletons (appState, dataState)
+│   ├── infra/           # Low-level adapters (GitHub REST client, LocalStorage wrapper)
+│   ├── services/        # Business logic and sync orchestration (manager, sync)
+│   ├── constants.ts     # Layout, animation, and timeout constants
+│   ├── i18n.ts          # Localization dictionaries (EN / ZH)
+│   ├── types.ts         # Shared TypeScript interfaces
+│   └── utils.ts         # Reactive media queries, icon resolution, and helpers
+├── App.svelte           # Root layout and modal/toast host
+├── app.css              # Tailwind CSS theme tokens and native popover/dialog transitions
+└── main.ts              # Application mount entrypoint
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (Current / LTS)
+- Node.js (LTS / Current)
 - pnpm
 
-### Local Development
+### Development & Verification
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 pnpm install
 
-# 2. Start dev server
+# Start development server
 pnpm dev
 
-# 3. Build for production
-pnpm build
-
-# 4. Format, Lint & Type Check
+# Format, lint, and run static type checks (enforced by CI)
 pnpm format
 pnpm lint
 pnpm check
-```
 
-_Note: Pushing code that fails Biome lint/format or type checks will cause the CI/CD build pipeline to fail._
+# Build for production
+pnpm build
+```
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License v3.0](./LICENSE) (AGPL-3.0).
+Licensed under the [GNU Affero General Public License v3.0](./LICENSE) (AGPL-3.0-or-later).
