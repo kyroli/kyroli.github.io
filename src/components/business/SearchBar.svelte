@@ -1,6 +1,6 @@
 <script lang="ts">
 import { fade } from 'svelte/transition';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { SEARCH_ENGINES } from '$lib/config/search';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
@@ -74,7 +74,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
       <div class={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}></div>
     </button>
 
-    <div class="h-5 w-[1px] bg-border/60 shrink-0"></div>
+    <div class="h-5 w-px bg-border/60 shrink-0"></div>
 
     <input
       bind:this={inputEl}

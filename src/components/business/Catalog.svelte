@@ -1,16 +1,61 @@
-<script lang="ts">
+<script module lang="ts">
 import type { Attachment } from 'svelte/attachments';
 import { SvelteSet } from 'svelte/reactivity';
+
+const visibleGroupIds = new SvelteSet<string>();
+const groupEls = new Map<string, HTMLElement>();
+const elementIds = new WeakMap<Element, string>();
+
+let observer: IntersectionObserver | null = null;
+
+function getObserver(): IntersectionObserver {
+  if (!observer) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = elementIds.get(entry.target);
+          if (!id) continue;
+          if (entry.isIntersecting) {
+            visibleGroupIds.add(id);
+          } else {
+            visibleGroupIds.delete(id);
+          }
+        }
+      },
+      {
+        threshold: [0, 0.1, 0.5, 0.9, 1.0],
+        rootMargin: '-80px 0px -20% 0px'
+      }
+    );
+  }
+  return observer;
+}
+
+export const observeGroup: Attachment<HTMLElement> = (node: HTMLElement) => {
+  const id = node.dataset.dndGroupId;
+  if (!id) return;
+
+  const io = getObserver();
+  elementIds.set(node, id);
+  groupEls.set(id, node);
+  io.observe(node);
+
+  return () => {
+    io.unobserve(node);
+    elementIds.delete(node);
+    groupEls.delete(id);
+    visibleGroupIds.delete(id);
+  };
+};
+</script>
+
+<script lang="ts">
 import { scrollY } from 'svelte/reactivity/window';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { dataState } from '$lib/core/data.svelte';
 
-let observer: IntersectionObserver | null = null;
 let navEl = $state<HTMLElement | null>(null);
-
-const visibleGroupIds = new SvelteSet<string>();
-const groupIds = $derived(dataState.groups.map((g) => g.id).join(','));
 
 function isGroupActive(id: string): boolean {
   return visibleGroupIds.size > 0 ? visibleGroupIds.has(id) : dataState.groups[0]?.id === id;
@@ -26,22 +71,6 @@ const firstActiveGroupId = $derived(
 // Map to store mobile nav button elements for auto-centering
 const buttonEls = new Map<string, HTMLButtonElement>();
 
-$effect(() => {
-  groupIds;
-
-  const timer = setTimeout(() => {
-    setupObserver();
-  }, 100);
-
-  return () => {
-    clearTimeout(timer);
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
-  };
-});
-
 // Auto-center the first active category in the horizontal scrollbar on mobile
 $effect(() => {
   if (firstActiveGroupId && navEl && navEl.offsetWidth > 0) {
@@ -56,46 +85,11 @@ $effect(() => {
   }
 });
 
-function setupObserver() {
-  if (observer) {
-    observer.disconnect();
-  }
-  visibleGroupIds.clear();
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        const id = entry.target.getAttribute('data-dnd-group-id');
-        if (!id) continue;
-        if (entry.isIntersecting) {
-          visibleGroupIds.add(id);
-        } else {
-          visibleGroupIds.delete(id);
-        }
-      }
-    },
-    {
-      threshold: [0, 0.1, 0.5, 0.9, 1.0],
-      rootMargin: '-80px 0px -20% 0px'
-    }
-  );
-
-  document.querySelectorAll('[data-dnd-group-id]').forEach((el) => {
-    observer?.observe(el);
-  });
-}
-
 function scrollToGroup(id: string) {
-  const el = document.querySelector(`[data-dnd-group-id="${id}"]`);
-  if (el) {
-    const rect = el.getBoundingClientRect();
-    const targetY = rect.top + window.scrollY - 100;
-
-    window.scrollTo({
-      top: targetY,
-      behavior: 'smooth'
-    });
-  }
+  groupEls.get(id)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
 }
 
 // Attachment to register button elements in the map

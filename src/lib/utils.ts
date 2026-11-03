@@ -8,6 +8,12 @@ export const promoteToTopLayer: Attachment<HTMLElement> = (element) => {
   element.showPopover();
 };
 
+export const isValidHttpUrl = (rawUrl: string): boolean => {
+  if (!URL.canParse(rawUrl)) return false;
+  const { protocol } = new URL(rawUrl);
+  return protocol === 'http:' || protocol === 'https:';
+};
+
 interface AssetModule {
   default?: string;
   src?: string;

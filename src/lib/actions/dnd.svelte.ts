@@ -2,9 +2,9 @@ import type { Attachment } from 'svelte/attachments';
 import { on } from 'svelte/events';
 import { DND_CONSTANTS } from '../constants';
 import { appState } from '../core/app.svelte';
-import { dataState } from '../core/data.svelte';
 import type { DndPayload } from '../types';
 import { isDesktop } from '../utils';
+import { tooltipState } from './tooltip.svelte';
 
 interface GroupMeta {
   id: string;
@@ -23,7 +23,6 @@ class DndEngine {
   isDragging = $state(false);
   draggedId = $state<string | null>(null);
   type = $state<'group' | 'site' | null>(null);
-  sourceGroupId = $state<string | null>(null);
 
   hoverGroupId = $state<string | null>(null);
   hoverIndex = $state<number | null>(null);
@@ -56,15 +55,9 @@ class DndEngine {
 
   onDropCallback: ((payload: DndPayload) => void) | null = null;
 
-  init(
-    e: PointerEvent,
-    type: 'group' | 'site',
-    id: string,
-    groupId: string | null,
-    node: HTMLElement
-  ) {
+  init(e: PointerEvent, type: 'group' | 'site', id: string, node: HTMLElement) {
     if (!appState.isEditMode || !e.isPrimary || e.button !== 0) return;
-    if (e.pointerType === 'touch' && window.innerWidth < 768) return;
+    if (e.pointerType === 'touch' && !isDesktop.current) return;
 
     const target = e.target as HTMLElement;
     if (target.closest('button, input, textarea, select, [data-no-drag]')) return;
@@ -73,7 +66,6 @@ class DndEngine {
     this.#dragNode = node;
     this.#pointerId = e.pointerId;
     this.draggedId = id;
-    this.sourceGroupId = groupId;
     this.hasDragged = false;
 
     this.#startX = e.clientX;
@@ -126,6 +118,7 @@ class DndEngine {
 
   #startEngine() {
     if (!this.#dragNode || this.#pointerId === null) return;
+    tooltipState.hide();
     document.body.classList.add('cursor-grabbing');
 
     this.#captureSnapshots();
@@ -346,12 +339,10 @@ class DndEngine {
         cols = Math.floor((contentWidth + gap + 1) / cellW);
         if (cols < 1) cols = 1;
 
-        const groupData = dataState.groups.find((g) => g.id === id);
-        itemCount = groupData ? groupData.sites.length : 0;
-
-        if (id === this.sourceGroupId && this.type === 'site') {
-          itemCount = Math.max(0, itemCount - 1);
-        }
+        const escapedId = CSS.escape(this.draggedId ?? '');
+        itemCount = gridEl.querySelectorAll(
+          `[data-dnd-site-id]:not([data-dnd-site-id="${escapedId}"])`
+        ).length;
       }
 
       this.#groupMetas.push({
@@ -420,7 +411,6 @@ class DndEngine {
 
     this.draggedId = null;
     this.type = null;
-    this.sourceGroupId = null;
     this.hoverGroupId = null;
     this.hoverIndex = null;
     this.sourceHeight = 0;
@@ -454,18 +444,29 @@ class DndEngine {
 
     this.#ghostEl.removeAttribute('data-dnd-group-id');
     this.#ghostEl.removeAttribute('data-dnd-site-id');
-    for (const el of this.#ghostEl.querySelectorAll('[data-dnd-group-id], [data-dnd-site-id]')) {
+    this.#ghostEl.style.anchorName = '';
+    for (const el of this.#ghostEl.querySelectorAll<HTMLElement>(
+      '[data-dnd-group-id], [data-dnd-site-id], [style*="anchor-name"]'
+    )) {
       el.removeAttribute('data-dnd-group-id');
       el.removeAttribute('data-dnd-site-id');
+      el.style.anchorName = '';
     }
+
+    this.#ghostEl.setAttribute('popover', 'manual');
 
     Object.assign(this.#ghostEl.style, {
       position: 'fixed',
       top: '0px',
       left: '0px',
+      margin: '0px',
+      padding: '0px',
       width: `${rect.width}px`,
       height: `${rect.height}px`,
-      zIndex: '10000',
+      border: 'none',
+      background: 'transparent',
+      color: 'inherit',
+      overflow: 'visible',
       pointerEvents: 'none',
       transform: `translate3d(${rect.left}px, ${rect.top}px, 0)`,
       boxShadow: '0 20px 40px -5px rgb(0 0 0 / 0.3)',
@@ -476,6 +477,7 @@ class DndEngine {
 
     this.#ghostEl.classList.remove('animate-fade', 'cursor-grab', 'cursor-move');
     document.body.appendChild(this.#ghostEl);
+    this.#ghostEl.showPopover();
   }
 
   #clamp(val: number, min: number, max: number) {
@@ -489,11 +491,7 @@ class DndEngine {
 
 export const dndState = new DndEngine();
 
-export function draggable(params: {
-  type: 'group' | 'site';
-  id: string;
-  groupId: string | null;
-}): Attachment<HTMLElement> {
+export function draggable(params: { type: 'group' | 'site'; id: string }): Attachment<HTMLElement> {
   return (element: HTMLElement) => {
     if (!appState.isEditMode) return;
 
@@ -503,9 +501,7 @@ export function draggable(params: {
     element.style.touchAction = desktop ? 'none' : '';
 
     const offs = [
-      on(element, 'pointerdown', (e) =>
-        dndState.init(e, params.type, params.id, params.groupId, element)
-      ),
+      on(element, 'pointerdown', (e) => dndState.init(e, params.type, params.id, element)),
       on(
         element,
         'click',

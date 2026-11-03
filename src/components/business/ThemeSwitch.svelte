@@ -1,4 +1,5 @@
 <script lang="ts">
+import { tooltipState } from '$lib/actions/tooltip.svelte';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import Button from '../ui/Button.svelte';
@@ -8,7 +9,7 @@ function handleToggle(e: MouseEvent) {
   if (e.currentTarget instanceof HTMLElement) {
     e.currentTarget.blur();
   }
-  appState.hideTooltip();
+  tooltipState.hide();
   appState.toggleTheme();
 }
 </script>

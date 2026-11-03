@@ -1,8 +1,28 @@
 import type { Attachment } from 'svelte/attachments';
 import { on } from 'svelte/events';
 import { APP_TIMEOUTS } from '../constants';
-import { appState } from '../core/app.svelte';
 import { isHoverable } from '../utils';
+
+interface TooltipPayload {
+  msg: string;
+  anchorName: string;
+}
+
+class TooltipManager {
+  current = $state<TooltipPayload | null>(null);
+
+  show = (msg: string, anchorName: string) => {
+    this.current = { msg, anchorName };
+  };
+
+  hide = (anchorName?: string) => {
+    if (this.current && (!anchorName || this.current.anchorName === anchorName)) {
+      this.current = null;
+    }
+  };
+}
+
+export const tooltipState = new TooltipManager();
 
 let tooltipIdCounter = 0;
 
@@ -34,13 +54,13 @@ export function tooltip(msg?: string | null): Attachment<HTMLElement> {
     const forceHide = () => {
       if (hoverTimeout) clearTimeout(hoverTimeout);
       if (isVisible) {
-        appState.hideTooltip(tooltipId);
+        tooltipState.hide(tooltipId);
         isVisible = false;
       }
     };
 
     const show = () => {
-      appState.showTooltip(msg, tooltipId);
+      tooltipState.show(msg, tooltipId);
       isVisible = true;
     };
 

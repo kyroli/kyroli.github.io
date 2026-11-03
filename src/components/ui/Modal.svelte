@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import { type FadeParams, fade } from 'svelte/transition';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
 import Icon from './Icon.svelte';

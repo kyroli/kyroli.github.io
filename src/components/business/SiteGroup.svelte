@@ -2,7 +2,7 @@
 import { flip } from 'svelte/animate';
 import { cubicOut } from 'svelte/easing';
 import { dndState, draggable } from '$lib/actions/dnd.svelte';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { ANIMATION_SPEED, UI_CONSTANTS } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
@@ -20,7 +20,7 @@ let {
 } = $props();
 </script>
 
-<div class="group-item flex flex-col gap-4 relative @container">
+<div class="group-item flex flex-col gap-4 relative">
   <GroupHeader {group} onDelete={onDeleteGroup} />
 
   <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
@@ -37,7 +37,7 @@ let {
           <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border"></div>
         {:else}
           <div 
-            {@attach draggable({ type: 'site', id: item.id, groupId: group.id })} 
+            {@attach draggable({ type: 'site', id: item.id })} 
             class="h-full rounded-xl"
           >
             <SiteCard site={item} groupId={group.id} />

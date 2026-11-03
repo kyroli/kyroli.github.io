@@ -1,5 +1,5 @@
 <script lang="ts">
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
@@ -58,7 +58,7 @@ function handleClick(e: MouseEvent) {
 }
 </script>
 
-<div class="site-card relative h-full" data-id={site.id}>
+<div class="relative h-full">
   <Card href={safeHref} onclick={handleClick} interactive={!appState.isEditMode} class={cardClass}>
     <div class="shrink-0 w-10 h-10 rounded-xl bg-icon-bg flex items-center justify-center overflow-hidden border border-border/50 transition-transform duration-200 group-hover:scale-105 p-2">
       <img 

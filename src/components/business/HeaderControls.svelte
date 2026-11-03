@@ -1,6 +1,6 @@
 <script lang="ts">
 import { fade } from 'svelte/transition';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
@@ -49,7 +49,9 @@ function getSafeErrorMessage(e: unknown): string {
 async function handleForcePush() {
   try {
     await sync.forcePush();
-    appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
+    if (dataState.syncStatus === 'success') {
+      appState.showToast(MESSAGES.TOAST.FORCE_PUSH_SUCCESS, 'success');
+    }
   } catch (e: unknown) {
     const msg = getSafeErrorMessage(e);
     appState.showToast(`${MESSAGES.TOAST.FORCE_PUSH_FAIL}: ${msg}`, 'error');
@@ -88,8 +90,10 @@ function handleReset() {
     onConfirm: async () => {
       try {
         await sync.resetToRemote();
-        appState.toggleEditMode();
-        appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+        if (dataState.syncStatus === 'success') {
+          appState.toggleEditMode();
+          appState.showToast(MESSAGES.TOAST.RESET_SUCCESS, 'success');
+        }
       } catch {
         appState.showToast(MESSAGES.TOAST.RESET_FAIL, 'error');
       }

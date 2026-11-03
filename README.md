@@ -23,7 +23,6 @@ A personal browser startpage and bookmark manager.
 
 - **Search**: Multi-engine search supporting Bing, Google, DuckDuckGo, and Yandex. Quick focus via `/` or `Ctrl/Cmd + K`, and blur via `Escape`.
 - **Drag & Drop**: Reorder bookmark groups and site links in Edit Mode, featuring FLIP animations, edge scroll detection, and `Escape` to cancel.
-- **Card Micro-interactions**: Pointer-driven 3D perspective tilt and surface shine on site cards.
 - **Responsive Navigation**: Desktop scroll-spy vertical sidebar and mobile sticky horizontal tabs with auto-centering.
 - **Theme Support**: Dark and light themes with system color-scheme detection.
 - **Localization**: Automatic interface localization for English and Simplified Chinese based on browser language settings.
@@ -49,7 +48,7 @@ src/
 │   ├── modals/          # Configuration dialogs and settings modals
 │   └── ui/              # Reusable, stateless primitives
 ├── lib/                 # Core Logical Layer
-│   ├── actions/         # Svelte attachments ({@attach} for drag-and-drop, tilt, tooltip)
+│   ├── actions/         # Svelte attachments ({@attach} for drag-and-drop and tooltip)
 │   ├── config/          # Preset configs (search engines, defaults)
 │   ├── core/            # Reactive global state stores (Svelte Runes)
 │   ├── infra/           # Infrastructure adapters (GitHub client, LocalStorage adapter)

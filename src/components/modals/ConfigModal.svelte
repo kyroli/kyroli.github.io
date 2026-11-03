@@ -1,6 +1,6 @@
 <script lang="ts">
 import { fade } from 'svelte/transition';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';

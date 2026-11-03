@@ -1,6 +1,7 @@
 import { on } from 'svelte/events';
 import { STORAGE_KEYS, storage } from '../infra/storage';
 import type { GithubConfig, Group, NavData, SyncStatus } from '../types';
+import { isValidHttpUrl } from '../utils';
 
 class DataCore {
   groups = $state<Group[]>([]);
@@ -21,32 +22,16 @@ class DataCore {
     this.lastSha = storage.sha;
 
     $effect.root(() => {
-      let isFirstRun = true;
-      let timer: number;
+      let skipGroupsSync = true;
 
       $effect(() => {
         // Read snapshot synchronously to track all deep reactive dependencies
         const snapshot = $state.snapshot(this.groups);
-
-        if (isFirstRun) {
-          isFirstRun = false;
+        if (skipGroupsSync) {
+          skipGroupsSync = false;
           return;
         }
-
-        clearTimeout(timer);
-        timer = window.setTimeout(() => {
-          storage.data = { groups: snapshot };
-        }, 500);
-
-        return () => clearTimeout(timer);
-      });
-
-      $effect(() => {
-        storage.config = this.config;
-      });
-
-      $effect(() => {
-        storage.sha = this.lastSha;
+        storage.data = { groups: snapshot };
       });
 
       $effect(() =>
@@ -55,6 +40,7 @@ class DataCore {
             try {
               const parsed = JSON.parse(e.newValue);
               if (Array.isArray(parsed.groups)) {
+                skipGroupsSync = true;
                 this.groups = this.sanitizeGroups(parsed.groups);
               }
             } catch (err) {
@@ -69,15 +55,14 @@ class DataCore {
               console.error('Cross-tab config sync error:', err);
             }
           }
+
+          if (e.key === STORAGE_KEYS.SHA && e.newValue !== null) {
+            this.lastSha = e.newValue;
+            this.isDirty = false;
+          }
         })
       );
     });
-  }
-
-  private isValidHttpUrl(rawUrl: string): boolean {
-    if (!URL.canParse(rawUrl)) return false;
-    const parsed = new URL(rawUrl);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   }
 
   private sanitizeGroups(groups: unknown): Group[] {
@@ -92,7 +77,7 @@ class DataCore {
               .filter((s): s is Record<string, unknown> => {
                 if (!s || typeof s !== 'object') return false;
                 if (typeof s.url !== 'string' || typeof s.name !== 'string') return false;
-                return this.isValidHttpUrl(s.url.trim());
+                return isValidHttpUrl(s.url.trim());
               })
               .map((s) => ({
                 id: typeof s.id === 'string' && s.id.trim() ? s.id : crypto.randomUUID(),
@@ -115,11 +100,15 @@ class DataCore {
 
   updateConfig(newConfig: GithubConfig) {
     this.config = newConfig;
+    storage.config = newConfig;
   }
 
   updateSyncState(status: SyncStatus, sha?: string, error?: string) {
     this.syncStatus = status;
-    if (sha) this.lastSha = sha;
+    if (sha) {
+      this.lastSha = sha;
+      storage.sha = sha;
+    }
     if (error) this.syncError = error;
 
     if (status === 'success') {
@@ -131,6 +120,7 @@ class DataCore {
   replaceData(newData: NavData, newSha: string) {
     this.groups = this.sanitizeGroups(newData.groups);
     this.lastSha = newSha;
+    storage.sha = newSha;
     this.syncStatus = 'success';
     this.isDirty = false;
   }

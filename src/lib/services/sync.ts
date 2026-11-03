@@ -8,8 +8,20 @@ import { GITHUB_ERRORS, GithubClient } from '../infra/github';
 import type { GithubConfig } from '../types';
 
 class SyncService {
+  #abortController: AbortController | null = null;
+
   private get client() {
     return new GithubClient(dataState.config);
+  }
+
+  #nextSignal(): AbortSignal {
+    this.#abortController?.abort();
+    this.#abortController = new AbortController();
+    return this.#abortController.signal;
+  }
+
+  #isAborted(e: unknown): boolean {
+    return e instanceof DOMException && e.name === 'AbortError';
   }
 
   /**
@@ -18,14 +30,17 @@ class SyncService {
    */
   async init(): Promise<void> {
     if (!dataState.hasToken) {
+      this.#abortController?.abort();
+      this.#abortController = null;
       dataState.updateSyncState('idle');
       return;
     }
 
+    const signal = this.#nextSignal();
     dataState.updateSyncState('checking');
 
     try {
-      const remote = await this.client.getFile();
+      const remote = await this.client.getFile('profile.json', signal);
 
       if (!remote) {
         dataState.updateSyncState('success');
@@ -54,6 +69,7 @@ class SyncService {
         }
       }
     } catch (e: unknown) {
+      if (this.#isAborted(e)) return;
       console.error('Init sync failed:', e);
       dataState.updateSyncState('error', undefined, this.formatError(e));
     }
@@ -65,17 +81,20 @@ class SyncService {
   async push(): Promise<void> {
     if (!dataState.isDirty || !dataState.hasToken) return;
 
+    const signal = this.#nextSignal();
     dataState.updateSyncState('syncing');
 
     try {
       const { sha } = await this.client.updateFile(
         'profile.json',
         { groups: dataState.groups },
-        dataState.lastSha || undefined
+        dataState.lastSha || undefined,
+        signal
       );
 
       dataState.updateSyncState('success', sha);
     } catch (e: unknown) {
+      if (this.#isAborted(e)) return;
       console.error('Push failed:', e);
 
       if (e instanceof Error && e.message === GITHUB_ERRORS.CONFLICT) {
@@ -92,19 +111,22 @@ class SyncService {
    * Overwrite cloud data with local version, ignoring SHA conflicts.
    */
   async forcePush(): Promise<void> {
+    const signal = this.#nextSignal();
     dataState.updateSyncState('syncing');
     try {
-      const remote = await this.client.getFile();
+      const remote = await this.client.getFile('profile.json', signal);
       const baseSha = remote ? remote.sha : undefined;
 
       const { sha } = await this.client.updateFile(
         'profile.json',
         { groups: dataState.groups },
-        baseSha
+        baseSha,
+        signal
       );
 
       dataState.updateSyncState('success', sha);
     } catch (e: unknown) {
+      if (this.#isAborted(e)) return;
       dataState.updateSyncState('error', undefined, this.formatError(e));
       throw e;
     }
@@ -114,9 +136,10 @@ class SyncService {
    * Pull from remote and reset local state.
    */
   async resetToRemote(): Promise<void> {
+    const signal = this.#nextSignal();
     dataState.updateSyncState('syncing');
     try {
-      const remote = await this.client.getFile();
+      const remote = await this.client.getFile('profile.json', signal);
       if (remote) {
         const content = GithubClient.parseContent(remote.content);
         dataState.replaceData(content, remote.sha);
@@ -124,6 +147,7 @@ class SyncService {
         throw new Error(MESSAGES.TOAST.REMOTE_EMPTY);
       }
     } catch (e: unknown) {
+      if (this.#isAborted(e)) return;
       dataState.updateSyncState('error', undefined, this.formatError(e));
       throw e;
     }

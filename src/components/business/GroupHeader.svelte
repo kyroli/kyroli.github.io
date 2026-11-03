@@ -1,6 +1,6 @@
 <script lang="ts">
 import { draggable } from '$lib/actions/dnd.svelte';
-import { tooltip } from '$lib/actions/tooltip';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import Icon from '../ui/Icon.svelte';
@@ -32,7 +32,7 @@ let {
   }`}>
     <div 
       class="hidden md:block cursor-grab text-text-dim hover:text-primary active-press-icon transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
-      {@attach draggable({ type: 'group', id: group.id, groupId: null })}
+      {@attach draggable({ type: 'group', id: group.id })}
       {@attach tooltip(MESSAGES.UI.TIP_DRAG_SORT)}
     >
       <Icon name="grip-vertical" class="w-5 h-5" />

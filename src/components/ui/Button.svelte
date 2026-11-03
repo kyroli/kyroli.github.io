@@ -1,17 +1,15 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import { tooltip } from '$lib/actions/tooltip';
+import type { HTMLButtonAttributes } from 'svelte/elements';
+import { tooltip } from '$lib/actions/tooltip.svelte';
 
-interface Props {
+type Props = HTMLButtonAttributes & {
   children: Snippet;
-  onclick?: (e: MouseEvent) => void;
   variant?: 'primary' | 'outline' | 'ghost' | 'danger';
   size?: 'default' | 'icon';
   class?: string;
-  disabled?: boolean;
   title?: string;
-  type?: 'button' | 'submit' | 'reset';
-}
+};
 
 let {
   children,

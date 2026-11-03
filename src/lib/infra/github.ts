@@ -41,16 +41,21 @@ export class GithubClient {
     return res.json() as Promise<T>;
   }
 
-  async getFile(path: string = 'profile.json'): Promise<RemoteFile | null> {
+  async getFile(path: string = 'profile.json', signal?: AbortSignal): Promise<RemoteFile | null> {
     try {
-      return await this.request<RemoteFile>(`/contents/${path}`);
+      return await this.request<RemoteFile>(`/contents/${path}`, { signal });
     } catch (e: unknown) {
       if (e instanceof Error && e.message === GITHUB_ERRORS.NOT_FOUND) return null;
       throw e;
     }
   }
 
-  async updateFile(path: string, content: NavData, sha?: string): Promise<{ sha: string }> {
+  async updateFile(
+    path: string,
+    content: NavData,
+    sha?: string,
+    signal?: AbortSignal
+  ): Promise<{ sha: string }> {
     const jsonStr = JSON.stringify(content, null, 2);
 
     const base64Content = new TextEncoder().encode(jsonStr).toBase64();
@@ -63,7 +68,8 @@ export class GithubClient {
 
     const res = await this.request<{ content: { sha: string } }>(`/contents/${path}`, {
       method: 'PUT',
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal
     });
 
     return res.content;

@@ -10,6 +10,7 @@ import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
 import type { DndPayload, VisualGroup, VisualSite } from '$lib/types';
 import Icon from '../ui/Icon.svelte';
+import { observeGroup } from './Catalog.svelte';
 import SiteGroup from './SiteGroup.svelte';
 
 const visualGroups = $derived.by<VisualGroup[]>(() => {
@@ -99,8 +100,9 @@ function handleDeleteGroup(groupName: string, groupId: string) {
 <div class="w-full flex flex-col gap-6 sm:gap-8 pt-4 sm:pt-6 pb-0">
   {#each visualGroups as group (group.id)}
     <div 
-        class="w-full transition-all"
+        class="w-full transition-all scroll-mt-[100px]"
         data-dnd-group-id={group.id}
+        {@attach observeGroup}
         animate:flip={{ duration: ANIMATION_SPEED.FLIP, easing: cubicOut }}
     >
         {#if group.isPlaceholder}
