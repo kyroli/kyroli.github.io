@@ -23,7 +23,7 @@ let {
 <div class="group-item flex flex-col gap-4 relative">
   <GroupHeader {group} onDelete={onDeleteGroup} />
 
-  <div class="{UI_CONSTANTS.GRID_LAYOUT} content-start min-h-[72px]">
+  <div class={[UI_CONSTANTS.GRID_LAYOUT, 'content-start min-h-[72px]']}>
     {#each group.sites as item (item.id)}
       <div 
         class="relative h-full z-10"
@@ -34,7 +34,7 @@ let {
         data-dnd-site-id={item.id}
       >
         {#if item.isPlaceholder}
-          <div class="{UI_CONSTANTS.CARD_HEIGHT} w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border"></div>
+          <div class={[UI_CONSTANTS.CARD_HEIGHT, 'w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 box-border']}></div>
         {:else}
           <div 
             {@attach draggable({ type: 'site', id: item.id })} 
@@ -49,7 +49,10 @@ let {
     {#if appState.isEditMode}
       <button 
         onclick={() => appState.openSiteModal(group.id)} 
-        class={`w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all ${UI_CONSTANTS.CARD_HEIGHT} cursor-pointer group active-press`}
+        class={[
+          'w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group active-press',
+          UI_CONSTANTS.CARD_HEIGHT
+        ]}
         {@attach tooltip(MESSAGES.UI.NEW_SITE)}
       >
         <Icon name="plus" class="w-5 h-5 group-hover:scale-110 transition-transform" />

@@ -106,7 +106,7 @@ function handleReset() {
 <div class="justify-self-end flex items-center justify-end">
   <div class="flex items-center gap-3 h-10">
     <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-surface border border-border/50" {@attach tooltip(syncStatusConfig.title)}>
-      <Icon name={syncStatusConfig.icon} class={`w-4 h-4 ${syncStatusConfig.color}`} />
+      <Icon name={syncStatusConfig.icon} class={['w-4 h-4', syncStatusConfig.color]} />
     </div>
 
     <div class="grid">

@@ -130,7 +130,7 @@ const toastClass = $derived(
       transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
       class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 py-0 m-0 pointer-events-none bg-transparent border-none outline-none overflow-visible"
     >
-      <div class={`px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border ${toastClass}`}>
+      <div class={['px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border', toastClass]}>
         {appState.toast.msg}
       </div>
     </div>

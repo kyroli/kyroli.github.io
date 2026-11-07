@@ -118,19 +118,21 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
           class="group relative flex items-center h-9 pl-4 text-left outline-none cursor-pointer"
         >
           <span 
-            class={`absolute -left-px w-0.5 transition-all duration-200 ${
-              isActive 
-                ? 'inset-y-0 bg-primary' 
+            class={[
+              'absolute -left-px w-0.5 transition-all duration-200',
+              isActive
+                ? 'inset-y-0 bg-primary'
                 : 'top-1/2 -translate-y-1/2 h-0 bg-transparent group-hover:h-4 group-hover:bg-text-dim/40'
-            }`}
+            ]}
           ></span>
 
           <span 
-            class={`text-xs font-bold whitespace-nowrap transition-colors duration-200 ${
-              isActive 
-                ? 'text-text' 
+            class={[
+              'text-xs font-bold whitespace-nowrap transition-colors duration-200',
+              isActive
+                ? 'text-text'
                 : 'text-text-dim/40 group-hover:text-text-dim/80'
-            }`}
+            ]}
           >
             {group.name}
           </span>
@@ -143,9 +145,10 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
   <nav
     bind:this={navEl}
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class={`sticky top-0 z-30 w-full flex xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200 ${
+    class={[
+      'sticky top-0 z-30 w-full flex xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200',
       (scrollY.current ?? 0) > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
-    }`}
+    ]}
   >
     <div class="flex items-center mx-auto md:mx-0 py-0.5">
       {#each dataState.groups as group, i (group.id)}
@@ -174,7 +177,12 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
         <button
           {@attach registerButton(group.id)}
           onclick={() => scrollToGroup(group.id)}
-          class={`px-4 py-2 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon ${roundedClass} ${styleClass} ${mrClass}`}
+          class={[
+            'px-4 py-2 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon',
+            roundedClass,
+            styleClass,
+            mrClass
+          ]}
         >
           {group.name}
         </button>

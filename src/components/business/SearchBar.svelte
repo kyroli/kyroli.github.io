@@ -53,7 +53,10 @@ function handleWindowKeydown(e: KeyboardEvent) {
 <svelte:window onkeydown={handleWindowKeydown} />
 
 <div class="relative w-full col-span-2 md:col-span-1 md:w-full md:max-w-[640px] lg:max-w-[720px] justify-self-center order-last md:order-none">
-  <div class={`relative flex items-center w-full h-10 rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${isMenuOpen ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'}`}>
+  <div class={[
+    'relative flex items-center w-full h-10 rounded-xl transition-all duration-200 bg-surface border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
+    isMenuOpen ? 'border-primary shadow-xs' : 'border-border shadow-solid hover:border-primary/50'
+  ]}>
     <button
       type="button"
       popovertarget="search-engine-menu"
@@ -71,7 +74,10 @@ function handleWindowKeydown(e: KeyboardEvent) {
           />
         {/key}
       </div>
-      <div class={`w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}></div>
+      <div class={[
+        'w-0 h-0 border-l-[3px] border-l-transparent border-r-[3px] border-r-transparent border-t-[3px] border-t-current opacity-50 transition-transform duration-200',
+        isMenuOpen && 'rotate-180'
+      ]}></div>
     </button>
 
     <div class="h-5 w-px bg-border/60 shrink-0"></div>

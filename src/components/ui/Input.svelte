@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { HTMLInputAttributes } from 'svelte/elements';
+import type { ClassValue, HTMLInputAttributes } from 'svelte/elements';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 
@@ -8,7 +8,7 @@ type Props = {
   ref?: HTMLInputElement | null;
   label?: string;
   error?: string;
-  class?: string;
+  class?: ClassValue;
 } & HTMLInputAttributes;
 
 let {
@@ -16,7 +16,7 @@ let {
   ref = $bindable<HTMLInputElement | null>(null),
   label,
   error,
-  class: className = '',
+  class: className,
   type = 'text',
   id,
   ...rest

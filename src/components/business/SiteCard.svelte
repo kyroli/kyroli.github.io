@@ -20,13 +20,12 @@ const displayHostname = $derived.by(() => {
 const safeHref = $derived(!appState.isEditMode ? site.url : undefined);
 const iconSrc = $derived(getIcon(site.url, site.icon));
 
-const cardClass = $derived(
-  `group relative transition-all duration-200 border active-press ${
-    appState.isEditMode
-      ? 'cursor-move border-border/60 bg-surface border-dashed hover:border-primary hover:border-solid hover:shadow-xs hover:bg-surface/50'
-      : 'border-transparent hover:border-border hover:shadow-solid'
-  }`
-);
+const cardClass = $derived([
+  'group relative transition-all duration-200 border active-press',
+  appState.isEditMode
+    ? 'cursor-move border-border/60 bg-surface border-dashed hover:border-primary hover:border-solid hover:shadow-xs hover:bg-surface/50'
+    : 'border-transparent hover:border-border hover:shadow-solid'
+]);
 
 const imgClass = 'w-full h-full object-contain pointer-events-none transition-all duration-200';
 

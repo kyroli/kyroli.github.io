@@ -12,11 +12,13 @@
   --color-icon-bg: light-dark(oklch(98.5% 0 0), oklch(27.4% 0.006 286));
   --color-danger: light-dark(oklch(57.7% 0.245 27.3), oklch(63.7% 0.237 25.3));
   --shadow-solid: 0 1px 2px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
-  --shadow-float: 0 10px 30px -5px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)), 0 4px 6px -2px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
+  --shadow-float:
+    0 10px 30px -5px light-dark(rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.4)),
+    0 4px 6px -2px light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.2));
 
   --font-sans: "Segoe UI", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
-  
+
   --tracking-normal: 0em;
   --tracking-wide: 0.02em;
   --tracking-widest: 0.08em;
@@ -47,7 +49,7 @@
 
   * {
     user-select: inherit;
-    outline: none !important;
+    outline: none;
   }
 
   input {
@@ -77,7 +79,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 9999;
-    opacity: 0.015; 
+    opacity: 0.015;
     background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAV2jsYAAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlP/AOW3ABoAAAAJcEhZcwAACxMAAAsTAQCanBgAAABOSURBVDjL7dJBDsAgDATBi+b/P7tVD0hIVU9sxpchM0t2C5mX0LqEzCtkXiHzCplXyLxC5hUyr5B5hcwrZF4h8wqZV8i8QuYVMq+QeYXMH9yPBCEW149aAAAAAElFTkSuQmCC");
   }
 
@@ -85,7 +87,6 @@
     opacity: 0.04;
   }
 }
-
 
 @utility shimmer {
   background: linear-gradient(
@@ -107,70 +108,73 @@
   }
 }
 
-.tap-target {
+@utility tap-target {
   position: relative;
-}
 
-.tap-target::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  cursor: pointer;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    cursor: pointer;
+  }
 }
 
 @utility no-scrollbar {
   scrollbar-width: none;
 }
 
-.engine-popover {
-  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
-              display 0.15s allow-discrete,
-              overlay 0.15s allow-discrete;
+@utility engine-popover {
+  transition:
+    opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    display 0.15s allow-discrete,
+    overlay 0.15s allow-discrete;
   opacity: 0;
   transform: translateY(-4px) scale(0.98);
-}
 
-.engine-popover:popover-open {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+  &:popover-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 
-  @starting-style {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
+    @starting-style {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
   }
 }
 
-.modal-dialog {
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              display 0.2s allow-discrete,
-              overlay 0.2s allow-discrete;
+@utility modal-dialog {
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    display 0.2s allow-discrete,
+    overlay 0.2s allow-discrete;
   opacity: 0;
   transform: scale(0.98);
-}
 
-.modal-dialog[open] {
-  opacity: 1;
-  transform: scale(1);
+  &[open] {
+    opacity: 1;
+    transform: scale(1);
 
-  @starting-style {
-    opacity: 0;
-    transform: scale(0.98);
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.98);
+    }
   }
-}
 
-.modal-dialog::backdrop {
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              display 0.2s allow-discrete,
-              overlay 0.2s allow-discrete;
-  opacity: 0;
-}
-
-.modal-dialog[open]::backdrop {
-  opacity: 1;
-
-  @starting-style {
+  &::backdrop {
+    transition:
+      opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      display 0.2s allow-discrete,
+      overlay 0.2s allow-discrete;
     opacity: 0;
+  }
+
+  &[open]::backdrop {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
+    }
   }
 }

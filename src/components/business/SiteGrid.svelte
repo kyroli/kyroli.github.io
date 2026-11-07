@@ -108,7 +108,7 @@ function handleDeleteGroup(groupName: string, groupId: string) {
         {#if group.isPlaceholder}
             <div 
                 class="w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 transition-all box-border min-h-[72px]"
-                style="height: {dndState.sourceHeight}px"
+                style:height="{dndState.sourceHeight}px"
             ></div>
         {:else}
             <SiteGroup {group} onDeleteGroup={handleDeleteGroup} />

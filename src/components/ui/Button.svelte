@@ -1,13 +1,13 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import type { HTMLButtonAttributes } from 'svelte/elements';
+import type { ClassValue, HTMLButtonAttributes } from 'svelte/elements';
 import { tooltip } from '$lib/actions/tooltip.svelte';
 
 type Props = HTMLButtonAttributes & {
   children: Snippet;
   variant?: 'primary' | 'outline' | 'ghost' | 'danger';
   size?: 'default' | 'icon';
-  class?: string;
+  class?: ClassValue;
   title?: string;
 };
 
@@ -16,7 +16,7 @@ let {
   onclick,
   variant = 'primary',
   size = 'default',
-  class: className = '',
+  class: className,
   disabled = false,
   title = '',
   type = 'button',
@@ -42,7 +42,7 @@ const buttonClass = $derived([
   baseStyles,
   variants[variant],
   (variant === 'outline' || variant === 'ghost') &&
-    !/\btext-(text|primary|danger|white)\b/.test(className) &&
+    (typeof className !== 'string' || !/\btext-(text|primary|danger|white)\b/.test(className)) &&
     'text-text',
   sizes[size],
   className

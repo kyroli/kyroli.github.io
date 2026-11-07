@@ -19,7 +19,7 @@ const logoHref = $derived(
       <a 
         href={logoHref} 
         target="_blank" 
-        class={`h-10 flex items-center gap-2.5 transition-opacity active-press ${!logoHref ? 'pointer-events-none' : 'hover:opacity-80'}`}
+        class={['h-10 flex items-center gap-2.5 transition-opacity active-press', !logoHref ? 'pointer-events-none' : 'hover:opacity-80']}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

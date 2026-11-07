@@ -27,9 +27,10 @@ let {
     <h2 class="text-xs font-bold tracking-widest text-text-dim uppercase opacity-80">{group.name}</h2>
   {/if}
   
-  <div class={`flex items-center gap-2 transition-all duration-200 ${
+  <div class={[
+    'flex items-center gap-2 transition-all duration-200',
     appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
-  }`}>
+  ]}>
     <div 
       class="hidden md:block cursor-grab text-text-dim hover:text-primary active-press-icon transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
       {@attach draggable({ type: 'group', id: group.id })}
