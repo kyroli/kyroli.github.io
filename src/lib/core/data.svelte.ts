@@ -105,14 +105,13 @@ class DataCore {
 
   updateSyncState(status: SyncStatus, sha?: string, error?: string) {
     this.syncStatus = status;
+    this.syncError = error;
     if (sha) {
       this.lastSha = sha;
       storage.sha = sha;
     }
-    if (error) this.syncError = error;
 
     if (status === 'success') {
-      this.syncError = undefined;
       this.isDirty = false;
     }
   }
@@ -122,6 +121,7 @@ class DataCore {
     this.lastSha = newSha;
     storage.sha = newSha;
     this.syncStatus = 'success';
+    this.syncError = undefined;
     this.isDirty = false;
   }
 }

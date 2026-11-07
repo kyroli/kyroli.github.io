@@ -132,7 +132,10 @@ class DndEngine {
   }
 
   #loop = () => {
-    if (!this.isDragging) return;
+    if (!this.isDragging || !appState.isEditMode) {
+      if (!appState.isEditMode) this.#onCancel();
+      return;
+    }
 
     const now = performance.now();
     const dt = (now - this.#lastFrameTime) / 1000;
@@ -487,6 +490,12 @@ class DndEngine {
   setOnDrop(fn: (payload: DndPayload) => void) {
     this.onDropCallback = fn;
   }
+
+  cancel() {
+    if (this.#pointerId !== null || this.isDragging) {
+      this.#onCancel();
+    }
+  }
 }
 
 export const dndState = new DndEngine();
@@ -521,6 +530,9 @@ export function draggable(params: { type: 'group' | 'site'; id: string }): Attac
     ];
 
     return () => {
+      if (!appState.isEditMode) {
+        dndState.cancel();
+      }
       element.style.cursor = '';
       element.style.touchAction = '';
       element.style.userSelect = '';

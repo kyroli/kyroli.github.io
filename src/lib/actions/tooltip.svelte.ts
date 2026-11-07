@@ -31,8 +31,7 @@ export function tooltip(msg?: string | null): Attachment<HTMLElement> {
     if (!msg) return;
 
     const tooltipId = `--tooltip-anchor-${++tooltipIdCounter}`;
-    let hoverTimeout: ReturnType<typeof setTimeout>;
-    let isVisible = false;
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
 
     function applyA11y(text: string) {
       element.setAttribute('aria-label', text);
@@ -52,20 +51,16 @@ export function tooltip(msg?: string | null): Attachment<HTMLElement> {
     applyA11y(msg);
 
     const forceHide = () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
-      if (isVisible) {
-        tooltipState.hide(tooltipId);
-        isVisible = false;
-      }
+      clearTimeout(hoverTimeout);
+      tooltipState.hide(tooltipId);
     };
 
     const show = () => {
       tooltipState.show(msg, tooltipId);
-      isVisible = true;
     };
 
     const onMouseEnter = () => {
-      if (hoverTimeout) clearTimeout(hoverTimeout);
+      clearTimeout(hoverTimeout);
       hoverTimeout = setTimeout(show, APP_TIMEOUTS.TOOLTIP_DELAY);
     };
 
@@ -83,7 +78,7 @@ export function tooltip(msg?: string | null): Attachment<HTMLElement> {
       on(element, 'blur', forceHide),
       on(element, 'mousedown', forceHide),
       on(element, 'keydown', (e) => {
-        if (e.key === 'Escape' && isVisible) forceHide();
+        if (e.key === 'Escape') forceHide();
       })
     ];
 
