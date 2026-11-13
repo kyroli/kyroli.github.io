@@ -47,8 +47,9 @@ let {
     {/each}
 
     {#if appState.isEditMode}
-      <button 
-        onclick={() => appState.openSiteModal(group.id)} 
+      <button
+        type="button"
+        onclick={() => appState.openSiteModal(group.id)}
         class={[
           'w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group active-press',
           UI_CONSTANTS.CARD_HEIGHT

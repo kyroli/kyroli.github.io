@@ -76,7 +76,8 @@ function handleClick(e: MouseEvent) {
     </div>
 
     {#if appState.isEditMode}
-      <button 
+      <button
+        type="button"
         class="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all z-20 bg-surface border border-border text-text-dim shadow-sm hover:text-danger hover:border-danger hover:scale-110 active-press-icon" 
         onclick={handleDelete} 
         {@attach tooltip(MESSAGES.UI.TIP_DELETE_SITE)}

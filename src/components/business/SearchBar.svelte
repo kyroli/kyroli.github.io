@@ -94,7 +94,7 @@ function handleWindowKeydown(e: KeyboardEvent) {
     />
 
     {#if search.trim().length > 0}
-      <button transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer shrink-0" {@attach tooltip(MESSAGES.UI.SEARCH)}>
+      <button type="button" transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} onclick={handleSearch} class="mr-1 w-8 h-8 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors active-press-icon cursor-pointer shrink-0" {@attach tooltip(MESSAGES.UI.SEARCH)}>
         <Icon name="search" class="w-4 h-4" />
       </button>
     {/if}

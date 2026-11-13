@@ -23,6 +23,16 @@ const modalTitle = $derived(
 // svelte-ignore state_referenced_locally
 let name = $state(group?.name ?? '');
 let error = $state('');
+let inputEl = $state<HTMLInputElement | null>(null);
+
+$effect(() => {
+  const el = inputEl;
+  if (!el) return;
+  // Defer until after Modal's showModal attachment opens the parent <dialog>
+  queueMicrotask(() => {
+    if (el.isConnected) el.focus();
+  });
+});
 
 function handleSave() {
   error = '';
@@ -57,13 +67,13 @@ function handleSave() {
 
 <Modal {onClose} title={modalTitle}>
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
-    <Input 
+    <Input
+      bind:ref={inputEl}
       bind:value={name} 
       error={error}
       placeholder={MESSAGES.MODAL.GROUP_PLACEHOLDER}
       oninput={() => error = ''}
       required
-      autofocus
     />
     
     <div class="flex gap-3 pt-2">

@@ -27,10 +27,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/setup@v3
         with:
-          install: false
-
-      - name: Install dependencies
-        run: pnpm install
+          cache: true
 
       - name: Check Formatting & Linting
         run: pnpm lint

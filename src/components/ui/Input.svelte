@@ -11,6 +11,8 @@ type Props = {
   class?: ClassValue;
 } & HTMLInputAttributes;
 
+const uid = $props.id();
+
 let {
   value = $bindable(''),
   ref = $bindable<HTMLInputElement | null>(null),
@@ -18,7 +20,7 @@ let {
   error,
   class: className,
   type = 'text',
-  id,
+  id = uid,
   ...rest
 }: Props = $props();
 

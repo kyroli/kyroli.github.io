@@ -16,7 +16,8 @@ let {
 
 <div class="flex items-center gap-3 pb-2 h-11 border-b border-border/40 group/header justify-between">
   {#if appState.isEditMode}
-    <button 
+    <button
+      type="button"
       onclick={() => appState.openGroupModal(group.id)}
       class="text-xs font-bold tracking-widest text-text-dim hover:text-primary transition-colors cursor-pointer uppercase truncate text-left opacity-80"
       {@attach tooltip(MESSAGES.UI.TIP_RENAME_GROUP)}
@@ -39,8 +40,9 @@ let {
       <Icon name="grip-vertical" class="w-5 h-5" />
     </div>
 
-    <button 
-      onclick={() => onDelete(group.name, group.id)} 
+    <button
+      type="button"
+      onclick={() => onDelete(group.name, group.id)}
       class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50 active-press-icon" 
       {@attach tooltip(MESSAGES.UI.TIP_DELETE_GROUP)}
     >

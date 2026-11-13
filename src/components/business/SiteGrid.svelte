@@ -117,7 +117,7 @@ function handleDeleteGroup(groupName: string, groupId: string) {
   {/each}
 
   {#if appState.isEditMode}
-    <button in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
+    <button type="button" in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
       <Icon name="plus" class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>

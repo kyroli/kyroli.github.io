@@ -13,7 +13,12 @@ type Props = HTMLAttributes<HTMLElement> & {
 
 let { children, class: className, onclick, href, interactive = true, ...rest }: Props = $props();
 
-const role = $derived(onclick ? 'button' : undefined);
+function handleKeyDown(e: KeyboardEvent) {
+  if ((e.key === 'Enter' || e.key === ' ') && e.currentTarget instanceof HTMLElement) {
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
 
 const baseStyles = `${UI_CONSTANTS.CARD_HEIGHT} p-4 flex items-center gap-4 bg-surface border rounded-xl relative`;
 
@@ -31,8 +36,20 @@ const finalClass = $derived([
   <a {href} {onclick} target="_blank" rel="noopener noreferrer" class={finalClass} {...rest}>
     {@render children()}
   </a>
+{:else if onclick}
+  <!-- biome-ignore lint/a11y/useSemanticElements: draggable card container cannot use a native button -->
+  <div
+    role="button"
+    tabindex="0"
+    {onclick}
+    onkeydown={handleKeyDown}
+    class={finalClass}
+    {...rest}
+  >
+    {@render children()}
+  </div>
 {:else}
-  <div {onclick} class={finalClass} {role} {...rest}>
+  <div class={finalClass} {...rest}>
     {@render children()}
   </div>
 {/if}

@@ -114,6 +114,7 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
         {@const isActive = isGroupActive(group.id)}
 
         <button
+          type="button"
           onclick={() => scrollToGroup(group.id)}
           class="group relative flex items-center h-9 pl-4 text-left outline-none cursor-pointer"
         >
@@ -175,6 +176,7 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
           : ''}
 
         <button
+          type="button"
           {@attach registerButton(group.id)}
           onclick={() => scrollToGroup(group.id)}
           class={[

@@ -60,7 +60,7 @@ const toastClass = $derived(
       {:else if dataState.syncError}
         <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-20 text-danger font-bold">
           <p>Error: {dataState.syncError}</p>
-          <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
+          <button type="button" onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
         </div>
       {:else if showSkeleton}
         <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}>
