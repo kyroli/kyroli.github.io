@@ -23,7 +23,7 @@ function getObserver(): IntersectionObserver {
         }
       },
       {
-        threshold: [0, 0.1, 0.5, 0.9, 1.0],
+        threshold: 0,
         rootMargin: '-80px 0px -20% 0px'
       }
     );
@@ -31,29 +31,33 @@ function getObserver(): IntersectionObserver {
   return observer;
 }
 
-export const observeGroup: Attachment<HTMLElement> = (node: HTMLElement) => {
-  const id = node.dataset.dndGroupId;
-  if (!id) return;
+export function observeGroup(id: string): Attachment<HTMLElement> {
+  return (node: HTMLElement) => {
+    const io = getObserver();
+    elementIds.set(node, id);
+    groupEls.set(id, node);
+    io.observe(node);
 
-  const io = getObserver();
-  elementIds.set(node, id);
-  groupEls.set(id, node);
-  io.observe(node);
-
-  return () => {
-    io.unobserve(node);
-    elementIds.delete(node);
-    groupEls.delete(id);
-    visibleGroupIds.delete(id);
+    return () => {
+      io.unobserve(node);
+      elementIds.delete(node);
+      groupEls.delete(id);
+      visibleGroupIds.delete(id);
+      if (groupEls.size === 0) {
+        observer?.disconnect();
+        observer = null;
+      }
+    };
   };
-};
+}
 </script>
 
 <script lang="ts">
-import { scrollY } from 'svelte/reactivity/window';
 import { fade } from 'svelte/transition';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { dataState } from '$lib/core/data.svelte';
+import { MESSAGES } from '$lib/i18n';
+import { prefersReducedMotion } from '$lib/utils';
 
 let navEl = $state<HTMLElement | null>(null);
 
@@ -79,7 +83,7 @@ $effect(() => {
       const targetLeft = btn.offsetLeft - navEl.clientWidth / 2 + btn.clientWidth / 2;
       navEl.scrollTo({
         left: targetLeft,
-        behavior: 'smooth'
+        behavior: prefersReducedMotion.current ? 'auto' : 'smooth'
       });
     }
   }
@@ -87,7 +91,7 @@ $effect(() => {
 
 function scrollToGroup(id: string) {
   groupEls.get(id)?.scrollIntoView({
-    behavior: 'smooth',
+    behavior: prefersReducedMotion.current ? 'auto' : 'smooth',
     block: 'start'
   });
 }
@@ -103,21 +107,24 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
 }
 </script>
 
-{#if dataState.groups.length > 0}
+{#if dataState.groups.length > 1}
   <!-- Desktop left sidebar navigation -->
-  <aside 
+  <aside
+    aria-label={MESSAGES.UI.CATEGORY_NAV}
     in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class="fixed left-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
+    class="fixed left-[max(3rem,calc(50%-900px+3rem))] max-w-[168px] top-1/2 -translate-y-1/2 hidden xl:flex flex-col z-40 max-h-[80vh] py-6 pr-4 overflow-y-auto no-scrollbar"
   >
-    <div class="relative flex flex-col border-l border-border">
+    <div class="relative flex flex-col border-l border-border min-w-0">
       {#each dataState.groups as group (group.id)}
         {@const isActive = isGroupActive(group.id)}
 
         <button
+          type="button"
+          aria-current={isActive ? 'true' : undefined}
           onclick={() => scrollToGroup(group.id)}
-          class="group relative flex items-center h-9 pl-4 text-left outline-none cursor-pointer"
+          class="group relative flex items-center h-9 pl-4 text-left cursor-pointer min-w-0 max-w-full"
         >
-          <span 
+          <span
             class={[
               'absolute -left-px w-0.5 transition-all duration-200',
               isActive
@@ -126,9 +133,9 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
             ]}
           ></span>
 
-          <span 
+          <span
             class={[
-              'text-xs font-bold whitespace-nowrap transition-colors duration-200',
+              'text-xs font-bold truncate uppercase tracking-wide transition-colors duration-200',
               isActive
                 ? 'text-text'
                 : 'text-text-dim/40 group-hover:text-text-dim/80'
@@ -142,51 +149,52 @@ function registerButton(id: string): Attachment<HTMLButtonElement> {
   </aside>
 
   <!-- Mobile/narrow viewport horizontal scroll sticky navigation -->
-  <nav
-    bind:this={navEl}
-    in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
-    class={[
-      'sticky top-0 z-30 w-full flex xl:hidden bg-bg border-b overflow-x-auto no-scrollbar transition-all duration-200',
-      (scrollY.current ?? 0) > 10 ? 'border-border py-2 px-5' : 'border-transparent py-3.5 px-5'
-    ]}
-  >
-    <div class="flex items-center mx-auto md:mx-0 py-0.5">
-      {#each dataState.groups as group, i (group.id)}
-        {@const isActive = isGroupActive(group.id)}
-        {@const prevActive = i > 0 && isGroupActive(dataState.groups[i - 1].id)}
-        {@const nextActive = i < dataState.groups.length - 1 && isGroupActive(dataState.groups[i + 1].id)}
+  <div class="catalog-sticky-wrap sticky top-0 z-30 xl:hidden -mx-6 lg:-mx-12">
+    <nav
+      bind:this={navEl}
+      aria-label={MESSAGES.UI.CATEGORY_NAV}
+      in:fade={{ duration: ANIMATION_SPEED.FADE_SLOW }}
+      class="catalog-sticky-bar w-full flex bg-bg/90 backdrop-blur-md border-b overflow-x-auto no-scrollbar transition-colors duration-200 py-2.5 px-6 lg:px-12"
+    >
+      <div class="flex items-center mx-auto md:mx-0 py-0.5">
+        {#each dataState.groups as group (group.id)}
+          {@const isActive = isGroupActive(group.id)}
 
-        {@const roundedClass = isActive
-          ? prevActive && nextActive
-            ? 'rounded-none border-x-transparent z-10'
-            : prevActive
-              ? 'rounded-r-xl rounded-l-none border-l-transparent z-10'
-              : nextActive
-                ? 'rounded-l-xl rounded-r-none border-r-transparent z-10'
-                : 'rounded-xl z-10'
-          : 'rounded-xl border-transparent z-0'}
-
-        {@const styleClass = isActive
-          ? 'font-bold text-primary bg-surface border-border shadow-solid'
-          : 'font-bold text-text-dim/70 hover:text-text bg-transparent'}
-
-        {@const mrClass = i < dataState.groups.length - 1
-          ? isActive && nextActive ? '-mr-px' : 'mr-2'
-          : ''}
-
-        <button
-          {@attach registerButton(group.id)}
-          onclick={() => scrollToGroup(group.id)}
-          class={[
-            'px-4 py-2 text-xs transition-all whitespace-nowrap cursor-pointer border active-press-icon',
-            roundedClass,
-            styleClass,
-            mrClass
-          ]}
-        >
-          {group.name}
-        </button>
-      {/each}
-    </div>
-  </nav>
+          <button
+            type="button"
+            data-active={isActive || undefined}
+            aria-current={isActive ? 'true' : undefined}
+            {@attach registerButton(group.id)}
+            onclick={() => scrollToGroup(group.id)}
+            class="catalog-pill px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all whitespace-nowrap cursor-pointer border border-transparent rounded-xl text-text-dim/70 hover:text-text bg-transparent mr-2 last:mr-0 active-press-icon"
+          >
+            {group.name}
+          </button>
+        {/each}
+      </div>
+    </nav>
+  </div>
 {/if}
+
+<style>
+.catalog-pill[data-active] {
+  color: var(--color-primary);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-solid);
+  z-index: 10;
+}
+
+.catalog-pill[data-active]:has(+ .catalog-pill[data-active]) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-color: transparent;
+  margin-right: -1px;
+}
+
+.catalog-pill[data-active] + .catalog-pill[data-active] {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-color: transparent;
+}
+</style>

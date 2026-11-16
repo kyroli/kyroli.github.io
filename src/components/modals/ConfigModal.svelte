@@ -20,6 +20,7 @@ let token = $state(dataState.config.token || '');
 
 let isSaving = $state(false);
 let globalError = $state('');
+let importInput = $state<HTMLInputElement | null>(null);
 
 const saveBtnText = $derived(isSaving ? MESSAGES.UI.WAITING : MESSAGES.UI.SAVE_AND_SYNC);
 
@@ -49,7 +50,7 @@ async function handleSave() {
 
     if (dataState.syncStatus === 'error') {
       globalError = dataState.syncError || MESSAGES.TOAST.UNKNOWN_ERROR;
-    } else {
+    } else if (dataState.syncStatus !== 'conflict') {
       appState.showToast(MESSAGES.TOAST.CONFIG_SAVED, 'success');
       if (appState.modal?.type === 'config') {
         onClose();
@@ -63,14 +64,19 @@ async function handleSave() {
 }
 
 async function handleExport() {
-  const success = await manager.exportData();
-  if (success) {
-    appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
+  globalError = '';
+  try {
+    const success = await manager.exportData();
+    if (success) {
+      appState.showToast(MESSAGES.TOAST.BACKUP_DOWNLOADED, 'success');
+    }
+  } catch (e: unknown) {
+    globalError = e instanceof Error ? e.message : MESSAGES.TOAST.UNKNOWN_ERROR;
   }
 }
 
-function handleFileImport(e: Event) {
-  const input = e.target as HTMLInputElement;
+function handleFileImport(e: Event & { currentTarget: HTMLInputElement }) {
+  const input = e.currentTarget;
 
   if (input.files?.[0]) {
     const file = input.files[0];
@@ -101,7 +107,7 @@ const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
 
 <Modal {onClose} title={MESSAGES.MODAL.CONFIG_TITLE}>
   {#if globalError}
-    <div transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>⚠️ {globalError}</div>
+    <div role="alert" transition:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorBannerClass}>{globalError}</div>
   {/if}
 
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }}>
@@ -141,10 +147,14 @@ const actionBtnClass = 'hover:text-primary transition-colors cursor-pointer';
       <button type="button" onclick={handleExport} class={actionBtnClass} {@attach tooltip(MESSAGES.MODAL.EXPORT_TITLE)}>{MESSAGES.MODAL.EXPORT_DATA}</button>
       <span class="opacity-30">|</span>
       
-      <label class={actionBtnClass} {@attach tooltip(MESSAGES.MODAL.IMPORT_TITLE)}>
+      <button type="button" onclick={() => importInput?.click()} class={actionBtnClass} {@attach tooltip(MESSAGES.MODAL.IMPORT_TITLE)}>
         {MESSAGES.MODAL.IMPORT_DATA}
-        <input type="file" accept=".json" class="hidden" onchange={handleFileImport} />
-      </label>
+      </button>
+      <input bind:this={importInput} type="file" accept=".json" class="hidden" onchange={handleFileImport} />
     </div>
+  </div>
+
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    {appState.toast?.msg ?? ''}
   </div>
 </Modal>

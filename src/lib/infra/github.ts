@@ -14,11 +14,12 @@ export class GithubClient {
   constructor(private config: GithubConfig) {}
 
   static parseRepoPath(path: string): { owner: string; repo: string } {
-    const parts = path.split('/');
-    if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
+    const parts = path.split('/').map((s) => s.trim());
+    const validSegment = /^(?!\.{1,2}$)[a-zA-Z0-9._-]+$/;
+    if (parts.length !== 2 || !validSegment.test(parts[0]) || !validSegment.test(parts[1])) {
       throw new Error(GITHUB_ERRORS.INVALID_REPO_FORMAT);
     }
-    return { owner: parts[0].trim(), repo: parts[1].trim() };
+    return { owner: parts[0], repo: parts[1] };
   }
 
   private get headers() {
@@ -79,8 +80,11 @@ export class GithubClient {
     try {
       const bytes = Uint8Array.fromBase64(base64, { lastChunkHandling: 'loose' });
       const decoder = new TextDecoder();
-      const json = decoder.decode(bytes);
-      return JSON.parse(json);
+      const parsed: unknown = JSON.parse(decoder.decode(bytes));
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('PARSE_ERROR');
+      }
+      return parsed as NavData;
     } catch {
       throw new Error('PARSE_ERROR');
     }

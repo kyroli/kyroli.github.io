@@ -14,12 +14,15 @@ class DataCore {
   syncError = $state<string | undefined>(undefined);
 
   hasToken = $derived(!!this.config.token);
-  isReady = $derived(this.groups.length > 0 || this.syncStatus !== 'checking');
+  isReady = $derived(
+    this.groups.length > 0 || (this.syncStatus !== 'checking' && this.syncStatus !== 'error')
+  );
 
   constructor() {
     this.groups = this.sanitizeGroups(storage.data.groups);
     this.config = storage.config;
     this.lastSha = storage.sha;
+    this.isDirty = storage.dirty;
 
     $effect.root(() => {
       let skipGroupsSync = true;
@@ -36,29 +39,35 @@ class DataCore {
 
       $effect(() =>
         on(window, 'storage', (e) => {
-          if (e.key === STORAGE_KEYS.DATA && e.newValue) {
-            try {
-              const parsed = JSON.parse(e.newValue);
-              if (Array.isArray(parsed.groups)) {
-                skipGroupsSync = true;
-                this.groups = this.sanitizeGroups(parsed.groups);
-              }
-            } catch (err) {
-              console.error('Cross-tab sync error:', err);
-            }
+          if (e.key === STORAGE_KEYS.DATA) {
+            skipGroupsSync = true;
+            this.groups = this.sanitizeGroups(storage.data.groups);
           }
 
-          if (e.key === STORAGE_KEYS.CONFIG && e.newValue) {
-            try {
-              this.config = JSON.parse(e.newValue);
-            } catch (err) {
-              console.error('Cross-tab config sync error:', err);
+          if (e.key === STORAGE_KEYS.CONFIG) {
+            const nextConfig = storage.config;
+            if (nextConfig.owner !== this.config.owner || nextConfig.repo !== this.config.repo) {
+              this.lastSha = '';
+              this.syncError = undefined;
             }
+            this.config = nextConfig;
           }
 
+          let remoteUpdated = false;
           if (e.key === STORAGE_KEYS.SHA && e.newValue !== null) {
             this.lastSha = e.newValue;
-            this.isDirty = false;
+            remoteUpdated = true;
+          } else if (e.key === STORAGE_KEYS.DIRTY) {
+            this.isDirty = e.newValue === '1';
+            remoteUpdated = true;
+          }
+
+          if (
+            remoteUpdated &&
+            !this.isDirty &&
+            (this.syncStatus === 'conflict' || this.syncStatus === 'error')
+          ) {
+            this.updateSyncState('success');
           }
         })
       );
@@ -82,8 +91,7 @@ class DataCore {
               .map((s) => ({
                 id: typeof s.id === 'string' && s.id.trim() ? s.id : crypto.randomUUID(),
                 name: (s.name as string).trim(),
-                url: (s.url as string).trim(),
-                icon: typeof s.icon === 'string' ? s.icon.trim() : ''
+                url: (s.url as string).trim()
               }))
           : []
       }));
@@ -91,38 +99,44 @@ class DataCore {
 
   markDirty() {
     this.isDirty = true;
+    storage.dirty = true;
   }
 
   setGroups(newGroups: Group[]) {
     this.groups = this.sanitizeGroups(newGroups);
-    this.isDirty = true;
+    this.markDirty();
   }
 
   updateConfig(newConfig: GithubConfig) {
+    const repoChanged =
+      newConfig.owner !== this.config.owner || newConfig.repo !== this.config.repo;
     this.config = newConfig;
     storage.config = newConfig;
+    if (repoChanged) {
+      this.lastSha = '';
+      this.syncError = undefined;
+      storage.sha = '';
+    }
   }
 
-  updateSyncState(status: SyncStatus, sha?: string, error?: string) {
+  updateSyncState(status: SyncStatus, error?: string) {
     this.syncStatus = status;
     this.syncError = error;
+  }
+
+  markSynced(sha: string) {
+    this.updateSyncState('success');
+    this.isDirty = false;
+    storage.dirty = false;
     if (sha) {
       this.lastSha = sha;
       storage.sha = sha;
-    }
-
-    if (status === 'success') {
-      this.isDirty = false;
     }
   }
 
   replaceData(newData: NavData, newSha: string) {
     this.groups = this.sanitizeGroups(newData.groups);
-    this.lastSha = newSha;
-    storage.sha = newSha;
-    this.syncStatus = 'success';
-    this.syncError = undefined;
-    this.isDirty = false;
+    this.markSynced(newSha);
   }
 }
 

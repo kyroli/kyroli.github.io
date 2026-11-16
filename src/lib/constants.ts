@@ -36,8 +36,6 @@ export const ANIMATION_SPEED = {
   FADE_NORMAL: 200,
   /** Slow transition for page-level module loading */
   FADE_SLOW: 300,
-  /** Micro-delay for smooth rendering sequence */
-  DELAY_SHORT: 50,
   /** FLIP animation duration for drag and drop reordering */
   FLIP: 300
 } as const;

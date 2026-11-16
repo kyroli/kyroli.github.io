@@ -35,7 +35,7 @@ const MESSAGES_EN = {
     STATUS_SYNCING: 'Syncing...',
     STATUS_UNSAVED: 'Unsaved changes',
     STATUS_SAVED: 'Data synced',
-    BACK_TO_TOP: 'Back to Top',
+    CATEGORY_NAV: 'Categories',
     DESCRIPTION: 'A personal browser startpage and bookmark manager.'
   },
 
@@ -56,9 +56,11 @@ const MESSAGES_EN = {
 
     SITE_TITLE_NEW: 'Add New Site',
     SITE_TITLE_EDIT: 'Edit Site Info',
+    SITE_LABEL_NAME: 'Site Title',
+    SITE_LABEL_URL: 'URL',
+    SITE_LABEL_GROUP: 'Group',
     SITE_NAME_PLACEHOLDER: 'Site Title (e.g. Google)',
-    SITE_URL_PLACEHOLDER: 'URL (e.g. https://www.google.com/)',
-    SITE_ICON_PLACEHOLDER: 'Custom icon name (optional)'
+    SITE_URL_PLACEHOLDER: 'URL (e.g. https://www.google.com/)'
   },
 
   TOAST: {
@@ -75,7 +77,6 @@ const MESSAGES_EN = {
     SITE_DELETED: 'Site deleted',
 
     SYNC_FAIL_PREFIX: 'Sync interrupted: ',
-    RESET_FAIL: 'Reset failed, please try again',
     FORCE_PUSH_FAIL: 'Force push failed, check network',
     INVALID_BACKUP: 'Invalid backup file',
     IMPORT_FAIL_FORMAT: 'Import failed: incorrect format',
@@ -96,7 +97,6 @@ const MESSAGES_EN = {
       'Cloud data updated with unsaved local changes.\n\nForce overwrite cloud version?\n(Note: This will overwrite remote changes)',
     RESTORE:
       'Are you sure you want to overwrite all current data with this backup?\nThis action cannot be undone.',
-    SYNC_CHANGES: 'Push current changes to GitHub?',
     DISCARD_CHANGES: 'Discard all unsaved changes and reset?',
     DELETE_SITE: 'Remove this website shortcut?',
     DELETE_GROUP: (name: string) => `Delete group "${name}" and all its sites?`
@@ -143,7 +143,7 @@ const MESSAGES_ZH = {
     STATUS_SYNCING: '同步中...',
     STATUS_UNSAVED: '未保存的更改',
     STATUS_SAVED: '数据已同步',
-    BACK_TO_TOP: '回到顶部',
+    CATEGORY_NAV: '分组导航',
     DESCRIPTION: '简单的个人书签/起始页/网址导航'
   },
 
@@ -164,9 +164,11 @@ const MESSAGES_ZH = {
 
     SITE_TITLE_NEW: '添加新网站',
     SITE_TITLE_EDIT: '编辑网站信息',
+    SITE_LABEL_NAME: '网站名称',
+    SITE_LABEL_URL: '网站地址',
+    SITE_LABEL_GROUP: '所属分组',
     SITE_NAME_PLACEHOLDER: '网站名称 (例如: Google)',
-    SITE_URL_PLACEHOLDER: '网址 (例如: https://www.google.com/)',
-    SITE_ICON_PLACEHOLDER: '自定义图标名称 (可选)'
+    SITE_URL_PLACEHOLDER: '网址 (例如: https://www.google.com/)'
   },
 
   TOAST: {
@@ -183,7 +185,6 @@ const MESSAGES_ZH = {
     SITE_DELETED: '网站已删除',
 
     SYNC_FAIL_PREFIX: '同步中断：',
-    RESET_FAIL: '重置失败，请重试',
     FORCE_PUSH_FAIL: '强制推送失败，请检查网络',
     INVALID_BACKUP: '无效的备份文件',
     IMPORT_FAIL_FORMAT: '导入失败：格式不正确',
@@ -203,7 +204,6 @@ const MESSAGES_ZH = {
     CONFLICT_FORCE:
       '云端数据已更新，且本地有未保存的更改。\n\n是否强制覆盖云端版本？\n(注意：这将覆盖远程的更改)',
     RESTORE: '确定要用此备份覆盖当前所有数据吗？\n此操作无法撤销。',
-    SYNC_CHANGES: '将当前更改推送到 GitHub？',
     DISCARD_CHANGES: '放弃所有未保存的更改并重置？',
     DELETE_SITE: '移除此网站快捷方式？',
     DELETE_GROUP: (name: string) => `删除分组 "${name}" 及其所有网站？`

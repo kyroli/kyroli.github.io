@@ -17,16 +17,16 @@
 - **零外部 UI 运行时依赖**：完全基于框架内置原语与浏览器原生标准实现，不依赖任何第三方 UI 组件库或状态管理库。
 - **原生 Web 标准实践**：
   - **Top Layer 与锚点定位**：模态框、下拉菜单、提示框（Tooltip）、通知（Toast）及拖拽浮层均采用原生 `<dialog closedby="any">`、Popover API（`popover`）与 CSS Anchor Positioning（`anchor-name`、`position-anchor`、`position-area`）。
-  - **现代 CSS 特性**：采用 `oklch()` 色彩空间配合原生 `light-dark()` 主题函数与 `@starting-style` 离散过渡动画。
-  - **ESNext 与原生接口**：仅面向现代浏览器，直接使用原生 `Uint8Array` Base64 编解码（`toBase64` / `fromBase64`）、`URL.canParse` 及 File System Access API（`showSaveFilePicker`）。
+  - **现代 CSS 特性**：采用 `oklch()` 色彩空间配合原生 `light-dark()` 主题函数、`@starting-style` 离散过渡动画、滚动状态容器查询（`scroll-state(stuck: top)`）以及可定制下拉选择器（`appearance: base-select`）。
+  - **ESNext 与原生接口**：仅面向现代浏览器，直接使用 View Transitions API（`document.startViewTransition`）、原生 `Uint8Array` Base64 编解码（`toBase64` / `fromBase64`）、`URL.canParse` 及 File System Access API（`showSaveFilePicker`）。
 - **单向分层架构**：严格划分无状态基础组件（`ui/`）、业务视图与按需动态加载弹窗（`business/`、`modals/`）、领域服务（`services/`）、全局响应式状态（`core/`）与底层基础设施适配器（`infra/`）。
 
 ## 功能特性
 
-- **多引擎搜索**：支持 Bing、Google、DuckDuckGo 与 Yandex 切换；支持通过 `/` 或 `Ctrl/Cmd + K` 快捷聚焦搜索框，按 `Escape` 失焦。
+- **多引擎搜索与站内直达**：支持 Bing、Google、DuckDuckGo 与 Yandex 切换，输入时实时匹配本地书签并支持方向键（`ArrowUp` / `ArrowDown`）与 `Enter` 快捷直达；支持通过 `/` 或 `Ctrl/Cmd + K` 聚焦搜索框，按 `Escape` 清空或失焦。
 - **指针驱动拖拽引擎**：编辑模式下支持分组与站点卡片的跨组拖拽重排，内置网格碰撞检测、视口边缘自动滚动、FLIP 动画及 `Escape` 随时取消。
 - **双端自适应导航**：桌面端提供基于 `IntersectionObserver` Attachment 联动的侧边目录；移动端提供吸顶横向分类导航并支持激活项自动滚动居中。
-- **主题与多语言**：支持浅色/深色主题切换并自动检测系统 `prefers-color-scheme`，根据浏览器语言环境自动适配简体中文与英文界面。
+- **主题与多语言**：支持浅色/深色主题平滑切换（基于 View Transitions 并遵循 `prefers-reduced-motion`）及系统 `prefers-color-scheme` 自动检测，根据浏览器语言环境自动适配简体中文与英文界面。
 
 ## 数据存储与云端同步
 

@@ -9,6 +9,7 @@ import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
 import type { DndPayload, VisualGroup, VisualSite } from '$lib/types';
+import { prefersReducedMotion } from '$lib/utils';
 import Icon from '../ui/Icon.svelte';
 import { observeGroup } from './Catalog.svelte';
 import SiteGroup from './SiteGroup.svelte';
@@ -100,10 +101,10 @@ function handleDeleteGroup(groupName: string, groupId: string) {
 <div class="w-full flex flex-col gap-6 sm:gap-8 pt-4 sm:pt-6 pb-0">
   {#each visualGroups as group (group.id)}
     <div 
-        class="w-full transition-all scroll-mt-[100px]"
+        class="w-full scroll-mt-16 xl:scroll-mt-8"
         data-dnd-group-id={group.id}
-        {@attach observeGroup}
-        animate:flip={{ duration: ANIMATION_SPEED.FLIP, easing: cubicOut }}
+        {@attach observeGroup(group.id)}
+        animate:flip={{ duration: prefersReducedMotion.current ? 0 : ANIMATION_SPEED.FLIP, easing: cubicOut }}
     >
         {#if group.isPlaceholder}
             <div 
@@ -117,7 +118,7 @@ function handleDeleteGroup(groupName: string, groupId: string) {
   {/each}
 
   {#if appState.isEditMode}
-    <button in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
+    <button type="button" in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} onclick={() => appState.openGroupModal()} class="w-full h-24 border-2 border-dashed border-border/50 rounded-xl flex items-center justify-center gap-2 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/30 transition-all cursor-pointer group mt-2 active-press">
       <Icon name="plus" class="w-5 h-5 group-hover:scale-110 transition-transform" />
       <span class="font-bold text-sm tracking-widest">{MESSAGES.UI.NEW_GROUP}</span>
     </button>

@@ -39,11 +39,11 @@ const toastClass = $derived(
 <svelte:head>
   <title>{MESSAGES.UI.APP_NAME} - {MESSAGES.UI.SUBTITLE}</title>
   <meta name="description" content={MESSAGES.UI.DESCRIPTION} />
-  <meta name="theme-color" content={appState.isDark ? '#09090b' : '#ffffff'} />
+  <meta name="theme-color" content={appState.isDark ? '#09090b' : '#f4f4f5'} />
 </svelte:head>
 
 <div class="min-h-dvh w-full bg-bg text-text pb-20">
-  <div class="w-full max-w-[1800px] mx-auto px-6 lg:px-12 xl:pl-[240px] xl:pr-12 transition-[padding] duration-300">
+  <div class={['w-full max-w-[1800px] mx-auto px-6 lg:px-12 transition-[padding] duration-300', dataState.groups.length > 1 && 'xl:pl-[220px] xl:pr-12']}>
     <Header />
     <Catalog />
 
@@ -59,10 +59,10 @@ const toastClass = $derived(
         </div>
       {:else if dataState.syncError}
         <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }} class="flex flex-col items-center justify-center py-20 text-danger font-bold">
-          <p>Error: {dataState.syncError}</p>
-          <button onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
+          <p>{dataState.syncError}</p>
+          <button type="button" onclick={() => appState.openConfig()} class="mt-4 underline cursor-pointer">{MESSAGES.UI.CHECK_CONFIG}</button>
         </div>
-      {:else if showSkeleton}
+      {:else if showSkeleton && dataState.syncStatus === 'checking'}
         <div in:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}>
           <LoadingSkeleton />
         </div>
@@ -98,41 +98,50 @@ const toastClass = $derived(
   {/if}
 
   {#if appState.modal?.type === 'confirm'}
-    {@const { msg, isDestructive, onConfirm } = appState.modal}
-    <Modal onClose={appState.closeModal} title={MESSAGES.UI.CONFIRM_ACTION}>
-      <div class="space-y-5 pt-1">
-         <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line text-pretty">
-            {msg}
-         </p>
-        <div class="flex gap-3 pt-2">
-          <Button variant="outline" onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
-          <Button 
-            variant={isDestructive ? 'danger' : 'primary'} 
-            onclick={() => { 
-              onConfirm();
-              appState.closeModal(); 
-            }} 
-            class="flex-1"
-          >
-            {MESSAGES.UI.CONFIRM}
-          </Button>
+    {#key appState.modal}
+      {@const { msg, isDestructive, onConfirm } = appState.modal}
+      <Modal onClose={appState.closeModal} title={MESSAGES.UI.CONFIRM_ACTION}>
+        <div class="space-y-5 pt-1">
+           <p class="text-text-dim font-bold text-sm leading-relaxed whitespace-pre-line text-pretty">
+              {msg}
+           </p>
+          <div class="flex gap-3 pt-2">
+            <Button variant="outline" data-autofocus={isDestructive || undefined} onclick={appState.closeModal} class="flex-1 text-text-dim">{MESSAGES.UI.CANCEL}</Button>
+            <Button 
+              variant={isDestructive ? 'danger' : 'primary'} 
+              onclick={() => { 
+                const action = onConfirm;
+                appState.closeModal(); 
+                action();
+              }} 
+              class="flex-1"
+            >
+              {MESSAGES.UI.CONFIRM}
+            </Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+    {/key}
   {/if}
 
   <TooltipContainer />
 
-  {#if appState.toast}
-    <div 
-      {@attach promoteToTopLayer}
-      popover="manual"
-      transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
-      class="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 py-0 m-0 pointer-events-none bg-transparent border-none outline-none overflow-visible"
-    >
-      <div class={['px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center transition-all border', toastClass]}>
-        {appState.toast.msg}
+  <div
+    role={appState.modal ? undefined : 'status'}
+    aria-live={appState.modal ? undefined : 'polite'}
+    aria-atomic="true"
+  >
+    {#if appState.toast}
+      <div
+        {@attach promoteToTopLayer}
+        popover="manual"
+        transition:fade={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+        class="fixed inset-auto bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 py-0 m-0 pointer-events-none bg-transparent border-none outline-none overflow-visible"
+      >
+        <div class={['px-6 py-4 rounded-xl text-sm font-bold tracking-tight text-center border', toastClass]}>
+          {appState.toast.msg}
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>

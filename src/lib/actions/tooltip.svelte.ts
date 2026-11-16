@@ -30,60 +30,59 @@ export function tooltip(msg?: string | null): Attachment<HTMLElement> {
   return (element: HTMLElement) => {
     if (!msg) return;
 
-    const tooltipId = `--tooltip-anchor-${++tooltipIdCounter}`;
-    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
-
-    function applyA11y(text: string) {
-      element.setAttribute('aria-label', text);
-      if (element.hasAttribute('title')) {
-        element.removeAttribute('title');
-      }
+    element.removeAttribute('title');
+    let managedAriaLabel = false;
+    if (
+      !element.textContent?.trim() &&
+      !element.hasAttribute('aria-label') &&
+      element.matches('button, a[href]')
+    ) {
+      element.setAttribute('aria-label', msg);
+      managedAriaLabel = true;
     }
 
     if (!isHoverable.current) {
-      applyA11y(msg);
-      return;
+      return () => {
+        if (managedAriaLabel) element.removeAttribute('aria-label');
+      };
     }
+
+    const tooltipId = `--tooltip-anchor-${++tooltipIdCounter}`;
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
 
     // Register the element as an anchor
     const prevAnchor = element.style.anchorName;
     element.style.anchorName = prevAnchor ? `${prevAnchor}, ${tooltipId}` : tooltipId;
-    applyA11y(msg);
 
     const forceHide = () => {
       clearTimeout(hoverTimeout);
       tooltipState.hide(tooltipId);
     };
 
-    const show = () => {
-      tooltipState.show(msg, tooltipId);
-    };
-
     const onMouseEnter = () => {
       clearTimeout(hoverTimeout);
-      hoverTimeout = setTimeout(show, APP_TIMEOUTS.TOOLTIP_DELAY);
-    };
-
-    const onFocus = () => {
-      try {
-        if (!element.matches(':focus-visible')) return;
-      } catch {}
-      onMouseEnter();
+      hoverTimeout = setTimeout(
+        () => tooltipState.show(msg, tooltipId),
+        APP_TIMEOUTS.TOOLTIP_DELAY
+      );
     };
 
     const offs = [
       on(element, 'mouseenter', onMouseEnter),
       on(element, 'mouseleave', forceHide),
-      on(element, 'focus', onFocus),
+      on(element, 'focus', () => {
+        if (element.matches(':focus-visible')) onMouseEnter();
+      }),
       on(element, 'blur', forceHide),
       on(element, 'mousedown', forceHide),
       on(element, 'keydown', (e) => {
-        if (e.key === 'Escape') forceHide();
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') forceHide();
       })
     ];
 
     return () => {
       forceHide();
+      if (managedAriaLabel) element.removeAttribute('aria-label');
       element.style.anchorName = prevAnchor;
       for (const off of offs) off();
     };

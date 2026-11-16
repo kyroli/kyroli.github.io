@@ -1,4 +1,5 @@
 <script lang="ts">
+import { untrack } from 'svelte';
 import { appState } from '$lib/core/app.svelte';
 import { dataState } from '$lib/core/data.svelte';
 import { MESSAGES } from '$lib/i18n';
@@ -20,32 +21,27 @@ const modalTitle = $derived(
   groupId ? MESSAGES.MODAL.GROUP_TITLE_EDIT : MESSAGES.MODAL.GROUP_TITLE_NEW
 );
 
-// svelte-ignore state_referenced_locally
-let name = $state(group?.name ?? '');
+let name = $state(untrack(() => group?.name ?? ''));
 let error = $state('');
 
 function handleSave() {
   error = '';
-  const trimmedName = name.trim();
-
-  if (!trimmedName) {
-    error = MESSAGES.TOAST.GROUP_NAME_REQUIRED;
+  if (groupId && !group) {
+    onClose();
     return;
   }
 
-  if (groupId && group) {
-    if (trimmedName === group.name) {
-      onClose();
-      return;
-    }
+  if (group && name.trim() === group.name) {
+    onClose();
+    return;
   }
 
   try {
     if (groupId) {
-      manager.renameGroup(groupId, trimmedName);
+      manager.renameGroup(groupId, name);
       appState.showToast(MESSAGES.TOAST.GROUP_RENAMED, 'success');
     } else {
-      manager.addGroup(trimmedName);
+      manager.addGroup(name);
       appState.showToast(MESSAGES.TOAST.GROUP_ADDED, 'success');
     }
     onClose();
@@ -57,13 +53,12 @@ function handleSave() {
 
 <Modal {onClose} title={modalTitle}>
   <form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="space-y-4">
-    <Input 
-      bind:value={name} 
+    <Input
+      bind:value={name}
       error={error}
       placeholder={MESSAGES.MODAL.GROUP_PLACEHOLDER}
       oninput={() => error = ''}
       required
-      autofocus
     />
     
     <div class="flex gap-3 pt-2">

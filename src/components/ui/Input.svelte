@@ -11,6 +11,8 @@ type Props = {
   class?: ClassValue;
 } & HTMLInputAttributes;
 
+const uid = $props.id();
+
 let {
   value = $bindable(''),
   ref = $bindable<HTMLInputElement | null>(null),
@@ -18,7 +20,7 @@ let {
   error,
   class: className,
   type = 'text',
-  id,
+  id = uid,
   ...rest
 }: Props = $props();
 
@@ -27,10 +29,11 @@ const baseStyles =
 const stateStyles = $derived(
   error
     ? 'border-danger/50 focus:border-danger text-danger placeholder:text-danger/40 focus:ring-2 focus:ring-danger/20'
-    : 'border-border focus-ring'
+    : 'border-border focus-ring user-invalid:border-danger/50'
 );
 
 const inputClass = $derived([baseStyles, stateStyles, className]);
+const errorId = $derived(`${id}-error`);
 
 const labelClass = 'text-xs font-bold text-text-dim tracking-wide ml-1 select-none';
 const errorClass = 'text-[10px] font-bold text-danger ml-1';
@@ -41,10 +44,19 @@ const errorClass = 'text-[10px] font-bold text-danger ml-1';
     <label for={id} class={labelClass}>{label}</label>
   {/if}
 
-  <input {id} {type} bind:this={ref} bind:value class={inputClass} {...rest} />
+  <input
+    {id}
+    {type}
+    bind:this={ref}
+    bind:value
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={error ? errorId : undefined}
+    class={inputClass}
+    {...rest}
+  />
 
   {#if error}
-    <span in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorClass}>
+    <span id={errorId} in:fade={{ duration: ANIMATION_SPEED.FADE_FAST }} class={errorClass}>
       {error}
     </span>
   {/if}

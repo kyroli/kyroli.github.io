@@ -49,7 +49,10 @@ class DndEngine {
   #ghostEl: HTMLElement | null = null;
   #dragNode: HTMLElement | null = null;
   #pointerId: number | null = null;
+  #active = false;
+  #needsSnapshot = false;
   #rafId: number | null = null;
+  #hasDraggedTimer: ReturnType<typeof setTimeout> | undefined;
   #lastFrameTime = 0;
   #cleanupListeners: (() => void)[] = [];
 
@@ -57,11 +60,13 @@ class DndEngine {
 
   init(e: PointerEvent, type: 'group' | 'site', id: string, node: HTMLElement) {
     if (!appState.isEditMode || !e.isPrimary || e.button !== 0) return;
+    if (this.#pointerId !== null || this.isDragging) return;
     if (e.pointerType === 'touch' && !isDesktop.current) return;
 
-    const target = e.target as HTMLElement;
-    if (target.closest('button, input, textarea, select, [data-no-drag]')) return;
+    const target = e.target instanceof Element ? e.target : null;
+    if (target?.closest('button, input, textarea, select, [data-no-drag]')) return;
 
+    clearTimeout(this.#hasDraggedTimer);
     this.type = type;
     this.#dragNode = node;
     this.#pointerId = e.pointerId;
@@ -78,7 +83,7 @@ class DndEngine {
 
     let visualTarget = node;
     if (type === 'group') {
-      const groupItem = node.closest('.group-item') as HTMLElement;
+      const groupItem = node.closest<HTMLElement>('.group-item');
       if (groupItem) visualTarget = groupItem;
     }
 
@@ -124,6 +129,7 @@ class DndEngine {
     this.#captureSnapshots();
     this.#createGhost(this.#dragNode);
 
+    this.#active = true;
     this.isDragging = true;
     this.hasDragged = true;
 
@@ -145,16 +151,28 @@ class DndEngine {
     this.#currentX = this.#inputX;
     this.#currentY = this.#inputY;
 
-    const scrollDelta = this.#calculateScrollDelta(safeDt);
-    if (scrollDelta !== 0) {
-      window.scrollBy(0, scrollDelta);
+    let layoutChanged = false;
+    if (this.#needsSnapshot) {
+      this.#needsSnapshot = false;
       this.#captureSnapshots();
+      layoutChanged = true;
+    }
+
+    const scrollDelta = this.#calculateScrollDelta(safeDt);
+    let scrolled = false;
+    if (scrollDelta !== 0) {
+      const prevY = window.scrollY;
+      window.scrollBy(0, scrollDelta);
+      scrolled = window.scrollY !== prevY;
+      if (scrolled) {
+        this.#captureSnapshots();
+      }
     }
 
     const ghostW = this.#ghostEl ? parseFloat(this.#ghostEl.style.width) : 0;
     const ghostH = this.#ghostEl ? parseFloat(this.#ghostEl.style.height) : 0;
-    const maxLeft = window.innerWidth - ghostW;
-    const maxTop = window.innerHeight - ghostH;
+    const maxLeft = Math.max(0, window.innerWidth - ghostW);
+    const maxTop = Math.max(0, window.innerHeight - ghostH);
 
     let ghostLeft = this.#currentX - this.#offsetX;
     let ghostTop = this.#currentY - this.#offsetY;
@@ -182,7 +200,7 @@ class DndEngine {
     const dist =
       Math.abs(centerX - this.#lastCollisionX) + Math.abs(centerY - this.#lastCollisionY);
 
-    if (dist > 1 || scrollDelta !== 0) {
+    if (dist > 1 || scrolled || layoutChanged) {
       this.#updateCollision(centerX, centerY);
       this.#lastCollisionX = centerX;
       this.#lastCollisionY = centerY;
@@ -265,7 +283,10 @@ class DndEngine {
 
     if (!activeGroup) return;
 
-    if (this.hoverGroupId !== activeGroup.id) this.hoverGroupId = activeGroup.id;
+    if (this.hoverGroupId !== activeGroup.id) {
+      this.hoverGroupId = activeGroup.id;
+      this.#needsSnapshot = true;
+    }
 
     if (activeGroup.itemCount === 0) {
       this.hoverIndex = 0;
@@ -294,21 +315,37 @@ class DndEngine {
     if (this.hoverIndex !== targetIndex) this.hoverIndex = targetIndex;
   }
 
+  #getLayoutRect(el: HTMLElement) {
+    let top = 0;
+    let left = 0;
+    let cur: HTMLElement | null = el;
+    while (cur) {
+      top += cur.offsetTop;
+      left += cur.offsetLeft;
+      cur = cur.offsetParent instanceof HTMLElement ? cur.offsetParent : null;
+    }
+    return {
+      top,
+      left,
+      right: left + el.offsetWidth,
+      bottom: top + el.offsetHeight,
+      width: el.offsetWidth
+    };
+  }
+
   #captureSnapshots() {
     this.#groupMetas = [];
-    const sX = window.scrollX;
-    const sY = window.scrollY;
 
     const stdW = this.#stdW;
     const stdH = this.#stdH;
     if (stdW <= 0 || stdH <= 0) return;
 
-    const groupEls = document.querySelectorAll('[data-dnd-group-id]');
+    const groupEls = document.querySelectorAll<HTMLElement>('[data-dnd-group-id]');
 
     for (const el of groupEls) {
-      const rect = el.getBoundingClientRect();
+      const rect = this.#getLayoutRect(el);
       const id = el.getAttribute('data-dnd-group-id') ?? '';
-      const gridEl = el.querySelector('.grid') as HTMLElement;
+      const gridEl = el.querySelector<HTMLElement>('.grid');
 
       let cols = 1;
       let cellW = stdW;
@@ -320,7 +357,7 @@ class DndEngine {
       let itemCount = 0;
 
       if (gridEl) {
-        const gridRect = gridEl.getBoundingClientRect();
+        const gridRect = this.#getLayoutRect(gridEl);
         const computed = getComputedStyle(gridEl);
 
         const gapVal = parseFloat(computed.gap || computed.columnGap);
@@ -351,10 +388,10 @@ class DndEngine {
       this.#groupMetas.push({
         id,
         rect: {
-          top: rect.top + sY,
-          bottom: rect.bottom + sY,
-          left: rect.left + sX,
-          right: rect.right + sX
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right
         },
         grid: {
           cols,
@@ -402,13 +439,16 @@ class DndEngine {
 
   #onResize = () => {
     if (this.isDragging) {
-      this.#onUp();
+      this.#onCancel();
     }
   };
 
   #reset() {
+    this.#active = false;
+    this.#needsSnapshot = false;
     this.isDragging = false;
-    setTimeout(() => {
+    clearTimeout(this.#hasDraggedTimer);
+    this.#hasDraggedTimer = setTimeout(() => {
       this.hasDragged = false;
     }, 50);
 
@@ -438,7 +478,7 @@ class DndEngine {
   #createGhost(src: HTMLElement) {
     let target = src;
     if (this.type === 'group') {
-      const groupItem = src.closest('.group-item') as HTMLElement;
+      const groupItem = src.closest<HTMLElement>('.group-item');
       if (groupItem) target = groupItem;
     }
 
@@ -478,7 +518,7 @@ class DndEngine {
       willChange: 'transform'
     });
 
-    this.#ghostEl.classList.remove('animate-fade', 'cursor-grab', 'cursor-move');
+    this.#ghostEl.classList.remove('cursor-grab', 'cursor-move');
     document.body.appendChild(this.#ghostEl);
     this.#ghostEl.showPopover();
   }
@@ -495,6 +535,10 @@ class DndEngine {
     if (this.#pointerId !== null || this.isDragging) {
       this.#onCancel();
     }
+  }
+
+  isPendingFor(node: HTMLElement): boolean {
+    return this.#dragNode === node && !this.#active;
   }
 }
 
@@ -530,7 +574,7 @@ export function draggable(params: { type: 'group' | 'site'; id: string }): Attac
     ];
 
     return () => {
-      if (!appState.isEditMode) {
+      if (!appState.isEditMode || dndState.isPendingFor(element)) {
         dndState.cancel();
       }
       element.style.cursor = '';

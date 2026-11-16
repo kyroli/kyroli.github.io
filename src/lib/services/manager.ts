@@ -1,6 +1,7 @@
 import { dataState } from '../core/data.svelte';
 import { MESSAGES } from '../i18n';
 import type { NavData } from '../types';
+import { normalizeHttpUrl } from '../utils';
 
 class DataManager {
   addGroup(name: string) {
@@ -59,35 +60,45 @@ class DataManager {
     }
   }
 
-  saveSite(groupId: string, siteData: { id?: string; name: string; url: string; icon: string }) {
-    const { name, url, icon, id } = siteData;
-    if (!name?.trim() || !url?.trim()) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
+  saveSite(
+    groupId: string,
+    siteData: { id?: string; name: string; url: string; targetGroupId?: string }
+  ) {
+    const cleanName = siteData.name.trim();
+    const cleanUrl = normalizeHttpUrl(siteData.url);
+    if (!cleanName || !cleanUrl) throw new Error(MESSAGES.TOAST.SITE_INFO_REQUIRED);
 
-    const cleanUrl = url.trim();
     if (!URL.canParse(cleanUrl)) throw new Error(MESSAGES.TOAST.SITE_URL_ERROR);
-    const parsedUrl = new URL(cleanUrl);
-
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    const { protocol } = new URL(cleanUrl);
+    if (protocol !== 'http:' && protocol !== 'https:') {
       throw new Error(MESSAGES.TOAST.SITE_PROTOCOL_ERROR);
     }
 
     const group = dataState.groups.find((g) => g.id === groupId);
     if (!group) throw new Error(MESSAGES.TOAST.GROUP_NOT_FOUND);
 
-    if (id) {
-      const site = group.sites.find((s) => s.id === id);
-      if (site) {
-        site.name = name.trim();
+    const destGroup =
+      (siteData.targetGroupId
+        ? dataState.groups.find((g) => g.id === siteData.targetGroupId)
+        : undefined) ?? group;
+
+    if (siteData.id) {
+      const siteIndex = group.sites.findIndex((s) => s.id === siteData.id);
+      if (siteIndex !== -1) {
+        const site = group.sites[siteIndex];
+        site.name = cleanName;
         site.url = cleanUrl;
-        site.icon = icon?.trim() || '';
+        if (destGroup !== group) {
+          group.sites.splice(siteIndex, 1);
+          destGroup.sites.push(site);
+        }
         dataState.markDirty();
       }
     } else {
-      group.sites.push({
+      destGroup.sites.push({
         id: crypto.randomUUID(),
-        name: name.trim(),
-        url: cleanUrl,
-        icon: icon?.trim() || ''
+        name: cleanName,
+        url: cleanUrl
       });
       dataState.markDirty();
     }

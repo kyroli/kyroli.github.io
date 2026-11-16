@@ -17,16 +17,16 @@ A minimal personal browser startpage and bookmark manager.
 - **Zero External UI Runtime**: Relies exclusively on framework primitives and native browser APIs without third-party UI component or state management libraries.
 - **Native Web Platform**:
   - **Top Layer & Positioning**: Uses native `<dialog closedby="any">`, the Popover API (`popover`), and CSS Anchor Positioning (`anchor-name`, `position-anchor`, `position-area`) for modals, menus, tooltips, toasts, and drag ghosts.
-  - **Modern CSS**: Uses `oklch()` color tokens paired with native `light-dark()` and `@starting-style` discrete transitions.
-  - **ESNext & Web APIs**: Targets modern browsers using native `Uint8Array` Base64 encoding/decoding (`toBase64` / `fromBase64`), `URL.canParse`, and the File System Access API (`showSaveFilePicker`).
+  - **Modern CSS**: Uses `oklch()` color tokens paired with native `light-dark()`, `@starting-style` discrete transitions, scroll-state container queries (`scroll-state(stuck: top)`), and customizable select elements (`appearance: base-select`).
+  - **ESNext & Web APIs**: Targets modern browsers using the View Transitions API (`document.startViewTransition`), native `Uint8Array` Base64 encoding/decoding (`toBase64` / `fromBase64`), `URL.canParse`, and the File System Access API (`showSaveFilePicker`).
 - **Unidirectional Layering**: Enforces strict separation across stateless UI primitives (`ui/`), business views and lazy-loaded modals (`business/`, `modals/`), domain services (`services/`), reactive state stores (`core/`), and infrastructure adapters (`infra/`).
 
 ## Features
 
-- **Multi-Engine Search**: Switch between Bing, Google, DuckDuckGo, and Yandex. Focus the search bar with `/` or `Ctrl/Cmd + K`, and dismiss with `Escape`.
+- **Search & Bookmark Quick-Jump**: Switch between Bing, Google, DuckDuckGo, and Yandex, with real-time local bookmark matching and keyboard navigation (`ArrowUp` / `ArrowDown` / `Enter`). Focus the search bar with `/` or `Ctrl/Cmd + K`, and clear or dismiss with `Escape`.
 - **Pointer-Driven Drag & Drop**: Reorder groups and site shortcuts in Edit Mode via a custom pointer-event engine featuring collision detection, viewport edge auto-scrolling, FLIP animations, and `Escape` cancellation.
 - **Adaptive Navigation**: Scroll-spy vertical sidebar on desktop (`IntersectionObserver` attachment) and auto-centering sticky horizontal category bar on mobile viewports.
-- **Theme & Localization**: Light and dark mode with `prefers-color-scheme` detection, plus automatic English and Simplified Chinese interface adaptation based on browser locale.
+- **Theme & Localization**: Light and dark mode with `prefers-color-scheme` detection and View Transitions (respecting `prefers-reduced-motion`), plus automatic English and Simplified Chinese interface adaptation based on browser locale.
 
 ## Data Storage & Sync
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
-import { type FadeParams, fade } from 'svelte/transition';
 import { tooltip } from '$lib/actions/tooltip.svelte';
 import { ANIMATION_SPEED } from '$lib/constants';
 import { MESSAGES } from '$lib/i18n';
@@ -16,21 +15,29 @@ let {
   title?: string;
 } = $props();
 
+const titleId = $props.id();
+
 function showModal(node: HTMLDialogElement) {
   if (!node.open) {
     node.showModal();
+    node
+      .querySelector<HTMLElement>(
+        '[autofocus], [data-autofocus], input:not([type="hidden"]), textarea, select'
+      )
+      ?.focus();
   }
 }
 
-function modalFade(node: Element, params?: FadeParams) {
+// Close the native dialog on unmount so CSS top-layer exit transitions can run before removal.
+function modalExit(node: Element) {
   if (node instanceof HTMLDialogElement && node.open) {
     node.close();
   }
-  return fade(node, params);
+  return { duration: ANIMATION_SPEED.FADE_NORMAL };
 }
 
 const dialogStyles =
-  'modal-dialog m-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto bg-surface text-text border border-border shadow-float outline-none backdrop:bg-black/40 backdrop:backdrop-blur-[1px]';
+  'modal-dialog m-auto w-[calc(100%-2rem)] sm:w-full max-w-sm rounded-2xl p-6 sm:p-8 max-h-[90dvh] overflow-y-auto bg-surface text-text border border-border shadow-float outline-none backdrop:bg-black/40 backdrop:backdrop-blur-[1px]';
 
 const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 </script>
@@ -51,15 +58,16 @@ const titleClass = 'text-xl font-bold tracking-tight text-text m-0';
 <dialog
   {@attach showModal}
   closedby="any"
+  aria-labelledby={title ? titleId : undefined}
+  aria-label={!title ? MESSAGES.UI.CONFIRM_ACTION : undefined}
   class={dialogStyles}
   onclose={(e) => !e.currentTarget.inert && onClose()}
-  in:fade|global={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
-  out:modalFade|global={{ duration: ANIMATION_SPEED.FADE_NORMAL }}
+  out:modalExit|global
 >
   <div class="flex flex-col gap-6 relative">
     {#if title}
       <div class="flex items-center justify-between">
-        <h2 class={titleClass}>{title}</h2>
+        <h2 id={titleId} class={titleClass}>{title}</h2>
         {@render actionButtons()}
       </div>
     {:else}

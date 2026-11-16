@@ -5,7 +5,7 @@
 import { dataState } from '../core/data.svelte';
 import { MESSAGES } from '../i18n';
 import { GITHUB_ERRORS, GithubClient } from '../infra/github';
-import type { GithubConfig } from '../types';
+import type { RemoteFile } from '../types';
 
 class SyncService {
   #abortController: AbortController | null = null;
@@ -44,7 +44,7 @@ class SyncService {
 
       if (!remote) {
         dataState.updateSyncState('success');
-        if (dataState.groups.length > 0) {
+        if (dataState.groups.length > 0 && !dataState.isDirty) {
           dataState.markDirty();
         }
         return;
@@ -57,21 +57,17 @@ class SyncService {
         const isFreshInstall = dataState.lastSha === '' && dataState.groups.length === 0;
 
         if (dataState.isDirty && !isFreshInstall) {
-          dataState.updateSyncState('conflict', remote.sha);
+          dataState.updateSyncState('conflict');
         } else {
           dataState.replaceData(remoteContent, remote.sha);
         }
       } else {
-        const wasDirty = dataState.isDirty;
         dataState.updateSyncState('success');
-        if (wasDirty) {
-          dataState.markDirty();
-        }
       }
     } catch (e: unknown) {
       if (this.#isAborted(e)) return;
       console.error('Init sync failed:', e);
-      dataState.updateSyncState('error', undefined, this.formatError(e));
+      dataState.updateSyncState('error', this.formatError(e));
     }
   }
 
@@ -92,16 +88,15 @@ class SyncService {
         signal
       );
 
-      dataState.updateSyncState('success', sha);
+      dataState.markSynced(sha);
     } catch (e: unknown) {
       if (this.#isAborted(e)) return;
       console.error('Push failed:', e);
 
       if (e instanceof Error && e.message === GITHUB_ERRORS.CONFLICT) {
-        dataState.updateSyncState('conflict');
         await this.init();
       } else {
-        dataState.updateSyncState('error', undefined, this.formatError(e));
+        dataState.updateSyncState('error', this.formatError(e));
         throw e;
       }
     }
@@ -124,10 +119,10 @@ class SyncService {
         signal
       );
 
-      dataState.updateSyncState('success', sha);
+      dataState.markSynced(sha);
     } catch (e: unknown) {
       if (this.#isAborted(e)) return;
-      dataState.updateSyncState('error', undefined, this.formatError(e));
+      dataState.updateSyncState('error', this.formatError(e));
       throw e;
     }
   }
@@ -138,24 +133,20 @@ class SyncService {
   async resetToRemote(): Promise<void> {
     const signal = this.#nextSignal();
     dataState.updateSyncState('syncing');
+    let remote: RemoteFile | null;
     try {
-      const remote = await this.client.getFile('profile.json', signal);
+      remote = await this.client.getFile('profile.json', signal);
       if (remote) {
-        const content = GithubClient.parseContent(remote.content);
-        dataState.replaceData(content, remote.sha);
-      } else {
-        throw new Error(MESSAGES.TOAST.REMOTE_EMPTY);
+        dataState.replaceData(GithubClient.parseContent(remote.content), remote.sha);
+        return;
       }
     } catch (e: unknown) {
       if (this.#isAborted(e)) return;
-      dataState.updateSyncState('error', undefined, this.formatError(e));
+      dataState.updateSyncState('error', this.formatError(e));
       throw e;
     }
-  }
-
-  async updateConfig(config: GithubConfig) {
-    dataState.updateConfig(config);
-    await this.init();
+    dataState.updateSyncState('idle');
+    throw new Error(MESSAGES.TOAST.REMOTE_EMPTY);
   }
 
   async connectRepository(repoPath: string, token: string) {
@@ -165,11 +156,12 @@ class SyncService {
     } catch {
       throw new Error(MESSAGES.TOAST.CONFIG_FORMAT_ERROR);
     }
-    await this.updateConfig({
+    dataState.updateConfig({
       owner: parsed.owner,
       repo: parsed.repo,
       token
     });
+    await this.init();
   }
 
   private formatError(e: unknown): string {

@@ -7,6 +7,7 @@ import { ANIMATION_SPEED, UI_CONSTANTS } from '$lib/constants';
 import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import type { VisualGroup } from '$lib/types';
+import { prefersReducedMotion } from '$lib/utils';
 import Icon from '../ui/Icon.svelte';
 import GroupHeader from './GroupHeader.svelte';
 import SiteCard from './SiteCard.svelte';
@@ -20,16 +21,16 @@ let {
 } = $props();
 </script>
 
-<div class="group-item flex flex-col gap-4 relative">
+<section aria-labelledby="group-heading-{group.id}" class="group-item flex flex-col gap-4 relative">
   <GroupHeader {group} onDelete={onDeleteGroup} />
 
-  <div class={[UI_CONSTANTS.GRID_LAYOUT, 'content-start min-h-[72px]']}>
+  <div class={[UI_CONSTANTS.GRID_LAYOUT, 'content-start', appState.isEditMode && 'min-h-[72px]']}>
     {#each group.sites as item (item.id)}
-      <div 
+      <div
         class="relative h-full z-10"
-        animate:flip={{ 
-          duration: dndState.type === 'group' ? 0 : ANIMATION_SPEED.FLIP, 
-          easing: cubicOut 
+        animate:flip={{
+          duration: dndState.type === 'group' || prefersReducedMotion.current ? 0 : ANIMATION_SPEED.FLIP,
+          easing: cubicOut
         }}
         data-dnd-site-id={item.id}
       >
@@ -47,8 +48,9 @@ let {
     {/each}
 
     {#if appState.isEditMode}
-      <button 
-        onclick={() => appState.openSiteModal(group.id)} 
+      <button
+        type="button"
+        onclick={() => appState.openSiteModal(group.id)}
         class={[
           'w-full flex flex-col gap-2 items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-text-dim/40 hover:text-primary hover:border-primary/50 hover:bg-surface/50 transition-all cursor-pointer group active-press',
           UI_CONSTANTS.CARD_HEIGHT
@@ -59,4 +61,4 @@ let {
       </button>
     {/if}
   </div>
-</div>
+</section>

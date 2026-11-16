@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   CONFIG: 'nav_cfg',
   THEME: 'nav_theme',
   SHA: 'nav_sha',
+  DIRTY: 'nav_dirty',
   ENGINE: 'nav_engine'
 } as const;
 
@@ -20,7 +21,12 @@ function readJson<T>(key: string, fallback: T): T {
 
 export const storage = {
   get config(): GithubConfig {
-    return readJson(STORAGE_KEYS.CONFIG, { owner: '', repo: '', token: '' });
+    const raw = readJson<Partial<GithubConfig>>(STORAGE_KEYS.CONFIG, {});
+    return {
+      owner: typeof raw?.owner === 'string' ? raw.owner : '',
+      repo: typeof raw?.repo === 'string' ? raw.repo : '',
+      token: typeof raw?.token === 'string' ? raw.token : ''
+    };
   },
 
   set config(v: GithubConfig) {
@@ -41,6 +47,15 @@ export const storage = {
 
   set sha(v: string) {
     localStorage.setItem(STORAGE_KEYS.SHA, v);
+  },
+
+  get dirty(): boolean {
+    return localStorage.getItem(STORAGE_KEYS.DIRTY) === '1';
+  },
+
+  set dirty(v: boolean) {
+    if (v) localStorage.setItem(STORAGE_KEYS.DIRTY, '1');
+    else localStorage.removeItem(STORAGE_KEYS.DIRTY);
   },
 
   get theme(): string | null {

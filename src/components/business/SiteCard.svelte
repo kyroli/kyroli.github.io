@@ -4,21 +4,13 @@ import { appState } from '$lib/core/app.svelte';
 import { MESSAGES } from '$lib/i18n';
 import { manager } from '$lib/services/manager';
 import type { Site } from '$lib/types';
-import { DEFAULT_ICON, getIcon } from '$lib/utils';
+import { getDomain, siteIcon } from '$lib/utils';
 import Card from '../ui/Card.svelte';
 import Icon from '../ui/Icon.svelte';
 
 let { site, groupId }: { site: Site; groupId: string } = $props();
 
-const displayHostname = $derived.by(() => {
-  try {
-    return new URL(site.url).hostname.replace(/^www\./, '');
-  } catch {
-    return site.url;
-  }
-});
 const safeHref = $derived(!appState.isEditMode ? site.url : undefined);
-const iconSrc = $derived(getIcon(site.url, site.icon));
 
 const cardClass = $derived([
   'group relative transition-all duration-200 border active-press',
@@ -29,16 +21,7 @@ const cardClass = $derived([
 
 const imgClass = 'w-full h-full object-contain pointer-events-none transition-all duration-200';
 
-function handleImageError(e: Event) {
-  const img = e.currentTarget as HTMLImageElement;
-  if (img.src !== DEFAULT_ICON) {
-    img.src = DEFAULT_ICON;
-  }
-}
-
-function handleDelete(e: MouseEvent) {
-  e.stopPropagation();
-  e.preventDefault();
+function handleDelete() {
   appState.openConfirm({
     msg: MESSAGES.CONFIRM.DELETE_SITE,
     onConfirm: () => {
@@ -58,31 +41,31 @@ function handleClick(e: MouseEvent) {
 </script>
 
 <div class="relative h-full">
-  <Card href={safeHref} onclick={handleClick} interactive={!appState.isEditMode} class={cardClass}>
+  <Card href={safeHref} onclick={handleClick} class={cardClass}>
     <div class="shrink-0 w-10 h-10 rounded-xl bg-icon-bg flex items-center justify-center overflow-hidden border border-border/50 transition-transform duration-200 group-hover:scale-105 p-2">
-      <img 
-        src={iconSrc} 
-        onerror={handleImageError}
+      <img
+        {@attach siteIcon(site.url)}
         class={imgClass}
-        loading="lazy" 
-        decoding="async" 
-        alt={site.name} 
+        loading="lazy"
+        decoding="async"
+        alt={site.name}
       />
     </div>
 
     <div class="flex flex-col overflow-hidden pointer-events-none min-w-0 flex-1 gap-1">
       <span class="text-[15px] font-bold text-text truncate leading-normal tracking-tight">{site.name}</span>
-      <span class="text-[10px] font-bold font-mono text-text-dim/60 truncate leading-normal tracking-widest uppercase opacity-80">{displayHostname}</span>
+      <span class="text-[10px] font-bold font-mono text-text-dim/70 truncate leading-normal tracking-widest uppercase">{getDomain(site.url)}</span>
     </div>
-
-    {#if appState.isEditMode}
-      <button 
-        class="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all z-20 bg-surface border border-border text-text-dim shadow-sm hover:text-danger hover:border-danger hover:scale-110 active-press-icon" 
-        onclick={handleDelete} 
-        {@attach tooltip(MESSAGES.UI.TIP_DELETE_SITE)}
-      >
-        <Icon name="trash" class="w-3.5 h-3.5" />
-      </button>
-    {/if}
   </Card>
+
+  {#if appState.isEditMode}
+    <button
+      type="button"
+      class="absolute -top-2.5 -right-2.5 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all z-20 bg-surface border border-border text-text-dim shadow-sm hover:text-danger hover:border-danger hover:scale-110 active-press-icon" 
+      onclick={handleDelete} 
+      {@attach tooltip(MESSAGES.UI.TIP_DELETE_SITE)}
+    >
+      <Icon name="trash" class="w-3.5 h-3.5" />
+    </button>
+  {/if}
 </div>

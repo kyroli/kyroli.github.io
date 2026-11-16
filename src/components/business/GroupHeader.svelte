@@ -15,22 +15,28 @@ let {
 </script>
 
 <div class="flex items-center gap-3 pb-2 h-11 border-b border-border/40 group/header justify-between">
-  {#if appState.isEditMode}
-    <button 
-      onclick={() => appState.openGroupModal(group.id)}
-      class="text-xs font-bold tracking-widest text-text-dim hover:text-primary transition-colors cursor-pointer uppercase truncate text-left opacity-80"
-      {@attach tooltip(MESSAGES.UI.TIP_RENAME_GROUP)}
-    >
+  <h2 id="group-heading-{group.id}" class="min-w-0 text-xs font-bold tracking-widest text-text-dim uppercase opacity-80">
+    {#if appState.isEditMode}
+      <button
+        type="button"
+        onclick={() => appState.openGroupModal(group.id)}
+        class="hover:text-primary transition-colors cursor-pointer uppercase truncate text-left max-w-full"
+        {@attach tooltip(MESSAGES.UI.TIP_RENAME_GROUP)}
+      >
+        {group.name}
+      </button>
+    {:else}
       {group.name}
-    </button>
-  {:else}
-    <h2 class="text-xs font-bold tracking-widest text-text-dim uppercase opacity-80">{group.name}</h2>
-  {/if}
+    {/if}
+  </h2>
   
-  <div class={[
-    'flex items-center gap-2 transition-all duration-200',
-    appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
-  ]}>
+  <div
+    inert={!appState.isEditMode}
+    class={[
+      'flex items-center gap-2 transition-all duration-200',
+      appState.isEditMode ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
+    ]}
+  >
     <div 
       class="hidden md:block cursor-grab text-text-dim hover:text-primary active-press-icon transition-all p-2 rounded-lg hover:bg-surface border border-transparent hover:border-border"
       {@attach draggable({ type: 'group', id: group.id })}
@@ -39,8 +45,9 @@ let {
       <Icon name="grip-vertical" class="w-5 h-5" />
     </div>
 
-    <button 
-      onclick={() => onDelete(group.name, group.id)} 
+    <button
+      type="button"
+      onclick={() => onDelete(group.name, group.id)}
       class="text-text-dim hover:text-danger hover:bg-surface p-2 rounded-lg transition-all cursor-pointer border border-transparent hover:border-border/50 active-press-icon" 
       {@attach tooltip(MESSAGES.UI.TIP_DELETE_GROUP)}
     >

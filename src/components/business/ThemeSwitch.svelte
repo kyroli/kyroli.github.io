@@ -5,10 +5,7 @@ import { MESSAGES } from '$lib/i18n';
 import Button from '../ui/Button.svelte';
 import Icon from '../ui/Icon.svelte';
 
-function handleToggle(e: MouseEvent) {
-  if (e.currentTarget instanceof HTMLElement) {
-    e.currentTarget.blur();
-  }
+function handleToggle() {
   tooltipState.hide();
   appState.toggleTheme();
 }

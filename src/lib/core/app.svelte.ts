@@ -1,7 +1,10 @@
+import { flushSync } from 'svelte';
+import { on } from 'svelte/events';
 import { online } from 'svelte/reactivity/window';
 import { DEFAULT_ENGINE_ID, SEARCH_ENGINES } from '../config/search';
 import { APP_TIMEOUTS } from '../constants';
 import { storage } from '../infra/storage';
+import { prefersReducedMotion } from '../utils';
 
 type ToastType = 'info' | 'success' | 'error';
 
@@ -38,7 +41,7 @@ class AppCore {
   modal = $state<ModalState>(null);
 
   toast = $state<ToastState | null>(null);
-  private toastTimer: number | null = null;
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   currentEngineId = $state(
     storage.engine && SEARCH_ENGINES[storage.engine] ? storage.engine : DEFAULT_ENGINE_ID
@@ -49,15 +52,32 @@ class AppCore {
     document.documentElement.lang = isZh ? 'zh-CN' : 'en';
 
     $effect.root(() => {
+      $effect(() =>
+        on(window.matchMedia('(prefers-color-scheme: dark)'), 'change', (e) => {
+          if (!storage.theme) this.isDark = e.matches;
+        })
+      );
+
       $effect(() => {
         document.documentElement.classList.toggle('dark', this.isDark);
-        storage.theme = this.isDark ? 'dark' : 'light';
       });
     });
   }
 
   toggleTheme = () => {
-    this.isDark = !this.isDark;
+    const next = !this.isDark;
+    storage.theme = next ? 'dark' : 'light';
+
+    if (prefersReducedMotion.current) {
+      this.isDark = next;
+      return;
+    }
+
+    document.startViewTransition(() => {
+      flushSync(() => {
+        this.isDark = next;
+      });
+    });
   };
 
   toggleEditMode = () => {
@@ -88,9 +108,9 @@ class AppCore {
   };
 
   showToast = (msg: string, type: ToastType = 'info') => {
-    if (this.toastTimer) clearTimeout(this.toastTimer);
+    clearTimeout(this.toastTimer);
     this.toast = { msg, type };
-    this.toastTimer = window.setTimeout(() => {
+    this.toastTimer = setTimeout(() => {
       this.toast = null;
     }, APP_TIMEOUTS.TOAST_DURATION);
   };

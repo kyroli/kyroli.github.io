@@ -18,8 +18,9 @@ const logoHref = $derived(
     <div class="justify-self-start flex min-w-0">
       <a 
         href={logoHref} 
-        target="_blank" 
-        class={['h-10 flex items-center gap-2.5 transition-opacity active-press', !logoHref ? 'pointer-events-none' : 'hover:opacity-80']}
+        target={logoHref ? '_blank' : undefined}
+        rel={logoHref ? 'noopener noreferrer' : undefined}
+        class={['h-10 flex items-center gap-2.5 transition-opacity', logoHref ? 'hover:opacity-80 active-press' : 'pointer-events-none']}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
