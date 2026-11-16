@@ -37,7 +37,7 @@ const matchedSites = $derived.by(() => {
 });
 
 function openSite(url: string) {
-  window.open(url, '_blank', 'noopener');
+  window.open(url, '_blank', 'noopener,noreferrer');
   search = '';
   selectedIndex = -1;
 }
@@ -50,9 +50,7 @@ function handleSearch() {
 
   const query = search.trim();
   if (!query) return;
-  window.open(`${activeEngine.url}${encodeURIComponent(query)}`, '_blank', 'noopener');
-  search = '';
-  selectedIndex = -1;
+  openSite(`${activeEngine.url}${encodeURIComponent(query)}`);
 }
 
 function handleInputKeydown(e: KeyboardEvent) {
